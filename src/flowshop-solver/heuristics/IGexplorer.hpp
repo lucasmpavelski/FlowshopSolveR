@@ -84,15 +84,12 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
    * @param _solution the current solution
    */
   virtual void operator()(EOT& _solution) {
-    // std::cerr << "explore!" << '\n';
     neighborhoodCheckpoint.initNeighborhood(_solution);
     int j = 0;
     while (_solution[j] != RandJOB[k]) {
       j++;
     }
     int position = 0;
-    /*if (j == position)
-      position++;*/
     EOT solTMP = _solution;
     solTMP.erase(solTMP.begin() + j);
     solTMP.insert(solTMP.begin() + position, RandJOB[k]);
@@ -109,7 +106,6 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
       solTMP.insert(solTMP.begin() + position, RandJOB[k]);
       eval(solTMP);
       neighborhoodCheckpoint.neighborCall(solTMP);
-      std::cerr << position << " " << best.fitness() << ' ' << solTMP << '\n';
       if (solComparator(best, solTMP)) {
         best = solTMP;
         ties = {position};
@@ -117,11 +113,7 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
         ties.push_back(position);
       }
     }
-    std::cerr << "ties:" << '\n';
-    for (auto i : ties)
-      std::cerr << i << '\n';
     int chosen = RNG::intUniform(ties.size() - 1);
-    std::cerr << "chosen:" << chosen << '\n';
     if (solComparator(_solution, best)) {
       solTMP = _solution;
       solTMP.invalidate();
@@ -129,11 +121,8 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
       solTMP.insert(solTMP.begin() + ties[chosen], RandJOB[k]);
       _solution = solTMP;
       _solution.fitness(best.fitness());
-      std::cerr << "_solution:" << _solution << '\n';
       improve = true;
     }
-    if ((ties.size() > 2) && improve)
-      std::cerr << "debub" << '\n';
     neighborhoodCheckpoint.lastNeighborhoodCall(_solution);
   }
 

@@ -15,14 +15,15 @@ class OpPerturbDestConst : public eoMonOp<EOT> {
  public:
   enum strat { random, ordered } nh_strategy;
 
-  OpPerturbDestConst(eoEvalFunc<EOT>& eval, int d,
+  OpPerturbDestConst(eoEvalFunc<EOT>& eval,
+                     int d,
                      moSolComparator<EOT> comp = moSolComparator<EOT>(),
-                     const int nh_size = -1, strat nh_strategy = strat::ordered)
+                     const int nh_size = -1,
+                     strat nh_strategy = strat::ordered)
       : eval(eval), d(d), comp(comp) {}
 
   virtual bool operator()(EOT& sol) {
     assert(d <= sol.size());
-    int index;
     int length = sol.size();
     std::vector<int> D;
     EOT tmp;
@@ -36,16 +37,20 @@ class OpPerturbDestConst : public eoMonOp<EOT> {
       vBest.invalidate();
       tmp = sol;
       length = sol.size();
+      std::vector<int> ties;
       for (int i = 0; i <= length; ++i) {
         tmp.insert(tmp.begin() + i, D[k]);
         tmp.invalidate();
         eval(tmp);
         if (vBest.invalid() || comp(vBest, tmp)) {
           vBest.fitness(tmp.fitness());
-          index = i;
+          ties = {i};
+        } else if (comp.equals(vBest, tmp)) {
+          ties.push_back(i);
         }
         tmp.erase(tmp.begin() + i);
       }
+      int index = ties[RNG::intUniform(ties.size() - 1)];
       sol.insert(sol.begin() + index, D[k]);
       sol.fitness(vBest.fitness());
     }
