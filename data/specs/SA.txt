@@ -1,0 +1,13 @@
+SA.Algo                   "" c (0,1,2)
+SA.Comp.Strat             "" c (0,1)
+SA.Init.Strat             "" c (0,1,2)
+SA.Neighborhood.Size      "" r (0.0, 9.999)
+SA.Span.Simple            "" i (50, 100)      | SA.Algo == 0
+SA.Span.Tries.Max         "" i (1000, 7000)   | SA.Algo == 1
+SA.Span.Move.Max          "" i (50, 500)      | SA.Algo == 1
+SA.Nb.Span.Max            "" i (2, 10)        | SA.Algo == 1
+SA.Init.Temp              "" r (5.0, 10.0)    | SA.Algo == 0 || SA.Algo == 1
+SA.Final.Temp             "" r (0.0, 1.0)     | SA.Algo == 0
+SA.Alpha                  "" r (0.1, 1.0)     | SA.Algo == 0 || SA.Algo == 1 
+SA.T                      "" r (0.1, 10.0)    | SA.Algo == 2
+SA.Beta                   "" r (0.0, 1.0)     | SA.Algo == 2

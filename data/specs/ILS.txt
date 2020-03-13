@@ -1,0 +1,20 @@
+ILS.Algo                          "" c (0,1,2,3)
+ILS.Comp.Strat                    "" c (0,1)
+ILS.Init.Strat                    "" c (0,1,2)
+ILS.Neighborhood.Size             "" r (0.0, 9.999)
+ILS.Neighborhood.Strat            "" c (0,1)
+ILS.LS.Single.Step                "" c (0,1)
+ILS.Accept                        "" c (0,1,2)
+ILS.Accept.Temperature            "" r (0.0,5.0)    | ILS.Accept == 2
+ILS.Perturb                       "" c (0,1,2)
+ILS.Perturb.Restart.Init          "" c (0,1,2)      | ILS.Perturb == 0
+ILS.Perturb.Restart.Threshold     "" i (0,10)       | ILS.Perturb == 0
+ILS.Perturb.No.Kick               "" i (1,3)        | ILS.Perturb == 1
+ILS.Perturb.Kick.Strength         "" r (0.0,1.0)    | ILS.Perturb == 1
+ILS.Perturb.NILS.Escape           "" c (0,1,2,3,4)  | ILS.Perturb == 2
+ILS.Perturb.NILS.MNS              "" i (0,1000)     | ILS.Perturb == 2
+ILS.Perturb.NILS.Destruction.Size "" i (2,6)        | ILS.Perturb == 2 && ILS.Perturb.NILS.Escape == 3
+ILS.Perturb.NILS.No.Kick          "" i (1,3)        | ILS.Perturb == 2 && ILS.Perturb.NILS.Escape == 4
+
+
+

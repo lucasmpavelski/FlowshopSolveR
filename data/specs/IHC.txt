@@ -1,0 +1,5 @@
+IHC.Algo             "" c (0,1,2)
+IHC.Comp.Strat          "" c (0,1)
+IHC.Init.Strat          "" c (0,1,2)
+IHC.Neighborhood.Strat  "" c (0,1)
+IHC.Neighborhood.Size   "" r (0.0, 9.999)

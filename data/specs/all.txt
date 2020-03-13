@@ -1,0 +1,68 @@
+MH                                "" c (IHC,ISA,TS,ILS,IG,ACO)
+ACO.Comp.Strat                    "" c (0,1)        | MH == 'ACO'                                                    
+ACO.Init.Strat                    "" c (0,1,2)      | MH == 'ACO'                                                    
+ACO.Neighborhood.Size             "" r (0.0, 9.999) | MH == 'ACO'                                                    
+ACO.Neighborhood.Strat            "" c (0,1)        | MH == 'ACO'                                                    
+ACO.Local.Search                  "" c (0,1,2,3)    | MH == 'ACO'                                                    
+ACO.LS.Single.Step                "" c (0, 1)       | MH == 'ACO'                                 
+ACO.T.Min.Factor                  "" r (0.0, 1.0)   | MH == 'ACO'                                                    
+ACO.Rho                           "" r (0.01, 1.0)  | MH == 'ACO'                                                    
+ACO.P0                            "" r (0.0, 1.0)   | MH == 'ACO'                                                    
+IG.Comp.Strat                     "" c (0,1)        | MH == 'IG'                                                     
+IG.Init.Strat                     "" c (0,1,2)      | MH == 'IG'                                                     
+IG.Neighborhood.Size              "" r (0.0,9.999)  | MH == 'IG'                                                     
+IG.Neighborhood.Strat             "" c (0,1)        | MH == 'IG'                                                     
+IG.Local.Search                   "" c (0,1,2,3)    | MH == 'IG'                                                     
+IG.Accept                         "" c (0,1,2)      | MH == 'IG'                                                     
+IG.Algo                           "" c (0,1)        | MH == 'IG'                                                     
+IG.Destruction.Size               "" r (0.0,1.0)    | MH == 'IG'                                                     
+IG.LS.Single.Step                 "" c (0, 1)       | MH == 'IG'                                                     
+IG.Accept.Temperature             "" r (0.0,5.0)    | MH == 'IG'  && IG.Accept == 2                                  
+IG.LSPS.Local.Search              "" c (0,1,2,3)    | MH == 'IG'  && IG.Algo == 1                                    
+IG.LSPS.Single.Step               "" c (0,1)        | MH == 'IG'  && IG.Algo == 1                                    
+IHC.Algo                          "" c (0,1,2)      | MH == 'IHC'                                                     
+IHC.Comp.Strat                    "" c (0,1)        | MH == 'IHC'                                                     
+IHC.Init.Strat                    "" c (0,1,2)      | MH == 'IHC'                                                     
+IHC.Neighborhood.Strat            "" c (0,1)        | MH == 'IHC'                                                     
+IHC.Neighborhood.Size             "" r (0.0, 9.999) | MH == 'IHC'                                                     
+ILS.Algo                          "" c (0,1,2,3)    | MH == 'ILS'                                                    
+ILS.Comp.Strat                    "" c (0,1)        | MH == 'ILS'                                                    
+ILS.Init.Strat                    "" c (0,1,2)      | MH == 'ILS'                                                    
+ILS.Neighborhood.Size             "" r (0.0, 9.999) | MH == 'ILS'                                                    
+ILS.Neighborhood.Strat            "" c (0,1)        | MH == 'ILS'                                                    
+ILS.Accept                        "" c (0,1,2)      | MH == 'ILS'                                                    
+ILS.LS.Single.Step                "" c (0,1)        | MH == 'ILS'                                                    
+ILS.Perturb                       "" c (0,1,2)      | MH == 'ILS'                                                    
+ILS.Accept.Temperature            "" r (0.0,5.0)    | MH == 'ILS' && ILS.Accept == 2                                 
+ILS.Perturb.Restart.Init          "" c (0,1,2)      | MH == 'ILS' && ILS.Perturb == 0                                
+ILS.Perturb.Restart.Threshold     "" i (0,10)       | MH == 'ILS' && ILS.Perturb == 0                                
+ILS.Perturb.No.Kick               "" i (1,3)        | MH == 'ILS' && ILS.Perturb == 1                                
+ILS.Perturb.Kick.Strength         "" r (0.0,1.0)    | MH == 'ILS' && ILS.Perturb == 1                                
+ILS.Perturb.NILS.Escape           "" c (0,1,2,3,4)  | MH == 'ILS' && ILS.Perturb == 2                                
+ILS.Perturb.NILS.MNS              "" i (0,1000)     | MH == 'ILS' && ILS.Perturb == 2                                
+ILS.Perturb.NILS.Destruction.Size "" i (2,6)        | MH == 'ILS' && ILS.Perturb == 2 && ILS.Perturb.NILS.Escape == 3
+ILS.Perturb.NILS.No.Kick          "" i (1,3)        | MH == 'ILS' && ILS.Perturb == 2 && ILS.Perturb.NILS.Escape == 4
+ISA.Algo                          "" c (0,1,2)      | MH == 'ISA'                                                   
+ISA.Comp.Strat                    "" c (0,1)        | MH == 'ISA'                                                   
+ISA.Init.Strat                    "" c (0,1,2)      | MH == 'ISA'                                                   
+ISA.Neighborhood.Size             "" r (0.0, 9.999) | MH == 'ISA'                                                   
+ISA.Span.Simple                   "" i (50, 100)    | MH == 'ISA' && ISA.Algo == 0                                    
+ISA.Span.Tries.Max                "" i (1000, 7000) | MH == 'ISA' && ISA.Algo == 1                                    
+ISA.Span.Move.Max                 "" i (50, 500)    | MH == 'ISA' && ISA.Algo == 1                                    
+ISA.Nb.Span.Max                   "" i (2, 10)      | MH == 'ISA' && ISA.Algo == 1                                    
+ISA.Init.Temp                     "" r (5.0, 10.0)  | MH == 'ISA' && ISA.Algo %in% c(0, 1)                    
+ISA.Final.Temp                    "" r (0.0, 1.0)   | MH == 'ISA' && ISA.Algo == 0                                    
+ISA.Alpha                         "" r (0.1, 1.0)   | MH == 'ISA' && ISA.Algo %in% c(0, 1)                    
+ISA.T                             "" r (0.1, 10.0)  | MH == 'ISA' && ISA.Algo == 2                                    
+ISA.Beta                          "" r (0.0, 1.0)   | MH == 'ISA' && ISA.Algo == 2                                    
+TS.Algo                           "" c (0,1,2)      | MH == 'TS'
+TS.Comp.Strat                     "" c (0,1)        | MH == 'TS'
+TS.Init.Strat                     "" c (0,1,2)      | MH == 'TS'
+TS.Neighborhood.Size              "" r (0.0, 9.999) | MH == 'TS'
+TS.Neighborhood.Strat             "" c (0,1)        | MH == 'TS'
+TS.Aspiration                     "" c (0,1)        | MH == 'TS'
+TS.Tabu.List.Type                 "" c (0,1,2,3)    | MH == 'TS'
+TS.How.Long.Taboo                 "" i (1,10)       | MH == 'TS'
+TS.Max.Stagnation.Window          "" i (1,1000)     | MH == 'TS'
+TS.How.Long.Rnd.Taboo             "" i (1,8)        | MH == 'TS'  && TS.Tabu.List.Type == 1
+TS.Max.Size.TL                    "" i (2,10)       | MH == 'TS'  && TS.Tabu.List.Type %in% c(2,3)

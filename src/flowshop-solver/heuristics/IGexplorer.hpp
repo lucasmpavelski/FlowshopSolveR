@@ -10,8 +10,8 @@
 #include <utils/eoRNG.h>
 
 #include "global.hpp"
-#include "problems/FSPEvalFunc.hpp"
 #include "heuristics/neighborhood_checkpoint.hpp"
+#include "problems/FSPEvalFunc.hpp"
 
 /**
  * Explorer for a simple Hill-climbing
@@ -99,6 +99,7 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
     solTMP.invalidate();
     eval(solTMP);
     EOT best = solTMP;
+    std::vector<int> ties;
     for (; position < _solution.size(); position++) {
       if (position == j)
         continue;
@@ -108,13 +109,31 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
       solTMP.insert(solTMP.begin() + position, RandJOB[k]);
       eval(solTMP);
       neighborhoodCheckpoint.neighborCall(solTMP);
-      if (solComparator(best, solTMP))
+      std::cerr << position << " " << best.fitness() << ' ' << solTMP << '\n';
+      if (solComparator(best, solTMP)) {
         best = solTMP;
+        ties = {position};
+      } else if (solComparator.equals(best, solTMP)) {
+        ties.push_back(position);
+      }
     }
+    std::cerr << "ties:" << '\n';
+    for (auto i : ties)
+      std::cerr << i << '\n';
+    int chosen = RNG::intUniform(ties.size() - 1);
+    std::cerr << "chosen:" << chosen << '\n';
     if (solComparator(_solution, best)) {
-      _solution = best;
+      solTMP = _solution;
+      solTMP.invalidate();
+      solTMP.erase(solTMP.begin() + j);
+      solTMP.insert(solTMP.begin() + ties[chosen], RandJOB[k]);
+      _solution = solTMP;
+      _solution.fitness(best.fitness());
+      std::cerr << "_solution:" << _solution << '\n';
       improve = true;
     }
+    if ((ties.size() > 2) && improve)
+      std::cerr << "debub" << '\n';
     neighborhoodCheckpoint.lastNeighborhoodCall(_solution);
   }
 

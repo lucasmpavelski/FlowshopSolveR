@@ -1,0 +1,5 @@
+HC.Algo                "" c (0,1,2)
+HC.Comp.Strat          "" c (0,1)
+HC.Init.Strat          "" c (0,1,2)
+HC.Neighborhood.Strat  "" c (0,1)
+HC.Neighborhood.Size   "" r (0.0, 9.999)

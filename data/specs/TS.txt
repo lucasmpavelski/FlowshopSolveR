@@ -1,0 +1,11 @@
+TS.Algo                   "" c (0,1,2)
+TS.Comp.Strat             "" c (0,1)
+TS.Init.Strat             "" c (0,1,2)
+TS.Neighborhood.Size      "" r (0.0, 9.999)
+TS.Neighborhood.Strat     "" c (0,1)
+TS.Aspiration             "" c (0,1)
+TS.Tabu.List.Type         "" c (0,1,2,3)
+TS.Max.Size.TL            "" i (2,10)          | TS.Tabu.List.Type %in% c(2,3)
+TS.How.Long.Taboo         "" i (1,10)
+TS.How.Long.Rnd.Taboo     "" i (1,8)           | TS.Tabu.List.Type == 1
+TS.Max.Stagnation.Window  "" i (1,1000)
