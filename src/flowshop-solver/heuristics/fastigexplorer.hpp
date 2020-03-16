@@ -2,18 +2,18 @@
 
 #include <algorithm>
 
-#include "paradiseo/mo/comparator/moNeighborComparator.h"
-#include "explorer/moNeighborhoodExplorer.h"
 #include <neighborhood/moNeighborhood.h>
 #include <utils/eoRNG.h>
+#include "explorer/moNeighborhoodExplorer.h"
+#include "paradiseo/mo/comparator/moNeighborComparator.h"
 
 #include "global.hpp"
 #include "problems/fastfspeval.hpp"
-/*
-class FastIGexplorer : public moNeighborhoodExplorer<FastFSPProblem::Ngh> {
+
+class FastIGexplorer : public moNeighborhoodExplorer<moShiftNeighbor<FSP>> {
  public:
-  using EOT = FastFSPProblem::EOT;
-  using Ngh = FastFSPProblem::Ngh;
+  using EOT = FSP;
+  using Ngh = moShiftNeighbor<FSP>;
 
   FastIGexplorer(moEval<Ngh>& neighborEval,
                  moNeighborComparator<Ngh> neighborComparator,
@@ -28,7 +28,8 @@ class FastIGexplorer : public moNeighborhoodExplorer<FastFSPProblem::Ngh> {
     LO = false;
     RandJOB.resize(_solution.size());
     std::iota(RandJOB.begin(), RandJOB.end(), 0);
-    std::shuffle(RandJOB.begin(), RandJOB.end(), ParadiseoRNGFunctor<unsigned int>());
+    std::shuffle(RandJOB.begin(), RandJOB.end(),
+                 ParadiseoRNGFunctor<unsigned int>());
     k = 0;
   }
 
@@ -37,7 +38,8 @@ class FastIGexplorer : public moNeighborhoodExplorer<FastFSPProblem::Ngh> {
       k++;
     else {
       k = 0;
-      std::shuffle(RandJOB.begin(), RandJOB.end(), ParadiseoRNGFunctor<unsigned int>());
+      std::shuffle(RandJOB.begin(), RandJOB.end(),
+                   ParadiseoRNGFunctor<unsigned int>());
     }
     if (k == 0 && !improve) {
       LO = true;
@@ -55,12 +57,12 @@ class FastIGexplorer : public moNeighborhoodExplorer<FastFSPProblem::Ngh> {
     }
     unsigned jobToInsert = j;
     Ngh neighbor, bestNeighbor;
-    neighbor.setSize(_solution.size());
-    bestNeighbor.setSize(_solution.size());
     bestNeighbor.fitness(std::numeric_limits<double>::max());
     for (unsigned position = 0; position < _solution.size(); position++) {
-      if (jobToInsert == position) continue;
-      neighbor.setPositions(jobToInsert, position);
+      if (jobToInsert == position)
+        continue;
+      neighbor.index(
+          positionPairToKey(jobToInsert, position, _solution.size()));
       neighbor.invalidate();
       neighborEval(_solution, neighbor);
       if (neighborComparator(bestNeighbor, neighbor)) {
@@ -74,19 +76,13 @@ class FastIGexplorer : public moNeighborhoodExplorer<FastFSPProblem::Ngh> {
     }
   }
 
-  virtual bool isContinue(EOT& _solution) final override {
-    return !LO;
-  }
+  virtual bool isContinue(EOT& _solution) final override { return !LO; }
 
-  virtual void move(EOT& _solution)  final override {}
+  virtual void move(EOT& _solution) final override {}
 
-  virtual bool accept(EOT& _solution) final override {
-    return false;
-  }
+  virtual bool accept(EOT& _solution) final override { return false; }
 
-  std::string className() const {
-    return "IGexplorer";
-  }
+  std::string className() const { return "IGexplorer"; }
 
  private:
   moNeighborComparator<Ngh> neighborComparator;
@@ -103,14 +99,12 @@ class FastIGexplorer : public moNeighborhoodExplorer<FastFSPProblem::Ngh> {
 template <class Ngh, typename EOT = typename Ngh::EOT>
 class FastOpPerturbDestConst : public eoMonOp<EOT> {
  public:
-
   FastOpPerturbDestConst(moEval<Ngh>& neighborEval,
                          unsigned destructionSize,
                          moNeighborComparator<Ngh> neighborComparator)
-      : neighborEval(neighborEval)
-      , destructionSize(destructionSize)
-      , neighborComparator(neighborComparator) {
-  }
+      : neighborEval(neighborEval),
+        destructionSize(destructionSize),
+        neighborComparator(neighborComparator) {}
 
   virtual bool operator()(EOT& sol) final override {
     int index;
@@ -146,6 +140,3 @@ class FastOpPerturbDestConst : public eoMonOp<EOT> {
   unsigned destructionSize;
   moNeighborComparator<Ngh> neighborComparator;
 };
-
-
-*/

@@ -28,7 +28,7 @@ class OpPerturbDestConst : public eoMonOp<EOT> {
     std::vector<int> D;
     EOT tmp;
     for (int k = 0; k < d; k++) {
-      index = rng.random(sol.size());
+      int index = rng.random(sol.size());
       D.push_back(sol[index]);
       sol.erase(sol.begin() + index);
     }

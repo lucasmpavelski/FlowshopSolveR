@@ -1,13 +1,13 @@
 #pragma once
 
-#include "problems/FSPEvalFunc.hpp"
 #include "problems/FSPData.hpp"
+#include "problems/FSPEvalFunc.hpp"
 #include "problems/fastfspeval.hpp"
 
 #include "FSPOrderHeuristics.hpp"
 
-class FastNEH : public eoInit<FastFSPSolution> {
-public:
+class FastNEH : public eoInit<FSP> {
+ public:
   using ivec = std::vector<int>;
 
   CompiledSchedule compiledSchedule;
@@ -15,11 +15,10 @@ public:
   ivec initialOrder;
 
   FastNEH(const FSPData& fspData)
-    : fspData(fspData)
-    , compiledSchedule(fspData.noJobs(), fspData.noMachines()) {
-  }
+      : fspData(fspData),
+        compiledSchedule(fspData.noJobs(), fspData.noMachines()) {}
 
-  void operator()(FastFSPSolution& sol) final override {
+  void operator()(FSP& sol) final override {
     ivec initialOrder = getInitialOrder();
     sol.resize(0);
     sol.push_back(initialOrder[0]);
@@ -31,7 +30,9 @@ public:
     }
   }
 
-  virtual std::pair<int,FastFSPSolution::Fitness> findInsertionPosition(FastFSPSolution& sol, int jobToInsert) {
+  virtual std::pair<int, FSP::Fitness> findInsertionPosition(
+      FSP& sol,
+      int jobToInsert) {
     sol.push_back(jobToInsert);
     compiledSchedule.compile(fspData, sol);
     double minFit = std::numeric_limits<double>::infinity();
@@ -44,19 +45,15 @@ public:
       }
     }
     sol.pop_back();
-    return { idxToInsert, minFit };
+    return {idxToInsert, minFit};
   }
 
-  virtual ivec getInitialOrder() {
-    return totalProcTimes(fspData);
-  }
+  virtual ivec getInitialOrder() { return totalProcTimes(fspData); }
 };
 
 class FastNEHRandom : public FastNEH {
-public:
-  FastNEHRandom(const FSPData& fspData)
-    : FastNEH(fspData) {
-  }
+ public:
+  FastNEHRandom(const FSPData& fspData) : FastNEH(fspData) {}
 
   using FastNEH::fspData;
   int cycle = 3;

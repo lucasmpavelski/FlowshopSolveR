@@ -23,7 +23,7 @@ add_executable(test-aos test-aos.cpp)
 ADD_DEFINITIONS(-DTEST_FIXTURES_FOLDER="${CMAKE_SOURCE_DIR}/test/")
 
 target_link_libraries(test-all flowshop_solver_lib ${GTEST_LIBRARIES} ${PARADISEO_LIBRARIES} pthread)
-TARGET_LINK_LIBRARIES(test-fsp flowshop_solver_lib ${PARADISEO_LIBRARIES})
+TARGET_LINK_LIBRARIES(test-fsp flowshop_solver_lib ${GTEST_LIBRARIES} ${PARADISEO_LIBRARIES})
 TARGET_LINK_LIBRARIES(test-heuristic flowshop_solver_lib ${PARADISEO_LIBRARIES})
 TARGET_LINK_LIBRARIES(test-solve flowshop_solver_lib ${PARADISEO_LIBRARIES})
 TARGET_LINK_LIBRARIES(test-fla flowshop_solver_lib ${GTEST_LIBRARIES} ${PARADISEO_LIBRARIES} pthread)
