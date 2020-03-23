@@ -10,6 +10,7 @@
         "fstream": "cpp",
         "istream": "cpp",
         "streambuf": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "stdexcept": "cpp"
     }
 }
