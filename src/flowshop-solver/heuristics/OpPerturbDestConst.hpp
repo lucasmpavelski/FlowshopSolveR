@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
-
 #include <comparator/moSolComparator.h>
 #include <eoEvalFunc.h>
 #include <eoOp.h>
 #include <utils/eoRNG.h>
+
+#include <vector>
 
 /**
  * the main algorithm of the local search
@@ -45,12 +45,10 @@ class OpPerturbDestConst : public eoMonOp<EOT> {
         if (vBest.invalid() || comp(vBest, tmp)) {
           vBest.fitness(tmp.fitness());
           ties = {i};
-        } else if (comp.equals(vBest, tmp)) {
-          ties.push_back(i);
         }
         tmp.erase(tmp.begin() + i);
       }
-      int index = ties[RNG::intUniform(ties.size() - 1)];
+      int index = ties[0];  // RNG::intUniform(ties.size() - 1)];
       sol.insert(sol.begin() + index, D[k]);
       sol.fitness(vBest.fitness());
     }

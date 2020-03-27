@@ -6,6 +6,7 @@ set(FSP_SOURCES
   aos/lin_ucb.hpp
   aos/beta_distribution.hpp
   aos/thompson_sampling.hpp
+  continuators/myMovedSolutionStat.hpp
   heuristics/acceptCritTemperature.hpp
   heuristics/dummyAspiration.hpp
   heuristics/fastigexplorer.hpp

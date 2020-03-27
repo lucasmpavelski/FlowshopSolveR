@@ -210,7 +210,7 @@ TEST(FSPTaillardAcelleration, NeighborhoodEval)
   eoInitPermutation<FSP> randomInit(no_jobs);
   randomInit(sol);
 
-  movedSolutionStat movedSolutionStat;
+  myMovedSolutionStat<FSP> movedSolutionStat;
   movedSolutionStat.init(sol);
 
   FastFSPNeighborEval ne(fspData, movedSolutionStat);
@@ -228,6 +228,41 @@ TEST(FSPTaillardAcelleration, NeighborhoodEval)
 
     ASSERT_EQ(neighbor.fitness(), neighborFullEval.fitness());
   }
+}
+
+#include "heuristics/OpPerturbDestConst.hpp"
+#include "heuristics/fastigexplorer.hpp"
+
+TEST(TaillardAcceleration, DestructionConstruction)
+{
+  rng.reseed(65465l);
+  const int no_jobs = 50;
+  const int no_machines = 30;
+  const int ds = 50;
+  FSPData fspData(no_jobs, no_machines, 100);
+
+  FSP sol(no_jobs);
+  PermFSPEvalFunc<FSP> fullEval(fspData, Objective::MAKESPAN);
+
+  eoInitPermutation<FSP> randomInit(no_jobs);
+  randomInit(sol);
+  FSP sol2 = sol;
+
+  myMovedSolutionStat<FSP> movedSolutionStat;
+  movedSolutionStat.init(sol);
+
+  FastFSPNeighborEval ne(fspData, movedSolutionStat);
+  moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
+
+  OpPerturbDestConst opdc(fullEval, ds);
+  rng.reseed(65465l);
+  opdc(sol);
+
+  DestructionConstruction<FSPNeighbor> dc(ne, ds, movedSolutionStat);
+  rng.reseed(65465l);
+  dc(sol2);
+
+  ASSERT_EQ(sol, sol2);
 }
 
 int main(int argc, char **argv)

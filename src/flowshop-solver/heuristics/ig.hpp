@@ -1,36 +1,34 @@
 #pragma once
 
-#include <unordered_map>
-
 #include <paradiseo/eo/eoSwapMutation.h>
 #include <paradiseo/mo/continuator/moTrueContinuator.h>
 #include <paradiseo/mo/perturb/moMonOpPerturb.h>
 
+#include <unordered_map>
+
 #include "IGexplorer.hpp"
 #include "IGexplorerWithRepl.hpp"
-#include "ig_lsps.hpp"
-
 #include "MHParamsValues.hpp"
 #include "NEHInit.hpp"
 #include "OpPerturbDestConst.hpp"
 #include "acceptCritTemperature.hpp"
 #include "adaptive_destruction.hpp"
-#include "falseContinuator.hpp"
-#include "fspproblemfactory.hpp"
-#include "heuristics.hpp"
-#include "specsdata.hpp"
-
 #include "aos/frrmab.hpp"
 #include "aos/lin_ucb.hpp"
 #include "aos/probability_matching.hpp"
 #include "aos/random.hpp"
 #include "aos/thompson_sampling.hpp"
-
+#include "falseContinuator.hpp"
 #include "fla/AdaptiveWalkLengthFLA.hpp"
 #include "fla/AutocorrelationFLA.hpp"
 #include "fla/FitnessDistanceCorrelationFLA.hpp"
 #include "fla/FitnessHistory.hpp"
 #include "fla/NeutralityFLA.hpp"
+#include "fspproblemfactory.hpp"
+#include "heuristics.hpp"
+#include "heuristics/BestInsertionExplorer.hpp"
+#include "ig_lsps.hpp"
+#include "specsdata.hpp"
 
 template <class OpT>
 class OperatorSelectionFactory {
@@ -179,7 +177,8 @@ Result solveWithIG(
     checkpoint.add(neutralityFLA);
   }
 
-  IGexplorer<Ngh> igexplorer(fullEval, N, *compSS, neighborhoodCheckpoint);
+  BestInsertionExplorer<EOT> igexplorer(evalN, neighborhoodCheckpoint, *compNN,
+                                        *compSN);
   moLocalSearch<Ngh> algo3(igexplorer, checkpoint, fullEval);
   // IGexplorerWithRepl<Ngh> igWithReplexplorer(fullEval, N, *compSS); //
   // iterative greedy improvement with replacement moLocalSearch<Ngh>

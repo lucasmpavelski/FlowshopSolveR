@@ -1,16 +1,17 @@
 #pragma once
 
 #include <algorithm>
+#include <mo>
 #include <utility>
 #include <vector>
 
-#include <mo>
-
+#include "continuators/myMovedSolutionStat.hpp"
 #include "moHiResTimeContinuator.hpp"
 #include "problems/FSP.hpp"
 #include "problems/FSPData.hpp"
 #include "problems/FSPEvalFunc.hpp"
 #include "problems/Problem.hpp"
+
 using ivec = std::vector<int>;
 
 struct CompiledSchedule {
@@ -88,16 +89,6 @@ struct CompiledSchedule {
   inline int getMakespan(const unsigned i) const { return makespan[i]; }
 };
 
-class movedSolutionStat : public moStatBase<FSP> {
-  bool moved;
-
- public:
-  void init(FSP& sol) final override { moved = true; }
-  void operator()(FSP& sol) final override { moved = true; }
-  bool isMoved() const { return moved; }
-  void reset() { moved = false; }
-};
-
 int positionPairToKey(int first, int second, int size);
 
 std::pair<int, int> keyToPositionPair(int val, int size);
@@ -105,16 +96,17 @@ std::pair<int, int> keyToPositionPair(int val, int size);
 class FastFSPNeighborEval : public moEval<moShiftNeighbor<FSP>> {
   const FSPData& fspData;
   std::vector<CompiledSchedule> compiledSchedules;
-  movedSolutionStat& movedStat;
+  myMovedSolutionStat<FSP>& movedStat;
   std::vector<bool> isCompiled;
 
  public:
-  FastFSPNeighborEval(const FSPData& fspData, movedSolutionStat& movedStat)
+  FastFSPNeighborEval(const FSPData& fspData,
+                      myMovedSolutionStat<FSP>& movedStat)
       : fspData(fspData),
+        movedStat(movedStat),
         compiledSchedules(
             fspData.noJobs(),
             CompiledSchedule(fspData.noJobs(), fspData.noMachines())),
-        movedStat(movedStat),
         isCompiled(fspData.noJobs(), false) {}
 
   void operator()(FSP& sol, moShiftNeighbor<FSP>& ngh) final override {
@@ -126,7 +118,7 @@ class FastFSPNeighborEval : public moEval<moShiftNeighbor<FSP>> {
     //       size(), CompiledSchedule(fspData.noJobs(), fspData.noMachines()));
     //   isCompiled.assign(size(), 0);
     // }
-    if (movedStat.isMoved()) {
+    if (movedStat.value()) {
       movedStat.reset();
       isCompiled.assign(isCompiled.size(), 0);
     }

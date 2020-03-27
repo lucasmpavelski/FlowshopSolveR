@@ -1,5 +1,12 @@
 #pragma once
 
+#include "FSPEvalFunc.hpp"
+#include "NIFSPEvalFunc.hpp"
+#include "NWFSPEvalFunc.hpp"
+#include "Problem.hpp"
+#include "continuators/myMovedSolutionStat.hpp"
+#include "fastfspeval.hpp"
+#include "flowshop-solver/moHiResTimeContinuator.hpp"
 #include "paradiseo/eo/eoInt.h"
 #include "paradiseo/eo/eoScalarFitness.h"
 #include "paradiseo/mo/continuator/moBestSoFarStat.h"
@@ -11,12 +18,6 @@
 #include "paradiseo/mo/continuator/moStatBase.h"
 #include "paradiseo/mo/eval/moFullEvalByCopy.h"
 #include "paradiseo/mo/problems/permutation/moShiftNeighbor.h"
-
-#include "FSPEvalFunc.hpp"
-#include "NIFSPEvalFunc.hpp"
-#include "NWFSPEvalFunc.hpp"
-#include "Problem.hpp"
-#include "flowshop-solver/moHiResTimeContinuator.hpp"
 
 using FSPMax = eoInt<eoMaximizingFitness>;
 using FSPMin = eoInt<eoMinimizingFitness>;
@@ -58,13 +59,15 @@ struct FSPProblem : public Problem<moShiftNeighbor<FSP>> {
   using Ngh = moShiftNeighbor<EOT>;
   std::unique_ptr<FSPEvalFunc<EOT>> eval_func;
   eoEvalFuncCounter<EOT> eval_counter;
-  moFullEvalByCopy<Ngh> eval_neighbor;
+  std::unique_ptr<moEval<Ngh>> eval_neighbor;
   moEvalCounter<Ngh> eval_neighbor_counter;
   std::unique_ptr<moContinuator<Ngh>> continuator_ptr;
   std::unique_ptr<moCheckpoint<Ngh>> checkpoint_ptr;
   std::unique_ptr<moCheckpoint<Ngh>> checkpointGlobal_ptr;
   myBestSoFarStat<EOT> bestFound;
   myBestSoFarStat<EOT> bestFoundGlobal;
+  myMovedSolutionStat<EOT> movedStat;
+
   const std::string stopping_criterium;
   const std::string budget;
   const unsigned lower_bound;
@@ -82,8 +85,8 @@ struct FSPProblem : public Problem<moShiftNeighbor<FSP>> {
       : Problem<moShiftNeighbor<FSP>>(),
         eval_func(getEvalFunc(type, obj, dt)),
         eval_counter(*eval_func),
-        eval_neighbor(*eval_func),
-        eval_neighbor_counter(eval_neighbor),
+        eval_neighbor(getNeighborEvalFunc(type, obj, dt)),
+        eval_neighbor_counter(*eval_neighbor),
         stopping_criterium(_stopping_criterium),
         budget(_budget),
         lower_bound(lower_bound),
@@ -261,6 +264,18 @@ struct FSPProblem : public Problem<moShiftNeighbor<FSP>> {
     } else {
       throw std::runtime_error("No FSP problem for type " + type +
                                " and objective " + obj);
+    }
+    return ret;
+  }
+
+  std::unique_ptr<moEval<Ngh>> getNeighborEvalFunc(const std::string& type,
+                                                   const std::string& obj,
+                                                   const FSPData& dt) {
+    std::unique_ptr<moEval<Ngh>> ret(nullptr);
+    if (type == "PERM" && obj == "MAKESPAN") {
+      ret.reset(new FastFSPNeighborEval(dt, movedStat));
+    } else {
+      ret.reset(new moFullEvalByCopy<Ngh>(*eval_func));
     }
     return ret;
   }

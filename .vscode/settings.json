@@ -11,6 +11,9 @@
         "istream": "cpp",
         "streambuf": "cpp",
         "iostream": "cpp",
-        "stdexcept": "cpp"
+        "stdexcept": "cpp",
+        "limits": "cpp",
+        "unordered_map": "cpp",
+        "ostream": "cpp"
     }
 }
