@@ -14,6 +14,7 @@
         "stdexcept": "cpp",
         "limits": "cpp",
         "unordered_map": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "cmath": "cpp"
     }
 }

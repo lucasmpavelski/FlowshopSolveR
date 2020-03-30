@@ -27,6 +27,7 @@
 #include "fspproblemfactory.hpp"
 #include "heuristics.hpp"
 #include "heuristics/BestInsertionExplorer.hpp"
+#include "heuristics/fastigexplorer.hpp"
 #include "ig_lsps.hpp"
 #include "specsdata.hpp"
 
@@ -237,7 +238,10 @@ Result solveWithIG(
   *** Perturb
   ****/
   const int destruction_size = params.integer("IG.Destruction.Size");
-  OpPerturbDestConst<EOT> OpPerturb(fullEval, destruction_size);
+  myMovedSolutionStat<FSP> movedSolutionStat;
+  checkpoint.add(movedSolutionStat);
+  DestructionConstruction<Ngh> OpPerturb(evalN, destruction_size,
+                                         movedSolutionStat);
   moMonOpPerturb<Ngh> perturb0(OpPerturb, fullEval);
 
   const int N_lsps = N - destruction_size;

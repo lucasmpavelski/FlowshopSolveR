@@ -232,6 +232,41 @@ TEST(FSPTaillardAcelleration, NeighborhoodEval)
 
 #include "heuristics/OpPerturbDestConst.hpp"
 #include "heuristics/fastigexplorer.hpp"
+#include "heuristics/BestInsertionExplorer.hpp"
+#include "heuristics/neighborhood_checkpoint.hpp"
+
+TEST(TaillardAcceleration, BesetInsertionNeighborhood)
+{
+  rng.reseed(65465l);
+  const int no_jobs = 50;
+  const int no_machines = 30;
+  const int ds = 50;
+  FSPData fspData(no_jobs, no_machines, 100);
+
+  FSP sol(no_jobs);
+  PermFSPEvalFunc<FSP> fullEval(fspData, Objective::MAKESPAN);
+
+  eoInitPermutation<FSP> randomInit(no_jobs);
+  randomInit(sol);
+  FSP sol2 = sol;
+
+  myMovedSolutionStat<FSP> movedSolutionStat;
+  movedSolutionStat.init(sol);
+
+  FastFSPNeighborEval ne(fspData, movedSolutionStat);
+  moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
+
+  moTrueContinuator<FSPNeighbor> tc;
+  NeigborhoodCheckpoint<FSPNeighbor> neighborhoodCheckpoint{tc};
+  moNeighborComparator<FSPNeighbor> compNN;
+  moSolNeighborComparator<FSPNeighbor> compSN;
+  BestInsertionExplorer<FSP> igexplorer(ne, neighborhoodCheckpoint, compNN,
+                                        compSN);
+
+  fullEval(sol);
+  igexplorer.initParam(sol);
+  igexplorer(sol);
+}
 
 TEST(TaillardAcceleration, DestructionConstruction)
 {

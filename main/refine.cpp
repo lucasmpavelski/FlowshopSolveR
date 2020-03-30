@@ -20,21 +20,21 @@ int main(int argc, char *argv[])
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
-  prob["instance"] = "taill-like_rand_50_20_03.dat";
+  prob["instance"] = "taill-like_rand_50_5_01.dat";
   prob["stopping_criterium"] = "FIXEDTIME";
   std::unordered_map<std::string, double> params;
-  params["IG.Init.Strat"] = 1;
+  params["IG.Init.Strat"] = 0;
   params["IG.Comp.Strat"] = 0;
   params["IG.Neighborhood.Size"] = 9.9999;
   params["IG.Neighborhood.Strat"] = 0;
   params["IG.Local.Search"] = 3;
   params["IG.Accept"] = 2;
   params["IG.Accept.Temperature"] = 0.5;
-  params["IG.Algo"] = 2;
-  params["IG.Destruction.Size"] = 8;
+  params["IG.Algo"] = 0;
+  params["IG.Destruction.Size"] = 2;
   params["IG.LS.Single.Step"] = 0;
   params["IG.LSPS.Local.Search"] = 0;
   params["IG.LSPS.Single.Step"] = 0;
-  params["IG.AOS.Strategy"] = 3;
+  params["IG.AOS.Strategy"] = 0;
   std::cout << solveWith("IG", prob, params);
 }

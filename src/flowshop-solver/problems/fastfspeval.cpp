@@ -1,6 +1,11 @@
 #include "fastfspeval.hpp"
 
 int positionPairToKey(int first, int second, int n) {
+  if (first - 1 == second) {
+    int aux = first;
+    first = second;
+    second = first;
+  }
   if (first == second) {
     return -first - 2;
   }

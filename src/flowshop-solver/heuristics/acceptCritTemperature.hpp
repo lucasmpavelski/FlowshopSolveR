@@ -1,11 +1,11 @@
 #pragma once
 
-#include <cmath>
-
 #include <acceptCrit/moAcceptanceCriterion.h>
 #include <comparator/moSolComparator.h>
 #include <memory/moDummyMemory.h>
 #include <utils/eoRNG.h>
+
+#include <cmath>
 
 /**
  * Acceptance Criterion for extreme intensification : accept if the new solution
@@ -33,11 +33,11 @@ class acceptCritTemperature : public moAcceptanceCriterion<Neighbor>,
    * @return true if the new solution is better than previous one
    */
   bool operator()(EOT& _sol1, EOT& _sol2) {
-    if (rng.uniform() <=
-        exp(-std::abs(_sol2.fitness() - _sol1.fitness()) / threshold)) {
+    if (_sol2.fitness() < _sol1.fitness()) {
       return true;
     } else {
-      return false;
+      return rng.uniform() <=
+             std::exp((_sol1.fitness() - _sol2.fitness()) / threshold);
     }
   }
 };

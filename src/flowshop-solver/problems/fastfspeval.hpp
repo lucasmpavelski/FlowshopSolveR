@@ -94,7 +94,7 @@ int positionPairToKey(int first, int second, int size);
 std::pair<int, int> keyToPositionPair(int val, int size);
 
 class FastFSPNeighborEval : public moEval<moShiftNeighbor<FSP>> {
-  const FSPData& fspData;
+  const FSPData fspData;
   std::vector<CompiledSchedule> compiledSchedules;
   myMovedSolutionStat<FSP>& movedStat;
   std::vector<bool> isCompiled;
