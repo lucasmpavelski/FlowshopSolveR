@@ -54,9 +54,9 @@ class TimeStat : public moStat<EOT, int> {
   };
 };
 
-struct FSPProblem : public Problem<moShiftNeighbor<FSP>> {
+struct FSPProblem : public Problem<FSPNeighbor> {
   using EOT = FSP;
-  using Ngh = moShiftNeighbor<EOT>;
+  using Ngh = FSPNeighbor;
   std::unique_ptr<FSPEvalFunc<EOT>> eval_func;
   eoEvalFuncCounter<EOT> eval_counter;
   std::unique_ptr<moEval<Ngh>> eval_neighbor;
@@ -82,7 +82,7 @@ struct FSPProblem : public Problem<moShiftNeighbor<FSP>> {
              const std::string& _budget,
              std::string _stopping_criterium,
              unsigned lower_bound = 0)
-      : Problem<moShiftNeighbor<FSP>>(),
+      : Problem<FSPNeighbor>(),
         eval_func(getEvalFunc(type, obj, dt)),
         eval_counter(*eval_func),
         eval_neighbor(getNeighborEvalFunc(type, obj, dt)),

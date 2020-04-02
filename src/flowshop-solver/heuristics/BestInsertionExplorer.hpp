@@ -10,8 +10,8 @@
 
 template <class EOT>
 class BestInsertionExplorer
-    : public moNeighborhoodExplorer<moShiftNeighbor<EOT>> {
-  using Ngh = moShiftNeighbor<EOT>;
+    : public moNeighborhoodExplorer<myShiftNeighbor<EOT>> {
+  using Ngh = myShiftNeighbor<EOT>;
 
   NeigborhoodCheckpoint<Ngh>& neighborhoodCheckpoint;
   moNeighborComparator<Ngh>& neighborComparator;
@@ -77,8 +77,7 @@ class BestInsertionExplorer
     // bestNeighbor.fitness(std::numeric_limits<double>::max());
     int bestPosition = 0;
     for (unsigned position = 1; position < n; position++) {
-      int neighborIdx = positionPairToKey(0, position, n);
-      neighbor.index(neighborIdx);
+      neighbor.set(0, position, n);
       neighbor.invalidate();
       neighborEval(tmp, neighbor);
       if (neighborComparator(bestNeighbor, neighbor)) {

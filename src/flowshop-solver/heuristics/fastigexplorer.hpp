@@ -49,14 +49,12 @@ class DestructionConstruction : public eoMonOp<EOT> {
   void construction(EOT& sol, std::vector<int> jobsToInsert) {
     const auto n = sol.size();
     for (const auto& jobToInsert : jobsToInsert) {
-      sol.insert(sol.begin(), jobToInsert);
-      int currentPosition = sol.size() - 1;
+      sol.push_back(jobToInsert);
       Ngh neighbor, bestNeighbor;
       bestNeighbor.fitness(std::numeric_limits<double>::max());
       int bestPosition = -1;
       for (unsigned position = 0; position < sol.size(); position++) {
-        int neighborIdx = positionPairToKey(0, position, sol.size());
-        neighbor.index(neighborIdx);
+        neighbor.set(sol.size() - 1, position, sol.size());
         neighborEval(sol, neighbor);
         if (neighborComparator(bestNeighbor, neighbor)) {
           bestNeighbor = neighbor;

@@ -14,24 +14,53 @@ class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
    * @param _sol the solution to move
    */
   virtual void move(EOT& _sol) {
-    unsigned int tmp;
-    size = _sol.size();
-    translate(key + 1);
-    // keep the first component to change
-    tmp = _sol[first];
-    // shift
-    if (first < second) {
-      for (unsigned int i = first; i < second - 1; i++)
-        _sol[i] = _sol[i + 1];
-      // shift the first component
-      _sol[second - 1] = tmp;
-    } else { /* first > second*/
-      for (unsigned int i = first; i > second; i--)
-        _sol[i] = _sol[i - 1];
-      // shift the first component
-      _sol[second] = tmp;
+    if (static_cast<int>(key) >= 0) {
+      unsigned int tmp;
+      size = _sol.size();
+      translate(key + 1);
+      // keep the first component to change
+      tmp = _sol[first];
+      // shift
+      if (first < second) {
+        for (unsigned int i = first; i < second - 1; i++)
+          _sol[i] = _sol[i + 1];
+        // shift the first component
+        _sol[second - 1] = tmp;
+      } else { /* first > second*/
+        for (unsigned int i = first; i > second; i--)
+          _sol[i] = _sol[i - 1];
+        // shift the first component
+        _sol[second] = tmp;
+      }
+      _sol.invalidate();
+    } else {
+      auto begin = _sol.begin();
+      if (first <= second) {
+        std::rotate(begin + first, begin + first + 1, begin + second + 1);
+      } else {
+        std::rotate(begin + second, begin + first, begin + first + 1);
+      }
+      _sol.invalidate();
     }
-    _sol.invalidate();
+  }
+
+  using moIndexNeighbor<EOT, Fitness>::index;
+
+  void set(unsigned first, unsigned second, unsigned size) {
+    this->first = first;
+    this->second = second;
+    this->size = size;
+    this->key = static_cast<unsigned>(-1);
+  }
+
+  std::pair<unsigned, unsigned> firstSecond(EOT& _sol) {
+    if (static_cast<int>(key) >= 0) {
+      size = _sol.size();
+      translate(key + 1);
+      if (first < second)
+        second--;
+    }
+    return {first, second};
   }
 
   /**
@@ -81,4 +110,4 @@ class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
 using FSPMax = eoInt<eoMaximizingFitness>;
 using FSPMin = eoInt<eoMinimizingFitness>;
 using FSP = FSPMin;
-using FSPNeighbor = moShiftNeighbor<FSP>;
+using FSPNeighbor = myShiftNeighbor<FSP>;

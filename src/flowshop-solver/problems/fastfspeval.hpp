@@ -93,7 +93,7 @@ int positionPairToKey(int first, int second, int size);
 
 std::pair<int, int> keyToPositionPair(int val, int size);
 
-class FastFSPNeighborEval : public moEval<moShiftNeighbor<FSP>> {
+class FastFSPNeighborEval : public moEval<FSPNeighbor> {
   const FSPData fspData;
   std::vector<CompiledSchedule> compiledSchedules;
   myMovedSolutionStat<FSP>& movedStat;
@@ -109,8 +109,8 @@ class FastFSPNeighborEval : public moEval<moShiftNeighbor<FSP>> {
             CompiledSchedule(fspData.noJobs(), fspData.noMachines())),
         isCompiled(fspData.noJobs(), false) {}
 
-  void operator()(FSP& sol, moShiftNeighbor<FSP>& ngh) final override {
-    auto firstSecond = keyToPositionPair(ngh.index() + 1, sol.size());
+  void operator()(FSP& sol, FSPNeighbor& ngh) final override {
+    auto firstSecond = ngh.firstSecond(sol);
     int first = firstSecond.first;
     int second = firstSecond.second;
     // if (compiledSolution.size() == 0) {
@@ -129,8 +129,6 @@ class FastFSPNeighborEval : public moEval<moShiftNeighbor<FSP>> {
       compiledSchedules[first].compile(fspData, perm_i);
       isCompiled[first] = 1;
     }
-    if (first < second)
-      second--;
     ngh.fitness(compiledSchedules[first].getMakespan(second));
   }
 };

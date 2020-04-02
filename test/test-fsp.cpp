@@ -218,11 +218,11 @@ TEST(FSPTaillardAcelleration, NeighborhoodEval)
 
   for (int i = 0; i < (no_jobs - 1) * (no_jobs - 1); i++)
   {
-    moShiftNeighbor<FSP> neighbor;
+    FSPNeighbor neighbor;
     neighbor.index(i);
     ne(sol, neighbor);
 
-    moShiftNeighbor<FSP> neighborFullEval;
+    FSPNeighbor neighborFullEval;
     neighborFullEval.index(i);
     fullNe(sol, neighborFullEval);
 
@@ -272,8 +272,9 @@ TEST(TaillardAcceleration, DestructionConstruction)
 {
   rng.reseed(65465l);
   const int no_jobs = 50;
-  const int no_machines = 30;
-  const int ds = 50;
+  const int no_machines = 10;
+  const int ds = 3;
+
   FSPData fspData(no_jobs, no_machines, 100);
 
   FSP sol(no_jobs);
@@ -289,7 +290,7 @@ TEST(TaillardAcceleration, DestructionConstruction)
   FastFSPNeighborEval ne(fspData, movedSolutionStat);
   moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
 
-  OpPerturbDestConst opdc(fullEval, ds);
+  DestructionConstruction<FSPNeighbor> opdc(fullNe, ds, movedSolutionStat);
   rng.reseed(65465l);
   opdc(sol);
 
