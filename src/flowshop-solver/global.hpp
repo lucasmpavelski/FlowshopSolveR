@@ -177,15 +177,13 @@ struct RNG {
     return uniform_dist(engine);
   }
 
-  template <typename IntT = int>
-  inline static IntT intUniform(const IntT& from, const IntT& to) {
-    std::uniform_int_distribution<IntT> uniform_dist(from, to);
+  inline static int intUniform(int from, int to) {
+    std::uniform_int_distribution<int> uniform_dist(from, to);
     return uniform_dist(engine);
   }
 
-  template <typename IntT = int>
-  inline static IntT intUniform(const IntT& until = 100) {
-    return intUniform(static_cast<IntT>(0), until);
+  inline static int intUniform(const int until = 100) {
+    return intUniform(0, until);
   }
 
   inline static bool flipCoin() {

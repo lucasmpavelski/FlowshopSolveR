@@ -273,7 +273,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
                                                    const FSPData& dt) {
     std::unique_ptr<moEval<Ngh>> ret(nullptr);
     if (type == "PERM" && obj == "MAKESPAN") {
-      ret.reset(new FastFSPNeighborEval(dt, movedStat));
+      ret.reset(new FastFSPNeighborEval(dt, *eval_func, movedStat));
     } else {
       ret.reset(new moFullEvalByCopy<Ngh>(*eval_func));
     }

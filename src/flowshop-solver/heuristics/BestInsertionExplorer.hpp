@@ -63,33 +63,29 @@ class BestInsertionExplorer
   virtual void operator()(EOT& _solution) final override {
     const unsigned n = _solution.size();
     EOT tmp = _solution;
-    auto insertPosition = std::find(tmp.begin(), tmp.end(), RandJOB[k]);
-    std::rotate(tmp.begin(), insertPosition, insertPosition + 1);
+    auto insertPtr = std::find(tmp.begin(), tmp.end(), RandJOB[k]);
+    int insertPosition = std::distance(tmp.begin(), insertPtr);
+    // std::rotate(tmp.begin(), insertPosition, insertPosition + 1);
 
-    int neighborIdx =
-        positionPairToKey(std::distance(tmp.begin(), insertPosition), 0, n);
-    Ngh neighbor;
-    neighbor.index(neighborIdx);
-    neighborEval(_solution, neighbor);
-    Ngh bestNeighbor = neighbor;
+    Ngh neighbor, bestNeighbor;
 
     // Ngh neighbor, bestNeighbor;
     // bestNeighbor.fitness(std::numeric_limits<double>::max());
-    int bestPosition = 0;
-    for (unsigned position = 1; position < n; position++) {
-      neighbor.set(0, position, n);
+    int bestPosition = -1;
+    for (unsigned position = 0; position <= n; position++) {
+      if (insertPosition == position)
+        continue;
+      neighbor.set(insertPosition, position, n);
       neighbor.invalidate();
       neighborEval(tmp, neighbor);
-      if (neighborComparator(bestNeighbor, neighbor)) {
+      if (bestNeighbor.invalid() ||
+          neighborComparator(bestNeighbor, neighbor)) {
         bestPosition = position;
         bestNeighbor = neighbor;
       }
     }
     if (solNeighborComparator(_solution, bestNeighbor)) {
-      _solution = tmp;
-      if (bestPosition != 0) {
-        bestNeighbor.move(_solution);
-      }
+      bestNeighbor.move(_solution);
       _solution.fitness(bestNeighbor.fitness());
       improve = true;
     }

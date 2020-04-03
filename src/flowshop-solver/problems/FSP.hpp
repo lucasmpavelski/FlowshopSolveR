@@ -9,6 +9,11 @@ class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
  public:
   using moIndexNeighbor<EOT, Fitness>::key;
 
+  myShiftNeighbor() = default;
+  myShiftNeighbor(int from, int to, int size) : myShiftNeighbor{} {
+    set(from, to, size);
+  }
+
   /**
    * Apply move on a solution regarding a key
    * @param _sol the solution to move
@@ -35,8 +40,10 @@ class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
       _sol.invalidate();
     } else {
       auto begin = _sol.begin();
-      if (first <= second) {
-        std::rotate(begin + first, begin + first + 1, begin + second + 1);
+      if (first == second) {
+        return;
+      } else if (first < second) {
+        std::rotate(begin + first, begin + first + 1, begin + second);
       } else {
         std::rotate(begin + second, begin + first, begin + first + 1);
       }
@@ -57,8 +64,8 @@ class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
     if (static_cast<int>(key) >= 0) {
       size = _sol.size();
       translate(key + 1);
-      if (first < second)
-        second--;
+      // if (first < second)
+      //   second--;
     }
     return {first, second};
   }

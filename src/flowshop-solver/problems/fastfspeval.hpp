@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <memory>
 #include <mo>
 #include <utility>
 #include <vector>
@@ -54,12 +55,31 @@ struct CompiledSchedule {
   }
 
   void compile(const FSPData& fspData, const ivec& seq) {
+    compile(fspData, seq, 0);
+  }
+
+  void printMatrix(ivec& m) {
+    for (int i = 0; i < no_jobs; i++) {
+      for (int j = 0; j < no_machines; j++) {
+        std::cerr << ' ' << m[j * (no_jobs + 1) + i];
+      }
+      std::cerr << '\n';
+    }
+  }
+
+  void compile(const FSPData& fspData, const ivec& seq, int from) {
     const unsigned seq_size = static_cast<unsigned>(seq.size());
-    for (unsigned i = 1; i <= seq_size - 1; i++) {
+    for (unsigned i = from + 1; i <= seq_size - 1; i++) {
       unsigned seq_i = static_cast<unsigned>(seq[i - 1]);
       for (unsigned j = 1; j <= no_machines; j++) {
         e_(i, j) =
             std::max(e_(i, j - 1), e_(i - 1, j)) + fspData.pt(seq_i, j - 1);
+      }
+    }
+
+    for (unsigned i = no_jobs; i >= seq_size - 1; i--) {
+      for (unsigned j = no_machines; j >= 1; j--) {
+        q_(i, j) = 0;
       }
     }
     for (unsigned i = seq_size - 1; i >= 1; i--) {
@@ -69,13 +89,20 @@ struct CompiledSchedule {
             std::max(q_(i, j + 1), q_(i + 1, j)) + fspData.pt(seq_i, j - 1);
       }
     }
-    for (unsigned i = 1; i <= seq_size; i++) {
+    for (unsigned i = from + 1; i <= seq_size; i++) {
       unsigned seq_k = static_cast<unsigned>(seq[seq_size - 1]);
       for (unsigned j = 1; j <= no_machines; j++) {
         f_(i, j) =
             std::max(f_(i, j - 1), e_(i - 1, j)) + fspData.pt(seq_k, j - 1);
       }
     }
+
+    // std::cerr << "e_times" << '\n';
+    // printMatrix(e_times);
+    // std::cerr << "q_times" << '\n';
+    // printMatrix(q_times);
+    // std::cerr << "f_times" << '\n';
+    // printMatrix(f_times);
 
     std::fill(makespan.begin(), makespan.end(), 0);
     for (unsigned i = 1; i <= seq_size; i++) {
@@ -98,37 +125,62 @@ class FastFSPNeighborEval : public moEval<FSPNeighbor> {
   std::vector<CompiledSchedule> compiledSchedules;
   myMovedSolutionStat<FSP>& movedStat;
   std::vector<bool> isCompiled;
+  std::vector<EOT> compiledSolutions;
+  int from = 0;
+  eoEvalFunc<EOT>& fullEval;
+  // eoEval<FSP>& fullEval;
 
  public:
   FastFSPNeighborEval(const FSPData& fspData,
+                      eoEvalFunc<EOT>& fullEval,
                       myMovedSolutionStat<FSP>& movedStat)
       : fspData(fspData),
+        fullEval(fullEval),
         movedStat(movedStat),
         compiledSchedules(
             fspData.noJobs(),
             CompiledSchedule(fspData.noJobs(), fspData.noMachines())),
+        compiledSolutions(fspData.noJobs()),
         isCompiled(fspData.noJobs(), false) {}
 
   void operator()(FSP& sol, FSPNeighbor& ngh) final override {
     auto firstSecond = ngh.firstSecond(sol);
     int first = firstSecond.first;
     int second = firstSecond.second;
-    // if (compiledSolution.size() == 0) {
-    //   compiledSchedules.assign(
-    //       size(), CompiledSchedule(fspData.noJobs(), fspData.noMachines()));
-    //   isCompiled.assign(size(), 0);
-    // }
-    if (movedStat.value()) {
-      movedStat.reset();
-      isCompiled.assign(isCompiled.size(), 0);
-    }
-    if (!isCompiled[first]) {
-      ivec perm_i = sol;
+
+    auto& compiledSolution = compiledSolutions[first];
+
+    auto mPtr = std::mismatch(compiledSolution.begin(), compiledSolution.end(),
+                              sol.begin());
+
+    if (mPtr.second != sol.end()) {
+      from = std::distance(sol.begin(), mPtr.second);
+
+      // std::cerr << "Compiling for: " << sol << '\n';
+      // std::cerr << "Previous: " << compiledSolution << '\n';
+      // std::cerr << "Mismatch at: " << from << '\n';
+      EOT perm_i = sol;
       std::rotate(perm_i.begin() + first, perm_i.begin() + first + 1,
                   perm_i.end());
-      compiledSchedules[first].compile(fspData, perm_i);
-      isCompiled[first] = 1;
+
+      compiledSchedules[first].compile(fspData, perm_i, 0);
+      compiledSolutions[first] = sol;
+    }
+    if (first < second) {
+      second--;
     }
     ngh.fitness(compiledSchedules[first].getMakespan(second));
+
+    // EOT tmp = sol;
+    // ngh.move(tmp);
+    // fullEval(tmp);
+
+    // if (ngh.fitness() != tmp.fitness()) {
+    //   std::cerr << "ops" << ' ' << first << ' ' << second
+    //             << ' '
+    //             // << (tmp.fitness() ==
+    //             //     compiledSchedules[first].getMakespan(second - 1))
+    //             << '\n';
+    // }
   }
 };

@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
-  prob["instance"] = "taill-like_rand_50_5_01.dat";
+  prob["instance"] = "taillard_rand_50_20_01.dat";
   prob["stopping_criterium"] = "FIXEDTIME";
   std::unordered_map<std::string, double> params;
   params["IG.Init.Strat"] = 0;
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
   params["IG.Accept"] = 2;
   params["IG.Accept.Temperature"] = 0.5;
   params["IG.Algo"] = 0;
-  params["IG.Destruction.Size"] = 2;
+  params["IG.Destruction.Size"] = 4;
   params["IG.LS.Single.Step"] = 0;
   params["IG.LSPS.Local.Search"] = 0;
   params["IG.LSPS.Single.Step"] = 0;

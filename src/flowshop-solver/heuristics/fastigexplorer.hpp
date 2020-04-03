@@ -48,6 +48,7 @@ class DestructionConstruction : public eoMonOp<EOT> {
 
   void construction(EOT& sol, std::vector<int> jobsToInsert) {
     const auto n = sol.size();
+    movedStat(sol);
     for (const auto& jobToInsert : jobsToInsert) {
       sol.push_back(jobToInsert);
       Ngh neighbor, bestNeighbor;
