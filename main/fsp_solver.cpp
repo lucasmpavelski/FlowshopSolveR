@@ -104,9 +104,5 @@ int main(int argc, char *argv[])
         std::cout << "mh: " << mh << '\n'; for (auto kv : params) std::cout << kv.first << ": " << kv.second << '\n';
     }
     auto res = solveWith(mh, problem, params);
-    std::cout << res.fitness << ','
-              << res.no_evals << ','
-              << res.time << '\n';
-
     return 0;
 }

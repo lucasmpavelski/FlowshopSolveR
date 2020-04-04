@@ -97,7 +97,7 @@ template <typename Itr1, typename Itr2>
 class printableSeq {
  public:
   printableSeq(Itr1 beg, Itr2 end, const std::string& sep = " ")
-      : beg(beg), end(end), sep(sep) {}
+      : beg(beg), sep(sep), end(end) {}
 
   std::ostream& operator()(std::ostream& os = std::cout) const {
     return os << *this;

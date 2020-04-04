@@ -15,7 +15,7 @@ class FitnessHistory : public moStatBase<EOT> {
 
   void init(EOT& sol) final override { fitness.clear(); }
 
-  void operator()(EOT& sol) { fitness.push_back(sol.fitness()); }
+  void operator()(EOT& sol) final override { fitness.push_back(sol.fitness()); }
 
   // void lastCall(EOT& sol) { std::cerr << printSeq(fitness) << '\n'; }
 

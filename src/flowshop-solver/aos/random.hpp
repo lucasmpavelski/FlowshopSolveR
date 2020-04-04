@@ -16,11 +16,11 @@ class Random : public OperatorSelection<OpT> {
   Random(const std::vector<OpT>& strategies)
       : OperatorSelection<OpT>{strategies}, dist(0, strategies.size() - 1) {}
 
-  void update(){};
+  void update() final override{};
 
-  void feedback(const double cf, const double pf) {}
+  void feedback(const double cf, const double pf) final override {}
 
-  std::ostream& printOn(std::ostream& os) {
+  std::ostream& printOn(std::ostream& os) final override {
     os << "  strategy: Random\n";
     return os;
   }

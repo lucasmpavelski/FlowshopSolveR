@@ -122,21 +122,16 @@ std::pair<int, int> keyToPositionPair(int val, int size);
 
 class FastFSPNeighborEval : public moEval<FSPNeighbor> {
   const FSPData fspData;
+  eoEvalFunc<EOT>& fullEval;
   std::vector<CompiledSchedule> compiledSchedules;
-  myMovedSolutionStat<FSP>& movedStat;
   std::vector<bool> isCompiled;
   std::vector<EOT> compiledSolutions;
   int from = 0;
-  eoEvalFunc<EOT>& fullEval;
-  // eoEval<FSP>& fullEval;
 
  public:
-  FastFSPNeighborEval(const FSPData& fspData,
-                      eoEvalFunc<EOT>& fullEval,
-                      myMovedSolutionStat<FSP>& movedStat)
+  FastFSPNeighborEval(const FSPData& fspData, eoEvalFunc<EOT>& fullEval)
       : fspData(fspData),
         fullEval(fullEval),
-        movedStat(movedStat),
         compiledSchedules(
             fspData.noJobs(),
             CompiledSchedule(fspData.noJobs(), fspData.noMachines())),

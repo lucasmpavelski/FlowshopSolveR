@@ -54,6 +54,30 @@ class TimeStat : public moStat<EOT, int> {
   };
 };
 
+template <class EOT, class Fitness = typename EOT::Fitness>
+class myTimeFitnessPrinter : public moStatBase<EOT> {
+  TimeStat<EOT>& timer;
+  EOT best;
+  moSolComparator<EOT> compare;
+
+ public:
+  myTimeFitnessPrinter(TimeStat<EOT>& timer) : moStatBase<EOT>{}, timer{timer} {
+    best.fitness(std::numeric_limits<double>::max());
+    std::puts("runtime,fitness");
+  }
+
+  ~myTimeFitnessPrinter() {
+    std::cout << timer.value() << ',' << best.fitness() << '\n';
+  }
+
+  void operator()(EOT& sol) final override {
+    if (compare(best, sol)) {
+      std::cout << timer.value() << ',' << sol.fitness() << '\n';
+      best.fitness(sol.fitness());
+    }
+  }
+};
+
 struct FSPProblem : public Problem<FSPNeighbor> {
   using EOT = FSP;
   using Ngh = FSPNeighbor;
@@ -75,6 +99,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   TimeStat<EOT> timer;
   prefixedPrinter print;
   prefixedPrinter printg;
+  myTimeFitnessPrinter<EOT> timeFintessPrinter;
 
   FSPProblem(FSPData dt,
              std::string type,
@@ -91,7 +116,8 @@ struct FSPProblem : public Problem<FSPNeighbor> {
         budget(_budget),
         lower_bound(lower_bound),
         print("local_best:", " "),
-        printg("global best:", " ") {
+        printg("global best:", " "),
+        timeFintessPrinter{timer} {
     reset();
   }
 
@@ -144,10 +170,11 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     dummy.fitness(std::numeric_limits<double>::infinity());
     bestFoundGlobal.init(dummy);
 
-    printg.add(timer);
-    printg.add(bestFoundGlobal);
     checkpointGlobal_ptr->add(timer);
-    checkpointGlobal_ptr->add(printg);
+    checkpoint_ptr->add(timeFintessPrinter);
+    // printg.add(timer);
+    // printg.add(bestFoundGlobal);
+    // checkpointGlobal_ptr->add(printg);
   }
 
   moBestSoFarStat<EOT>& bestLocalSoFar() override { return bestFound; }
@@ -183,7 +210,6 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   };
 
   moContinuator<Ngh>* newContinuator() {
-    const auto& dt = getData();
     if (stopping_criterium == "EVALS")
       return new moEvalsContinuator<Ngh>(eval_counter, eval_neighbor_counter,
                                          getMaxEvals(), false);

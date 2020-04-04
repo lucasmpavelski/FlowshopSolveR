@@ -23,9 +23,9 @@ class ThompsonSampling : public OperatorSelection<OpT> {
     std::fill(betas.begin(), betas.end(), 0);
   }
 
-  void update(){};
+  void update() final override{};
 
-  void feedback(const double cf, const double pf) {
+  void feedback(const double cf, const double pf) final override {
     if (cf > pf) {
       alphas[opIdx]++;
     } else {
@@ -33,7 +33,7 @@ class ThompsonSampling : public OperatorSelection<OpT> {
     }
   }
 
-  std::ostream& printOn(std::ostream& os) {
+  std::ostream& printOn(std::ostream& os) final override {
     os << "  strategy: Thomson sampling MAB\n"
        << "  no_samples: " << noSamples << '\n';
     return os;

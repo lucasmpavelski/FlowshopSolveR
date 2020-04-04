@@ -44,8 +44,8 @@ class LinUCB : public OperatorSelection<OpT> {
          ProblemContext& context,
          const double alpha = 0.3)
       : OperatorSelection<OpT>{operators},
-        context{context},
         alpha{alpha},
+        context{context},
         A{operators.size(), MatrixXd::Identity(context.size(), context.size())},
         b{operators.size(), VectorXd::Zero(context.size())},
         theta{operators.size(), VectorXd{context.size()}},
@@ -54,9 +54,9 @@ class LinUCB : public OperatorSelection<OpT> {
     assert(alpha >= 0);
   }
 
-  void update(){};
+  void update() final override{};
 
-  void feedback(const double cf, const double pf) {
+  void feedback(const double cf, const double pf) final override {
     double reward = pf - cf;
     std::vector<double> features = context.compute();
     x = Eigen::Map<VectorXd>(features.data(), features.size());
@@ -69,7 +69,7 @@ class LinUCB : public OperatorSelection<OpT> {
     p(opIdx) = theta[opIdx].transpose() * x + alpha * std::sqrt(prod);
   }
 
-  std::ostream& printOn(std::ostream& os) {
+  std::ostream& printOn(std::ostream& os) final override {
     os << "  strategy: LinUCB MAB\n"
        << "  alpha: " << alpha << '\n';
     return os;

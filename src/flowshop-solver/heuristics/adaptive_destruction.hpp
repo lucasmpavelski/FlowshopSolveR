@@ -1,14 +1,13 @@
 #pragma once
 
-#include <vector>
-
 #include <comparator/moSolComparator.h>
 #include <eoEvalFunc.h>
 #include <eoOp.h>
 #include <utils/eoRNG.h>
 
-#include "aos/adaptive_operator_selection.hpp"
+#include <vector>
 
+#include "aos/adaptive_operator_selection.hpp"
 #include "heuristics/FitnessReward.hpp"
 
 /**
@@ -17,10 +16,11 @@
 template <class EOT>
 class AdaptiveDestruction : public eoMonOp<EOT> {
  public:
-  bool firstIteration = true;
-  enum strat { random, ordered } nh_strategy;
-  OperatorSelection<int>& operator_selection;
+  eoEvalFunc<EOT>& eval;
   FitnessReward<EOT>& fitness_reward;
+  OperatorSelection<int>& operator_selection;
+  moSolComparator<EOT> comp;
+  bool firstIteration = true;
 
   AdaptiveDestruction(eoEvalFunc<EOT>& eval,
                       OperatorSelection<int>& operator_selection,
@@ -30,9 +30,7 @@ class AdaptiveDestruction : public eoMonOp<EOT> {
         fitness_reward(fitness_reward),
         operator_selection(operator_selection),
         comp(comp),
-        firstIteration{true} {
-    std::cerr << "teste" << firstIteration << '\n';
-  }
+        firstIteration{true} {}
 
   bool operator()(EOT& sol) final override {
     // std::cerr << "destruct " << sol.fitness() << '\n';
@@ -75,9 +73,4 @@ class AdaptiveDestruction : public eoMonOp<EOT> {
     std::array<double, 1> feats = {1};
     return true;
   }
-
- private:
-  int d;  // nb de deconstruction
-  eoEvalFunc<EOT>& eval;
-  moSolComparator<EOT> comp;
 };

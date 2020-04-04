@@ -1,19 +1,18 @@
 #pragma once
 
-#include <algorithm>
-#include <unordered_map>
-
 #include <paradiseo/eo/eoSwapMutation.h>
 #include <paradiseo/mo/perturb/moMonOpPerturb.h>
 
-#include "MHParamsValues.hpp"
-#include "heuristics.hpp"
-#include "specsdata.hpp"
+#include <algorithm>
+#include <unordered_map>
 
 #include "IGexplorer.hpp"
+#include "MHParamsValues.hpp"
 #include "NEHInit.hpp"
-#include "fspproblemfactory.hpp"
 #include "falseContinuator.hpp"
+#include "fspproblemfactory.hpp"
+#include "heuristics.hpp"
+#include "specsdata.hpp"
 
 template <class Ngh>
 class MinMaxAntSystem : public moPerturbation<Ngh> {
@@ -38,7 +37,7 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
     t_min = t_min_f * t_max;
     pheromones.assign(N, dvec(N, t_max));
     Ngh dummy;
-    //add(_sol, dummy);
+    // add(_sol, dummy);
   }
 
   bool operator()(EOT& sol) final override {
@@ -46,7 +45,6 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
     sol.invalidate();
     sol.resize(0);
     sol.reserve(N);
-    std::uniform_int_distribution<int> unif_int(0, N - 1);
     dmat probs = pheromones;
     int chosen_job = -1;
     for (int j = 0; j < N; j++) {
@@ -86,7 +84,7 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
    * @param _sol the current solution
    * @param _neighbor the current neighbor
    */
-  void add(EOT& _sol, Ngh&) final override {};
+  void add(EOT& _sol, Ngh&) final override{};
 
   /**
    * update the memory
@@ -111,7 +109,6 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
   void clearMemory() final override{};
 
  private:
-
   // parameters
   const int N;
   const double t_min_f, rho, p0;
@@ -141,8 +138,6 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
   }
 };
 
-
-
 Result solveWithACO(
     const std::unordered_map<std::string, std::string>& problem_specs,
     const std::unordered_map<std::string, double>& param_values) {
@@ -156,13 +151,10 @@ Result solveWithACO(
 
   FSPProblem prob = FSPProblemFactory::get(problem_specs);
   const int N = prob.size(0);
-  const int M = prob.size(1);
   const int max_nh_size = pow(N - 1, 2);
   const std::string mh = params.mhName();
-  const double max_ct = prob.upperBound();
 
   // continuator
-  moContinuator<Ngh>& continuator = prob.continuator();
   eoEvalFunc<EOT>& fullEval = prob.eval();
   moEval<Ngh>& evalN = prob.neighborEval();
 

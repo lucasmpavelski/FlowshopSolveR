@@ -1,9 +1,8 @@
 #pragma once
 
-#include "paradiseo/mo/comparator/moSolComparator.h"
-
 #include "fla/FitnessLandscapeMetric.hpp"
 #include "heuristics/neighborhood_stat.hpp"
+#include "paradiseo/mo/comparator/moSolComparator.h"
 
 template <class EOT>
 class NeutralityFLA : public NeigborhoodStat<EOT, double>,
@@ -43,5 +42,5 @@ class NeutralityFLA : public NeigborhoodStat<EOT, double>,
 
   void operator()(EOT& sol) final override {}
 
-  double compute() { return value(); };
+  double compute() final override { return value(); };
 };

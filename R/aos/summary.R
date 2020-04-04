@@ -13,7 +13,7 @@ problems <- read_csv(here("data", 'taillard_instances.csv')) %>%
   )
 
 configs <- crossing(
-  IG.Init.Strat         = 1,
+  IG.Init.Strat         = 0,
   IG.Comp.Strat         = 0,
   IG.Neighborhood.Size  = 9.9999,
   IG.Neighborhood.Strat = 0,
@@ -54,10 +54,10 @@ experiments <- experiments %>%
       IG.AOS.Strategy,
       sep = ','
     ),
-    filename = here("runs", paste0(problem_model, '_', config, '.out')),
+    filename = here("runs", "ig-random-fast", paste0('1_', problem_model, '_', config, '.out')),
     valid_result = file.exists(filename)
-  ) # %>%
-  # filter(valid_result)
+  ) %>%
+  filter(valid_result)
 
 loadResults <- function(fn) {
   lines <- read_lines(fn, skip = 2)

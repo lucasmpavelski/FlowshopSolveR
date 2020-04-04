@@ -8,8 +8,8 @@ template <class Ngh, typename EOT = typename Ngh::EOT>
 class DestructionConstruction : public eoMonOp<EOT> {
   moEval<Ngh>& neighborEval;
   unsigned _destructionSize;
-  myMovedSolutionStat<EOT>& movedStat;
   moNeighborComparator<Ngh>& neighborComparator;
+  myMovedSolutionStat<EOT>& movedStat;
   moNeighborComparator<Ngh> defaultComparator;
 
  public:
@@ -47,7 +47,6 @@ class DestructionConstruction : public eoMonOp<EOT> {
   }
 
   void construction(EOT& sol, std::vector<int> jobsToInsert) {
-    const auto n = sol.size();
     movedStat(sol);
     for (const auto& jobToInsert : jobsToInsert) {
       sol.push_back(jobToInsert);

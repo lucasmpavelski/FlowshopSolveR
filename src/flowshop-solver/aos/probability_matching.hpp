@@ -39,9 +39,9 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
                       const double alpha = 0.8,
                       const double p_min = 0.1)
       : OperatorSelection<OpT>(operators),
-        rew_type(rew_type),
         alpha(alpha),
         p_min(p_min),
+        rew_type(rew_type),
         quality(noOperators()),
         reward(noOperators()),
         prob(noOperators()),
@@ -80,6 +80,7 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
         os << "ExtNorm";
         break;
     }
+    return os;
   };
 };
 
