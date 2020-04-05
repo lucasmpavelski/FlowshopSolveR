@@ -1,9 +1,9 @@
-#include <vector>
-#include <iostream>
-#include <numeric>
 #include <algorithm>
-#include <random>
+#include <iostream>
 #include <mo>
+#include <numeric>
+#include <random>
+#include <vector>
 
 #include "problems/FSPEvalFunc.hpp"
 
@@ -74,11 +74,9 @@ struct MMASParams {
       else {
         float sum = probs.col(j).sum();
         if (sum <= 1e-6) {
-          // choose randomly if there are not enough values (or all ties at zero)
-          do {
-              chosen_job = unif_int(rng);
-          } while (std::find(sol.begin(), sol.end(), chosen_job) != sol.end());
-        } else {
+          // choose randomly if there are not enough values (or all ties at
+zero) do { chosen_job = unif_int(rng); } while (std::find(sol.begin(),
+sol.end(), chosen_job) != sol.end()); } else {
           // use the probabilities as a distribution
           float r = unif(rng) * sum;
           float cum_sum = 0.0;
@@ -233,13 +231,13 @@ void testUpdate() {
   std::cout << mmas.pheromones;
 }
 
-#include "flowshop-solver/fspproblemfactory.h"
 #include "flowshop-solver/MHSolve.h"
+#include "flowshop-solver/fspproblemfactory.h"
 
 void runMMAS() {
   initFactories("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/generated_intances/generated_instances_all/",
-                "/home/lucasmp/projects/git/evolutionary_tunners/data/specs/", true);
-  std::unordered_map<std::string, std::string> prob_data;
+                "/home/lucasmp/projects/git/evolutionary_tunners/data/specs/",
+true); std::unordered_map<std::string, std::string> prob_data;
 
 
   prob_data["problem"] = "FSP";
@@ -262,10 +260,10 @@ void runMMAS() {
 
   // validate problem state
   if (prob.noEvals() >= maxEval)
-     throw std::runtime_error("Error: the problem does not have evaluations left! " +
-                              std::to_string(prob.noEvals()) + "/" + std::to_string(maxEval));
-  else if (prob.noEvals() != 0)
-    std::cerr << "Warning: number of evaluations is not cleared! (" << prob.noEvals() << ")";
+     throw std::runtime_error("Error: the problem does not have evaluations
+left! " + std::to_string(prob.noEvals()) + "/" + std::to_string(maxEval)); else
+if (prob.noEvals() != 0) std::cerr << "Warning: number of evaluations is not
+cleared! (" << prob.noEvals() << ")";
 
   // continuator
   moContinuator<Ngh> &continuator = prob.continuator();
@@ -296,7 +294,8 @@ void runMMAS() {
   int nh_size = max_nh_size;
 
   moOrderNeighborhood<Ngh> neighborhood0(nh_size);
-  moFirstImprHC<Ngh> fi(neighborhood0, fullEval, evalN, checkpoint, compNN0, compSN0);
+  moFirstImprHC<Ngh> fi(neighborhood0, fullEval, evalN, checkpoint, compNN0,
+compSN0);
 
   MMASParams mmas(N);
   std::mt19937_64 rng;
@@ -341,8 +340,4 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 */
-int main(int argc, char *argv[])
-{
-
-  return 0;
-}
+int main(int, char *[]) { return 0; }

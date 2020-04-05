@@ -1,15 +1,13 @@
 #pragma once
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <memory>
 
-#include "paradiseo/mo/algo/moLocalSearch.h"
-#include "paradiseo/mo/sampling/moAdaptiveWalkSampling.h"
-#include "paradiseo/eo/eoSwapMutation.h"
-#include "paradiseo/eo/eoShiftMutation.h"
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
 
 #include "fspproblemfactory.hpp"
 #include "heuristics/FSPOrderHeuristics.hpp"
@@ -206,11 +204,11 @@ double walkSamplingAutocorr(
   int k = std::stoi(delay);
   double num_sum = 0.0;
   double den_sum = 0.0;
-  for (int i = 0; i < fits.size() - k; i++) {
+  for (unsigned i = 0; i < fits.size() - k; i++) {
     num_sum += (fits[i] - fits_mean) * (fits[i + k] - fits_mean);
     den_sum += std::pow((fits[i] - fits_mean), 2);
   }
-  for (int i = fits.size() - k; i < fits.size(); i++)
+  for (unsigned i = fits.size() - k; i < fits.size(); i++)
     den_sum += std::pow((fits[i] - fits_mean), 2);
 
   return num_sum / den_sum;
@@ -301,7 +299,6 @@ std::vector<double> enumerateAll(
   ProblemTp problem = FSPProblemFactory::get(prob_params);
   auto& fullEval = problem.eval();
   using EOT = ProblemTp::EOT;
-  using Ngh = ProblemTp::Ngh;
 
   int n = problem.size();
   EOT sol(n);
@@ -345,22 +342,21 @@ struct graph {
   struct edge {
     int node_idx, weight;
 
-    edge(int a, int b): node_idx{a}, weight{b} {};
+    edge(int a, int b) : node_idx{a}, weight{b} {};
   };
 
   struct lo_sample {
     EOT sol;
     int no_steps;
-    lo_sample(EOT sol, int no_steps): sol{sol}, no_steps{no_steps} {};
+    lo_sample(EOT sol, int no_steps) : sol{sol}, no_steps{no_steps} {};
   };
-  
+
   std::vector<EOT> nodes;
   std::vector<std::vector<lo_sample>> samples;
   std::vector<std::vector<edge>> edges;
-  
 
   int addNode(EOT n, EOT sample, int no_steps) {
-    int idx = getIndex(n);
+    unsigned idx = getIndex(n);
     if (idx == nodes.size()) {
       nodes.emplace_back(n);
       samples.resize(samples.size() + 1);
@@ -375,9 +371,7 @@ struct graph {
     return std::distance(nodes.begin(), it);
   }
 
-  bool contains(const EOT& n) {
-    return getIndex(n) != nodes.size();
-  }
+  bool contains(const EOT& n) { return getIndex(n) != nodes.size(); }
 
   edge* getEdge(const EOT& a, const EOT& b) {
     int a_idx = getIndex(a);
@@ -391,17 +385,17 @@ struct graph {
   }
 
   void addEdge(const EOT& a, const EOT& b, int weight) {
-    int a_idx = getIndex(a);
-    int b_idx = getIndex(b);
+    unsigned a_idx = getIndex(a);
+    unsigned b_idx = getIndex(b);
     assert(a_idx != nodes.size() && b_idx != nodes.size());
     edges.at(a_idx).push_back(graph<EOT>::edge(b_idx, weight));
   }
 
   void print(std::ostream& out) {
-    for (int i = 0; i < nodes.size(); i++) {
+    for (unsigned i = 0; i < nodes.size(); i++) {
       out << i << ": " << nodes[i] << '\n';
     }
-    for (int i = 0; i < edges.size(); i++) {
+    for (unsigned i = 0; i < edges.size(); i++) {
       out << i << ": ";
       for (auto e : edges[i]) {
         out << " (" << e.node_idx << "," << e.weight << ")";
@@ -443,9 +437,13 @@ bool contains(const std::vector<T>& vec, const T& obj) {
   return std::find(vec.begin(), vec.end(), obj) != vec.end();
 }
 
-template<class Ngh, class EOT = typename Ngh::EOT>
-EOT randomWalkStep(EOT& sol, graph<EOT>& lon, moLocalSearch<Ngh>& localSearch,
-  moCounterStat<EOT>& counter, eoEvalFunc<EOT>& eval, const std::vector<EOT>& walk) {
+template <class Ngh, class EOT = typename Ngh::EOT>
+EOT randomWalkStep(EOT& sol,
+                   graph<EOT>& lon,
+                   moLocalSearch<Ngh>& localSearch,
+                   moCounterStat<EOT>& counter,
+                   eoEvalFunc<EOT>& eval,
+                   const std::vector<EOT>& walk) {
   for (auto& edge : lon.edges[lon.getIndex(sol)]) {
     if (!contains(walk, lon.nodes[edge.node_idx])) {
       return lon.nodes[edge.node_idx];
@@ -461,9 +459,10 @@ EOT randomWalkStep(EOT& sol, graph<EOT>& lon, moLocalSearch<Ngh>& localSearch,
   return new_sol;
 }
 
-graph<FSPProblem::EOT> sampleLON(std::unordered_map<std::string, std::string> prob_params,
-               std::unordered_map<std::string, std::string> sampling_params,
-               unsigned seed) {
+graph<FSPProblem::EOT> sampleLON(
+    std::unordered_map<std::string, std::string> prob_params,
+    std::unordered_map<std::string, std::string> sampling_params,
+    unsigned seed) {
   rng.reseed(seed);
   FSPProblem problem = FSPProblemFactory::get(prob_params);
   using EOT = FSPProblem::EOT;
@@ -472,26 +471,28 @@ graph<FSPProblem::EOT> sampleLON(std::unordered_map<std::string, std::string> pr
   // sampling params
   using namespace std::string_literals;
   auto init_strat = getWithDef(sampling_params, "Init.Strat"s, "RANDOM"s);
-  auto sampling_strat = getWithDef(sampling_params, "Sampling.Strat"s, "RANDOM_BEST"s);
+  auto sampling_strat =
+      getWithDef(sampling_params, "Sampling.Strat"s, "RANDOM_BEST"s);
   auto d = stoi(getWithDef(sampling_params, "Depth"s, "2"s));
   auto m = stoi(getWithDef(sampling_params, "No.Edges"s, "15"s));
   auto l = stoi(getWithDef(sampling_params, "Walk.Lengh"s, "50"s));
-  auto perturb_strat = getWithDef(sampling_params, "Perturbation.Operator"s, "IG"s);
+  auto perturb_strat =
+      getWithDef(sampling_params, "Perturbation.Operator"s, "IG"s);
   auto strength = stoi(getWithDef(sampling_params, "Strength"s, "1"s));
 
   // full IG params defaults
-  sampling_params["IG.Init.Strat"        ] = "2";
-  sampling_params["IG.Comp.Strat"        ] = "0";
-  sampling_params["IG.Neighborhood.Size" ] = "6.3774";
+  sampling_params["IG.Init.Strat"] = "2";
+  sampling_params["IG.Comp.Strat"] = "0";
+  sampling_params["IG.Neighborhood.Size"] = "6.3774";
   sampling_params["IG.Neighborhood.Strat"] = "1";
-  sampling_params["IG.Local.Search"      ] = "0";
-  sampling_params["IG.Accept"            ] = "1";
+  sampling_params["IG.Local.Search"] = "0";
+  sampling_params["IG.Accept"] = "1";
   sampling_params["IG.Accept.Temperature"] = "1";
-  sampling_params["IG.Algo"              ] = "1";
-  sampling_params["IG.Destruction.Size"  ] = "0.2335";
-  sampling_params["IG.LS.Single.Step"    ] = "0";
-  sampling_params["IG.LSPS.Local.Search" ] = "1";
-  sampling_params["IG.LSPS.Single.Step"  ] = "1";
+  sampling_params["IG.Algo"] = "1";
+  sampling_params["IG.Destruction.Size"] = "0.2335";
+  sampling_params["IG.LS.Single.Step"] = "0";
+  sampling_params["IG.LSPS.Local.Search"] = "1";
+  sampling_params["IG.LSPS.Single.Step"] = "1";
 
   auto order = totalProcTimes(problem.getData());
   auto& eval = problem.eval();
@@ -525,9 +526,12 @@ graph<FSPProblem::EOT> sampleLON(std::unordered_map<std::string, std::string> pr
 
   moSolNeighborComparator<Ngh> solNeighborEqComp;
   moEqualNeighborComparator<Ngh> neighborEqComp;
-  moFirstImprHC<Ngh> fi(neighborhood, eval, neighborEval, checkpoint, neighborEqComp, solNeighborEqComp);
-  moSimpleHC<Ngh> hc(neighborhood, eval, neighborEval, checkpoint, neighborEqComp, solNeighborEqComp);
-  moRandomBestHC<Ngh> randomBestHC(neighborhood, eval, neighborEval, checkpoint, neighborEqComp, solNeighborEqComp);
+  moFirstImprHC<Ngh> fi(neighborhood, eval, neighborEval, checkpoint,
+                        neighborEqComp, solNeighborEqComp);
+  moSimpleHC<Ngh> hc(neighborhood, eval, neighborEval, checkpoint,
+                     neighborEqComp, solNeighborEqComp);
+  moRandomBestHC<Ngh> randomBestHC(neighborhood, eval, neighborEval, checkpoint,
+                                   neighborEqComp, solNeighborEqComp);
 
   moSolComparator<EOT> comparator;
   IGexplorer<Ngh> igExplorer(eval, problem.size(0), comparator);
@@ -567,7 +571,8 @@ graph<FSPProblem::EOT> sampleLON(std::unordered_map<std::string, std::string> pr
   const int no_nh_sizes = (max_nh_size - min_nh_size) / nh_interval;
   const int scale =
       int((no_nh_sizes + 1) * params.real("IG.Neighborhood.Size") / 10.0);
-  const int ig_nh_size = std::min(max_nh_size, min_nh_size + scale * nh_interval);
+  const int ig_nh_size =
+      std::min(max_nh_size, min_nh_size + scale * nh_interval);
 
   moOrderNeighborhood<Ngh> neighborhood0(ig_nh_size);
   moRndWithoutReplNeighborhood<Ngh> neighborhood1(ig_nh_size);
@@ -611,11 +616,14 @@ graph<FSPProblem::EOT> sampleLON(std::unordered_map<std::string, std::string> pr
   }
 
   // algos xxHC
-  moFirstImprHC<Ngh> algo0(*igNeighborhood, fullEval, evalN, localCheckpoint, *compNN,
+  moFirstImprHC<Ngh> algo0(*igNeighborhood, fullEval, evalN, localCheckpoint,
+                           *compNN,
                            *compSN);  // FIHC
-  moSimpleHC<Ngh> algo1(*igNeighborhood, fullEval, evalN, localCheckpoint, *compNN,
+  moSimpleHC<Ngh> algo1(*igNeighborhood, fullEval, evalN, localCheckpoint,
+                        *compNN,
                         *compSN);  // BestHC
-  moRandomBestHC<Ngh> algo2(*igNeighborhood, fullEval, evalN, localCheckpoint, *compNN,
+  moRandomBestHC<Ngh> algo2(*igNeighborhood, fullEval, evalN, localCheckpoint,
+                            *compNN,
                             *compSN);  // rndBestHC
 
   // IG (Ruiz+Stuetzle)
@@ -684,7 +692,8 @@ graph<FSPProblem::EOT> sampleLON(std::unordered_map<std::string, std::string> pr
   moMonOpPerturb<Ngh> igPerturb0(igOpPerturb, fullEval);
 
   const int N_lsps = N - destruction_size;
-  const int nh_size_lsps = getNhSize(N_lsps, params.real("IG.Neighborhood.Size"));
+  const int nh_size_lsps =
+      getNhSize(N_lsps, params.real("IG.Neighborhood.Size"));
 
   moOrderNeighborhood<Ngh> neighborhood0_lsps(nh_size_lsps);
   moRndWithoutReplNeighborhood<Ngh> neighborhood1_lsps(nh_size_lsps);
@@ -705,8 +714,8 @@ graph<FSPProblem::EOT> sampleLON(std::unordered_map<std::string, std::string> pr
   moFirstImprHC<Ngh> algo0_lsps(*neighborhood_lsps, fullEval, evalN,
                                 localContinuator, *compNN,
                                 *compSN);  // FIHC
-  moSimpleHC<Ngh> algo1_lsps(*neighborhood_lsps, fullEval, evalN, localContinuator,
-                             *compNN,
+  moSimpleHC<Ngh> algo1_lsps(*neighborhood_lsps, fullEval, evalN,
+                             localContinuator, *compNN,
                              *compSN);  // BestHC
   moRandomBestHC<Ngh> algo2_lsps(*neighborhood_lsps, fullEval, evalN,
                                  localContinuator, *compNN,
@@ -775,19 +784,19 @@ graph<FSPProblem::EOT> sampleLON(std::unordered_map<std::string, std::string> pr
     localSearch = &fullIg;
   else
     throw std::runtime_error("Unknown sampling strat: " + sampling_strat);
-  
+
   OpPerturbDestConst<EOT> OpPerturb(eval, strength);
-  eoSwapMutation<EOT> swapPerturb(strength);
-  //eoShiftMutation<EOT> shiftPerturb;
+  // eoSwapMutation<EOT> swapPerturb(strength);
+  // eoShiftMutation<EOT> shiftPerturb;
   moMonOpPerturb<Ngh> perturb0(OpPerturb, eval);
-  moMonOpPerturb<Ngh> perturb1(swapPerturb, eval);
-  //moMonOpPerturb<Ngh> perturb2(shiftPerturb, eval);
+  // moMonOpPerturb<Ngh> perturb1(swapPerturb, eval);
+  // moMonOpPerturb<Ngh> perturb2(shiftPerturb, eval);
 
   moPerturbation<Ngh>* op = nullptr;
   if (perturb_strat == "IG")
     op = &perturb0;
   else if (perturb_strat == "SWAP")
-    op = &perturb1;
+    op = nullptr;  //&perturb1;
   else
     throw std::runtime_error("Unknown perturb_strat: " + perturb_strat);
 

@@ -1,12 +1,12 @@
-#include <cassert>
-#include <string>
-#include <iostream>
 #include <algorithm>
+#include <cassert>
+#include <iostream>
+#include <string>
 
 #include <gtest/gtest.h>
 
-#include "problems/FSPEvalFunc.hpp"
 #include "problems/FSPData.hpp"
+#include "problems/FSPEvalFunc.hpp"
 #include "problems/NIFSPEvalFunc.hpp"
 #include "problems/NWFSPEvalFunc.hpp"
 
@@ -18,26 +18,19 @@
 
 std::string instances_folder = TEST_FIXTURES_FOLDER;
 
-void testLoadData(void)
-{
+void testLoadData(void) {
   using std::cout;
   using std::endl;
   FSPData fsp_data{instances_folder + "test.txt"};
   assert(fsp_data.maxCT() == 125);
-  int pt[] = {
-      5, 9, 9, 4,
-      9, 3, 4, 8,
-      8, 10, 5, 8,
-      10, 1, 8, 7,
-      1, 8, 6, 2};
+  int pt[] = {5, 9, 9, 4, 9, 3, 4, 8, 8, 10, 5, 8, 10, 1, 8, 7, 1, 8, 6, 2};
   const auto &pt_ref = fsp_data.procTimesRef();
   assert(std::equal(std::begin(pt_ref), std::end(pt_ref), pt));
   assert(fsp_data.machineProcTimesRef()[0] == 27);
   assert(fsp_data.jobProcTimesRef()[0] == 33);
 }
 
-void testEvalMin()
-{
+void testEvalMin() {
   using std::cout;
   using std::endl;
   PermFSPEvalFunc<FSPMin> fsp_eval{FSPData{instances_folder + "test.txt"}};
@@ -50,8 +43,7 @@ void testEvalMin()
   assert(sol.fitness() == 54);
 }
 
-void testEvalMax()
-{
+void testEvalMax() {
   using std::cout;
   using std::endl;
   PermFSPEvalFunc<FSP> fsp_eval{FSPData{instances_folder + "test.txt"}};
@@ -64,11 +56,11 @@ void testEvalMax()
   assert(sol.fitness() == 125 - 54);
 }
 
-void testEvalFlowtime()
-{
+void testEvalFlowtime() {
   using std::cout;
   using std::endl;
-  PermFSPEvalFunc<FSPMin> fsp_eval{FSPData{instances_folder + "test.txt"}, Objective::FLOWTIME};
+  PermFSPEvalFunc<FSPMin> fsp_eval{FSPData{instances_folder + "test.txt"},
+                                   Objective::FLOWTIME};
   FSPMin sol(4);
   sol[0] = 4 - 1;
   sol[1] = 3 - 1;
@@ -78,8 +70,7 @@ void testEvalFlowtime()
   assert(sol.fitness() == (29 + 41 + 46 + 54));
 }
 
-void testPartialEval()
-{
+void testPartialEval() {
   using std::cout;
   using std::endl;
   std::string instances_folder = TEST_FIXTURES_FOLDER;
@@ -91,8 +82,7 @@ void testPartialEval()
   assert(sol.fitness() == 41);
 }
 
-void testNIEval()
-{
+void testNIEval() {
   using std::cout;
   using std::endl;
   FSPData dt(instances_folder + "test.txt");
@@ -116,13 +106,12 @@ void testNIEval()
   assert(solftp.fitness() == 78);
 }
 
-void testNWEval()
-{
+void testNWEval() {
   using std::cout;
   using std::endl;
   FSPData dt(instances_folder + "test.txt");
   NWFSPEvalFunc<FSPMin> fsp_eval(dt, Objective::MAKESPAN);
-  //nwfspEval<FSP> fsp_eval(instances_folder + "test.txt");
+  // nwfspEval<FSP> fsp_eval(instances_folder + "test.txt");
   FSPMin sol(4);
   FSPMin solp(2);
   sol[0] = solp[0] = 4 - 1;
@@ -131,24 +120,23 @@ void testNWEval()
   sol[3] = 2 - 1;
   fsp_eval(sol);
   fsp_eval(solp);
-  //cout << sol.fitness() << endl;
-  //cout << solp.fitness() << endl;
+  // cout << sol.fitness() << endl;
+  // cout << solp.fitness() << endl;
   assert(sol.fitness() == 59);
   assert(solp.fitness() == 41);
   NWFSPEvalFunc<FSPMin> fsp_evalft(dt, Objective::FLOWTIME);
-  //nwfspEval<FSP> fsp_evalft(instances_folder + "test.txt", 1);
+  // nwfspEval<FSP> fsp_evalft(instances_folder + "test.txt", 1);
   FSPMin solft = sol;
   FSPMin solftp = solp;
   fsp_evalft(solft);
   fsp_evalft(solftp);
-  //cout << solft.fitness() << endl;
-  //cout << solftp.fitness() << endl;
+  // cout << solft.fitness() << endl;
+  // cout << solftp.fitness() << endl;
   assert(solft.fitness() == 180);
   assert(solftp.fitness() == 70);
 }
 
-TEST(FSPTaillardAcelleration, Evaluation)
-{
+TEST(FSPTaillardAcelleration, Evaluation) {
   rng.reseed(65465l);
   const int no_jobs = 4;
   const int no_machines = 3;
@@ -187,8 +175,7 @@ TEST(FSPTaillardAcelleration, Evaluation)
 }
 
 bool auxMoveNeighborCompare(std::initializer_list<int> init, int from, int to,
-                            std::initializer_list<int> result)
-{
+                            std::initializer_list<int> result) {
   FSP sol;
   sol.assign(init);
   FSPNeighbor ng(from, to, sol.size());
@@ -196,36 +183,34 @@ bool auxMoveNeighborCompare(std::initializer_list<int> init, int from, int to,
   return std::equal(sol.begin(), sol.end(), result.begin());
 }
 
-TEST(FSPNeighbor, MoveOperatorEqual)
-{
-  ASSERT_TRUE(auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 0, 0, {1, 2, 3, 4, 5, 6}));
+TEST(FSPNeighbor, MoveOperatorEqual) {
+  ASSERT_TRUE(
+      auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 0, 0, {1, 2, 3, 4, 5, 6}));
 }
 
-TEST(FSPNeighbor, MoveAhead)
-{
-  ASSERT_TRUE(auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 1, 5, {1, 3, 4, 5, 2, 6}));
+TEST(FSPNeighbor, MoveAhead) {
+  ASSERT_TRUE(
+      auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 1, 5, {1, 3, 4, 5, 2, 6}));
 }
 
-TEST(FSPNeighbor, MoveBack)
-{
-  ASSERT_TRUE(auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 4, 1, {1, 5, 2, 3, 4, 6}));
+TEST(FSPNeighbor, MoveBack) {
+  ASSERT_TRUE(
+      auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 4, 1, {1, 5, 2, 3, 4, 6}));
 }
 
-TEST(FSPNeighbor, MoveBegin)
-{
-  ASSERT_TRUE(auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 4, 0, {5, 1, 2, 3, 4, 6}));
+TEST(FSPNeighbor, MoveBegin) {
+  ASSERT_TRUE(
+      auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 4, 0, {5, 1, 2, 3, 4, 6}));
 }
 
-TEST(FSPNeighbor, MoveEnd)
-{
-  ASSERT_TRUE(auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 1, 6, {1, 3, 4, 5, 6, 2}));
+TEST(FSPNeighbor, MoveEnd) {
+  ASSERT_TRUE(
+      auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 1, 6, {1, 3, 4, 5, 6, 2}));
 }
 
-TEST(FSPTaillardAcelleration, IndexConvert)
-{
+TEST(FSPTaillardAcelleration, IndexConvert) {
   int n = 200;
-  for (int i = 0; i < (n - 1) * (n - 1); i++)
-  {
+  for (int i = 0; i < (n - 1) * (n - 1); i++) {
     auto kp = keyToPositionPair(i, n);
     auto pos = positionPairToKey(kp.first, kp.second, n);
     ASSERT_TRUE(i == pos);
@@ -234,17 +219,28 @@ TEST(FSPTaillardAcelleration, IndexConvert)
 
 #include "flowshop-solver/fspproblemfactory.hpp"
 
-TEST(FSPTaillardAcelleration, Results)
-{
+TEST(FSPTaillardAcelleration, Results) {
   auto res = {
-      44, 11, 45, 38, 31, 18, 49, 21, 34, 3, 30, 20, 5, 46, 7, 12, 17, 9, 42, 37, 41, 0, 14, 27, 24, 43, 28, 40, 47, 35, 48, 29, 2, 16, 23, 8, 6, 4, 1, 26, 19, 25, 13, 15, 39, 36, 32, 33, 22, 10
-      //44, 11, 8, 12, 7, 25, 35, 19, 31, 13, 3, 24, 41, 38, 17, 23, 40, 48, 49, 34, 43, 37, 18, 15, 47, 2, 9, 21, 0, 46, 42, 4, 27, 45, 29, 1, 6, 5, 26, 14, 28, 20, 39, 30, 32, 36, 16, 33, 22, 10
-      // 11, 49, 25, 31, 38, 45, 36, 7, 18, 14, 8, 3, 19, 34, 35, 12, 21, 26, 20, 1, 17, 43, 46, 27, 28, 41, 13, 44, 2, 29, 24, 9, 5, 42, 32, 30, 0, 47, 40, 37, 23, 16, 15, 39, 48, 6, 4, 33, 22, 10};
+      44, 11, 45, 38, 31, 18, 49, 21, 34, 3,  30, 20, 5,  46, 7,  12, 17,
+      9,  42, 37, 41, 0,  14, 27, 24, 43, 28, 40, 47, 35, 48, 29, 2,  16,
+      23, 8,  6,  4,  1,  26, 19, 25, 13, 15, 39, 36, 32, 33, 22, 10
+      // 44, 11, 8, 12, 7, 25, 35, 19, 31, 13, 3, 24, 41, 38, 17, 23, 40, 48,
+      // 49, 34, 43, 37, 18, 15, 47, 2, 9, 21, 0, 46, 42, 4, 27, 45, 29, 1, 6,
+      // 5, 26, 14, 28, 20, 39, 30, 32, 36, 16, 33, 22, 10 11, 49, 25, 31, 38,
+      // 45, 36, 7, 18, 14, 8, 3, 19, 34, 35, 12, 21, 26, 20, 1, 17, 43, 46, 27,
+      // 28, 41, 13, 44, 2, 29, 24, 9, 5, 42, 32, 30, 0, 47, 40, 37, 23, 16, 15,
+      // 39, 48, 6, 4, 33, 22, 10};
   };
   auto res2 = {
-      11, 44, 45, 38, 31, 18, 49, 21, 34, 3, 30, 20, 5, 46, 7, 12, 17, 9, 42, 37, 41, 0, 14, 27, 24, 43, 28, 40, 47, 35, 48, 29, 2, 16, 23, 8, 6, 4, 1, 26, 19, 25, 13, 15, 39, 36, 32, 33, 22, 10
-      //44, 11, 8, 12, 7, 25, 35, 19, 31, 13, 3, 24, 41, 38, 17, 23, 40, 48, 49, 34, 43, 37, 18, 15, 47, 2, 9, 21, 0, 46, 42, 4, 27, 45, 29, 1, 6, 5, 26, 14, 28, 20, 39, 30, 32, 36, 16, 33, 22, 10
-      // 11, 49, 25, 31, 38, 45, 36, 7, 18, 14, 8, 3, 19, 34, 35, 12, 21, 26, 20, 1, 17, 43, 46, 27, 28, 41, 13, 44, 2, 29, 24, 9, 5, 42, 32, 30, 0, 47, 40, 37, 23, 16, 15, 39, 48, 6, 4, 33, 22, 10};
+      11, 44, 45, 38, 31, 18, 49, 21, 34, 3,  30, 20, 5,  46, 7,  12, 17,
+      9,  42, 37, 41, 0,  14, 27, 24, 43, 28, 40, 47, 35, 48, 29, 2,  16,
+      23, 8,  6,  4,  1,  26, 19, 25, 13, 15, 39, 36, 32, 33, 22, 10
+      // 44, 11, 8, 12, 7, 25, 35, 19, 31, 13, 3, 24, 41, 38, 17, 23, 40, 48,
+      // 49, 34, 43, 37, 18, 15, 47, 2, 9, 21, 0, 46, 42, 4, 27, 45, 29, 1, 6,
+      // 5, 26, 14, 28, 20, 39, 30, 32, 36, 16, 33, 22, 10 11, 49, 25, 31, 38,
+      // 45, 36, 7, 18, 14, 8, 3, 19, 34, 35, 12, 21, 26, 20, 1, 17, 43, 46, 27,
+      // 28, 41, 13, 44, 2, 29, 24, 9, 5, 42, 32, 30, 0, 47, 40, 37, 23, 16, 15,
+      // 39, 48, 6, 4, 33, 22, 10};
   };
   FSP sol(50);
   sol.assign(res);
@@ -269,8 +265,7 @@ TEST(FSPTaillardAcelleration, Results)
   ASSERT_EQ(sol.fitness(), 2737);
 }
 
-TEST(FSPTaillardAcelleration, NeighborhoodEval)
-{
+TEST(FSPTaillardAcelleration, NeighborhoodEval) {
   rng.reseed(65465l);
   const int no_jobs = 50;
   const int no_machines = 10;
@@ -285,11 +280,10 @@ TEST(FSPTaillardAcelleration, NeighborhoodEval)
   myMovedSolutionStat<FSP> movedSolutionStat;
   movedSolutionStat.init(sol);
 
-  FastFSPNeighborEval ne(fspData, fullEval, movedSolutionStat);
+  FastFSPNeighborEval ne(fspData, fullEval);
   moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
 
-  for (int i = 0; i < (no_jobs - 1) * (no_jobs - 1); i++)
-  {
+  for (int i = 0; i < (no_jobs - 1) * (no_jobs - 1); i++) {
     FSPNeighbor neighbor;
     neighbor.index(i);
     ne(sol, neighbor);
@@ -302,17 +296,15 @@ TEST(FSPTaillardAcelleration, NeighborhoodEval)
   }
 }
 
+#include "heuristics/BestInsertionExplorer.hpp"
 #include "heuristics/OpPerturbDestConst.hpp"
 #include "heuristics/fastigexplorer.hpp"
-#include "heuristics/BestInsertionExplorer.hpp"
 #include "heuristics/neighborhood_checkpoint.hpp"
 
-TEST(TaillardAcceleration, BestInsertionNeighborhood)
-{
+TEST(TaillardAcceleration, BestInsertionNeighborhood) {
   rng.reseed(65465l);
   const int no_jobs = 50;
   const int no_machines = 30;
-  const int ds = 50;
   FSPData fspData(no_jobs, no_machines, 100);
 
   FSP sol(no_jobs);
@@ -325,7 +317,7 @@ TEST(TaillardAcceleration, BestInsertionNeighborhood)
   myMovedSolutionStat<FSP> movedSolutionStat;
   movedSolutionStat.init(sol);
 
-  FastFSPNeighborEval ne(fspData, fullEval, movedSolutionStat);
+  FastFSPNeighborEval ne(fspData, fullEval);
   moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
 
   moTrueContinuator<FSPNeighbor> tc;
@@ -340,8 +332,8 @@ TEST(TaillardAcceleration, BestInsertionNeighborhood)
   igexplorer.initParam(sol);
   igexplorer(sol);
 
-  BestInsertionExplorer<FSP> igexplorerFull(fullNe, neighborhoodCheckpoint, compNN,
-                                            compSN);
+  BestInsertionExplorer<FSP> igexplorerFull(fullNe, neighborhoodCheckpoint,
+                                            compNN, compSN);
 
   rng.reseed(65465l);
   fullEval(sol2);
@@ -354,8 +346,7 @@ TEST(TaillardAcceleration, BestInsertionNeighborhood)
 
 #include "paradiseo/mo/algo/moFirstImprHC.h"
 
-TEST(TaillardAcceleration, ReCompileEval)
-{
+TEST(TaillardAcceleration, ReCompileEval) {
   rng.reseed(65465l);
   const int no_jobs = 100;
   const int no_machines = 30;
@@ -371,15 +362,14 @@ TEST(TaillardAcceleration, ReCompileEval)
 
   myMovedSolutionStat<FSP> movedSolutionStat;
   movedSolutionStat.init(sol);
-  FastFSPNeighborEval ne(fspData, fullEval, movedSolutionStat);
+  FastFSPNeighborEval ne(fspData, fullEval);
 
   FSPNeighbor neighbor;
   // 0 neighbor is compiled
   neighbor.set(0, sol.size() - 1, sol.size());
   ne(sol, neighbor);
 
-  for (int newPos = sol.size(); newPos >= 0; newPos--)
-  {
+  for (int newPos = sol.size(); newPos >= 0; newPos--) {
     neighbor.set(sol.size() / 2, newPos, sol.size());
     // ne(sol, neighbor);
 
@@ -397,8 +387,7 @@ TEST(TaillardAcceleration, ReCompileEval)
   }
 }
 
-TEST(TaillardAcceleration, DestructionConstruction)
-{
+TEST(TaillardAcceleration, DestructionConstruction) {
   rng.reseed(65465l);
   const int no_jobs = 50;
   const int no_machines = 10;
@@ -416,7 +405,7 @@ TEST(TaillardAcceleration, DestructionConstruction)
   myMovedSolutionStat<FSP> movedSolutionStat;
   movedSolutionStat.init(sol);
 
-  FastFSPNeighborEval ne(fspData, fullEval, movedSolutionStat);
+  FastFSPNeighborEval ne(fspData, fullEval);
   moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
 
   DestructionConstruction<FSPNeighbor> opdc(fullNe, ds, movedSolutionStat);
@@ -430,8 +419,7 @@ TEST(TaillardAcceleration, DestructionConstruction)
   ASSERT_EQ(sol, sol2);
 }
 
-int main(int argc, char **argv)
-{
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) {
   argc = 2;
   char *argvv[] = {"", "--gtest_filter=*"};
   testing::InitGoogleTest(&argc, argvv);

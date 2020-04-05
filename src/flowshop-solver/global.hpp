@@ -12,8 +12,8 @@
 #include <vector>
 
 // Paradiseo includes
-#include "paradiseo/eo/utils/eoRNG.h"
-#include "paradiseo/eo/utils/eoStdoutMonitor.h"
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
 
 template <class EnumT, class Number>
 EnumT fromNumeric(Number n) {

@@ -2,6 +2,9 @@
 
 #include <unordered_map>
 
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
+
 #include "IGexplorer.hpp"
 #include "IGexplorerWithRepl.hpp"
 #include "MHParamsValues.hpp"
@@ -16,8 +19,6 @@
 #include "heuristics.hpp"
 #include "ilsKickOp.hpp"
 #include "op_cooling_schedule.hpp"
-#include "paradiseo/eo/eoSwapMutation.h"
-#include "paradiseo/mo/perturb/moMonOpPerturb.h"
 #include "randomNeutralWalkExplorer.hpp"
 
 Result solveWithILS(
@@ -226,8 +227,8 @@ Result solveWithILS(
   eoInitAdaptor<EOT> initPerturb2(init2);  // init perturb NEHrnd
   OpPerturbDestConst<EOT> NILSOpPerturb(
       fullEval, params.integer("ILS.Perturb.NILS.Destruction.Size"));
-  eoSwapMutation<EOT> NILSkickPerturb(
-      params.integer("ILS.Perturb.NILS.No.Kick"));
+  // eoSwapMutation<EOT> NILSkickPerturb(
+  //    params.integer("ILS.Perturb.NILS.No.Kick"));
 
   eoMonOp<EOT>* nilsEscape;
   switch (params.categorical("ILS.Perturb.NILS.Escape")) {
@@ -244,7 +245,7 @@ Result solveWithILS(
       nilsEscape = &NILSOpPerturb;
       break;
     case 4:
-      nilsEscape = &NILSkickPerturb;
+      nilsEscape = nullptr;  // &NILSkickPerturb;
       break;
     default:
       assert(false);

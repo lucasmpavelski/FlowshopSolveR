@@ -36,7 +36,8 @@ void testSolveWithFactories() {
 
 void testSolve() {
   int seed = 481571373;
-  FSPData fspData("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/flowshop/binom_rand_30_20_01.dat");
+  FSPData
+fspData("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/flowshop/binom_rand_30_20_01.dat");
   rng.reseed(seed);
   std::unordered_map<std::string, float> params;
   params["Comp.Strat"] =  0;
@@ -49,8 +50,8 @@ void testSolve() {
   params["ILS.LS.CompStrat"] = 1;
   params["ILS.LS.NeighborhoodStrat"] = 1;
   params["ILS.LS.NeighborhoodSize"] = 10.0;
-  MHParamsSpecsFactory::init("/home/lucasmp/projects/git/evolutionary_tunners/data/specs/", true);
-  MHParamsSpecs mh_specs = MHParamsSpecsFactory::get("ILS2");
+  MHParamsSpecsFactory::init("/home/lucasmp/projects/git/evolutionary_tunners/data/specs/",
+true); MHParamsSpecs mh_specs = MHParamsSpecsFactory::get("ILS2");
   MHParamsValues values(&mh_specs);
   for (auto ps : mh_specs) {
     if (params.find(ps->name) == params.end())
@@ -65,8 +66,10 @@ void testSolve() {
 
 void testFastSolve() {
   unsigned seed = 481571373;
-  FSPData fspData("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/flowshop/binom_rand_30_20_01.dat");
-  //system("cat /home/lucasmp/projects/git/evolutionary_tunners/data/instances/generated_intances/generated_instances_all/taill-like_30_5_3005104.gen.bestKnown");
+  FSPData
+fspData("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/flowshop/binom_rand_30_20_01.dat");
+  //system("cat
+/home/lucasmp/projects/git/evolutionary_tunners/data/instances/generated_intances/generated_instances_all/taill-like_30_5_3005104.gen.bestKnown");
   rng.reseed(seed);
   std::unordered_map<std::string, float> params;
   params["Comp.Strat"] =  0;
@@ -79,13 +82,11 @@ void testFastSolve() {
   params["ILS.LS.CompStrat"] = 1;
   params["ILS.LS.NeighborhoodStrat"] = 0;
   params["ILS.LS.NeighborhoodSize"] = 10.0;
-  MHParamsSpecsFactory::init("/home/lucasmp/projects/git/evolutionary_tunners/data/specs/", true);
-  MHParamsSpecs mh_specs = MHParamsSpecsFactory::get("ILS");
-  MHParamsValues values(&mh_specs);
-  for (auto ps : mh_specs) {
-    if (params.find(ps->name) == params.end())
-      throw std::runtime_error("Parameter " + ps->name + " needs a value!");
-    values[ps->name] = params.at(ps->name);
+  MHParamsSpecsFactory::init("/home/lucasmp/projects/git/evolutionary_tunners/data/specs/",
+true); MHParamsSpecs mh_specs = MHParamsSpecsFactory::get("ILS"); MHParamsValues
+values(&mh_specs); for (auto ps : mh_specs) { if (params.find(ps->name) ==
+params.end()) throw std::runtime_error("Parameter " + ps->name + " needs a
+value!"); values[ps->name] = params.at(ps->name);
   }
   FSPProblem problem(fspData, "PERM", "MAKESPAN", "high", "EVALS");
   std::vector<int> order = totalProcTimes(problem.getData());
@@ -94,14 +95,11 @@ void testFastSolve() {
 }
 */
 
-void testSolve() {
-  
-}
+void testSolve() {}
 
-int main(int argc, char *argv[])
-{
-  //testSolveWithFactories();
+int main(int, char *[]) {
+  // testSolveWithFactories();
   testSolve();
-  //testFastSolve();
+  // testFastSolve();
   return 0;
 }

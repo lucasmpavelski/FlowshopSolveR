@@ -1,6 +1,7 @@
 #pragma once
 
-#include <paradiseo/mo/perturb/moPerturbation.h>
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
 
 template <class Chrom>
 class ilsKickOp : public eoMonOp<Chrom> {

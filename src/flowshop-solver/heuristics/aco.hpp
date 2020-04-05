@@ -1,14 +1,7 @@
 #pragma once
 
-#include <paradiseo/eo/eoSwapMutation.h>
-#include <paradiseo/mo/comparator/moComparator.h>
-#include <paradiseo/mo/comparator/moEqualNeighborComparator.h>
-#include <paradiseo/mo/comparator/moEqualSolComparator.h>
-#include <paradiseo/mo/comparator/moEqualSolNeighborComparator.h>
-#include <paradiseo/mo/comparator/moNeighborComparator.h>
-#include <paradiseo/mo/comparator/moSolNeighborComparator.h>
-#include <paradiseo/mo/mo.h>
-#include <paradiseo/mo/neighborhood/moOrderNeighborhood.h>
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
 
 #include <algorithm>
 #include <unordered_map>

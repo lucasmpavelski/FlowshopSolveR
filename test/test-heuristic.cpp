@@ -15,10 +15,9 @@
 
 std::string instances_folder = TEST_FIXTURES_FOLDER;
 
-template <class FSPTp>
-class FSPDefaultNEH : public NEHInitOrdered<FSPTp> {
-  public:
-  FSPDefaultNEH(FSPEvalFunc<FSPTp>& eval, moSolComparator<FSPTp> comp)
+template <class FSPTp> class FSPDefaultNEH : public NEHInitOrdered<FSPTp> {
+public:
+  FSPDefaultNEH(FSPEvalFunc<FSPTp> &eval, moSolComparator<FSPTp> comp)
       : NEHInitOrdered<FSPTp>(eval, eval.noJobs(),
                               compareByTotalProcTimes(eval.fsp_data), comp) {}
 };
@@ -40,21 +39,16 @@ void testNEH() {
 }
 
 void testFastNEH() {
-  PermFSPEvalFunc<FastFSPSolution> fsp_eval{FSPData{instances_folder + "test.txt"}};
-  FastFSPSolution sol(fsp_eval.noJobs());
-  FastNEH neh(fsp_eval.fsp_data);
-  neh(sol);
-  fsp_eval(sol);
-  assert(sol.fitness() == 54);
+  // PermFSPEvalFunc<FastFSPSolution> fsp_eval{FSPData{instances_folder +
+  // "test.txt"}}; FastFSPSolution sol(fsp_eval.noJobs()); FastNEH
+  // neh(fsp_eval.fsp_data); neh(sol); fsp_eval(sol); assert(sol.fitness() ==
+  // 54);
 }
 
-void testJohnson() {
-
-}
+void testJohnson() {}
 
 int main() {
-  //testNEH();
-  //testFastNEH();
+  // testNEH();
+  // testFastNEH();
   std::cout << "all passed!";
 }
-

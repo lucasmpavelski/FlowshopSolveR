@@ -1,27 +1,21 @@
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <random>
 #include <stdio.h>
 #include <vector>
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-#include <random>
-#include <iterator>
 
-
-template<class T>
-void print(T b, T e) {
+template <class T> void print(T b, T e) {
   using el = typename T::value_type;
-  std::for_each(b, e, [](const el& e) {
-    printf("%2d ", e);
-  });
+  std::for_each(b, e, [](const el &e) { printf("%2d ", e); });
 }
 
-template<class T>
-void print(const std::vector<T> v) {
+template <class T> void print(const std::vector<T> v) {
   print(std::begin(v), std::end(v));
 }
 
-template<class T>
-void print(const std::vector<T> v, int r) {
+template <class T> void print(const std::vector<T> v, int r) {
   int c = v.size() / r;
   auto beg = std::begin(v), end = beg;
   std::advance(end, c);
@@ -33,8 +27,8 @@ void print(const std::vector<T> v, int r) {
   }
 }
 
-template<class RNG>
-std::vector<int> randomSolution(int no_jobs, int no_machines, RNG& rng) {
+template <class RNG>
+std::vector<int> randomSolution(int no_jobs, int no_machines, RNG &rng) {
   std::vector<int> solution(no_machines * no_jobs);
   auto beg = std::begin(solution), end = beg;
   std::advance(end, no_machines);
@@ -52,14 +46,12 @@ struct JSP {
   std::vector<int> times;
   std::vector<int> orders;
 
-  JSP(int no_jobs, int no_machines) :
-    no_jobs(no_jobs), no_machines(no_machines),
-    times(no_jobs * no_machines),
-    orders(no_jobs * no_machines) {}
+  JSP(int no_jobs, int no_machines)
+      : no_jobs(no_jobs), no_machines(no_machines),
+        times(no_jobs * no_machines), orders(no_jobs * no_machines) {}
 };
 
-template<class RNG>
-void randomStructureJSP(JSP& jsp, RNG& rng) {
+template <class RNG> void randomStructureJSP(JSP &jsp, RNG &rng) {
   auto beg = std::begin(jsp.orders), end = beg;
   std::advance(end, jsp.no_machines);
   for (int i = 0; i < jsp.no_jobs; i++) {
@@ -70,7 +62,7 @@ void randomStructureJSP(JSP& jsp, RNG& rng) {
   }
 }
 
-int schedule(const JSP& jsp, std::vector<int> solution) {
+int schedule(const JSP &jsp, std::vector<int> solution) {
   //  tj = [0]*j   # end of previous task for each job
   //  tm = [0]*m   # end of previous task on each machine
   std::vector<int> machineTimes(jsp.no_machines, 0);
@@ -103,14 +95,9 @@ int schedule(const JSP& jsp, std::vector<int> solution) {
   return 0;
 }
 
-
-
-
-int schedule2(const JSP& jsp, std::vector<int> solution) {
+int schedule2(const JSP &jsp, std::vector<int> solution) {
   std::vector<int> edges((jsp.no_jobs + 2) * (jsp.no_jobs + 2));
 
-  for (int operation : solution) {
-  }
   return 0;
 }
 
@@ -120,28 +107,28 @@ Out copy_n(In first, Size n, Out result) {
     return result;
 }*/
 
-std::vector<int> line2IntVector(std::istream& line, int size) {
+std::vector<int> line2IntVector(std::istream &line, int size) {
   std::vector<int> vec;
   vec.reserve(size);
-  std::copy_n(std::istream_iterator<int>(line),
-         size,
-         std::back_inserter(vec));
+  std::copy_n(std::istream_iterator<int>(line), size, std::back_inserter(vec));
   return vec;
 }
 
 std::vector<JSP> load(int no_jobs, int no_machines) {
-  std::string folder = "/home/lucasmp/projects/git/evolutionary_tunners/data/instances/JSP/";
-  std::string filename = "tai" + std::to_string(no_jobs) + "_" + std::to_string(no_machines) + ".txt";
+  std::string folder =
+      "/home/lucasmp/projects/git/evolutionary_tunners/data/instances/JSP/";
+  std::string filename = "tai" + std::to_string(no_jobs) + "_" +
+                         std::to_string(no_machines) + ".txt";
   std::string filePath = folder + filename;
   std::ifstream file(filePath.c_str());
   std::vector<JSP> insts;
   for (int inst = 0; inst < 10; inst++) {
     std::string line;
-    // skip: Nb of jobs, Nb of Machines, Time seed, Machine seed, Upper bound, Lower bound
+    // skip: Nb of jobs, Nb of Machines, Time seed, Machine seed, Upper bound,
+    // Lower bound
     std::getline(file, line);
-    std::vector<int> meta;// = line2IntVector(file, 6);
-    std::copy_n(std::istream_iterator<int>(file), 6,
-                std::back_inserter(meta));
+    std::vector<int> meta; // = line2IntVector(file, 6);
+    std::copy_n(std::istream_iterator<int>(file), 6, std::back_inserter(meta));
     // skip: Times
     std::getline(file, line);
     std::getline(file, line);
@@ -169,33 +156,35 @@ std::vector<JSP> load(int no_jobs, int no_machines) {
 
 int main() {
   auto jsps{load(20, 15)};
-//  std::mt19937_64 rng;
-//  rng.seed(123);
-//  JSP jsp(4, 3);
-//  std::generate(std::begin(jsp.times), std::end(jsp.times), [&rng](){
-//    std::uniform_int_distribution<int> dist(1, 10);
-//    return dist(rng);
-//  });
-//  randomStructureJSP(jsp, rng);
-//  auto sol = randomSolution(jsp.no_jobs, jsp.no_machines, rng);
-//  print(sol);
-//  printf("\n\n");
+  //  std::mt19937_64 rng;
+  //  rng.seed(123);
+  //  JSP jsp(4, 3);
+  //  std::generate(std::begin(jsp.times), std::end(jsp.times), [&rng](){
+  //    std::uniform_int_distribution<int> dist(1, 10);
+  //    return dist(rng);
+  //  });
+  //  randomStructureJSP(jsp, rng);
+  //  auto sol = randomSolution(jsp.no_jobs, jsp.no_machines, rng);
+  //  print(sol);
+  //  printf("\n\n");
   std::vector<int> sol = {
-    11, 10,  1,  6, 19,  8, 17,  4,  0,  2,  7, 14, 18, 15,  9,  5, 16,  3, 13, 12,
-    19, 17,  4,  6, 18,  7,  1,  8,  9,  5, 12, 11, 13, 14, 15, 10,  2,  3, 16,  0,
-     1,  6,  2, 12,  9, 15, 16, 11,  4, 14, 19,  0,  3, 17,  8, 13,  7, 18,  5, 10,
-     4,  2,  7,  9,  5, 12, 11, 19, 13, 16,  6,  1, 17, 18,  8, 14,  3,  0, 15, 10,
-    19, 11,  6,  7,  1, 10, 13, 12, 16,  8,  5,  9,  4,  0, 18,  2, 14, 15,  3, 17,
-     8, 17,  1,  3,  2, 12, 16, 19,  6,  7,  4,  9, 13,  5, 11,  0, 14, 18, 10, 15,
-     9, 10, 11,  6,  2,  4, 18, 15, 13,  8, 19,  7, 14,  5,  1, 16, 12,  0,  3, 17,
-    16, 15,  8,  3,  0, 13, 18, 19,  2, 12,  9,  6, 17,  4, 10, 14,  5, 11,  1,  7,
-    17, 16,  8,  0,  4, 18, 14,  7,  9,  5, 13, 11, 10, 19,  6, 12,  1, 15,  3,  2,
-     3, 16,  0,  2, 12,  9,  4, 15,  6, 14, 13, 18,  8, 11,  5, 10, 17,  7,  1, 19,
-     1,  3, 13, 15,  0, 14, 18,  2,  8, 12,  7,  6, 19, 10,  4, 17, 11,  5, 16,  9,
-     6, 17,  0, 16, 13, 15,  7, 18,  5, 12, 11, 19,  1, 14, 10,  9,  4,  8,  3,  2,
-     0,  7, 16,  8, 12,  2,  6, 18, 14,  5,  9, 19, 10,  4,  3, 17, 15, 11, 13,  1,
-    19, 16,  3,  4,  0,  8, 14,  5, 12,  2,  7,  1, 10,  6, 13,  9, 11, 18, 17, 15,
-    17, 15,  3, 12, 13, 18,  4, 10,  8,  2,  9,  1,  5, 16,  6, 14, 19,  0, 11,  7,
+      11, 10, 1,  6,  19, 8,  17, 4,  0,  2,  7,  14, 18, 15, 9,  5,  16, 3,
+      13, 12, 19, 17, 4,  6,  18, 7,  1,  8,  9,  5,  12, 11, 13, 14, 15, 10,
+      2,  3,  16, 0,  1,  6,  2,  12, 9,  15, 16, 11, 4,  14, 19, 0,  3,  17,
+      8,  13, 7,  18, 5,  10, 4,  2,  7,  9,  5,  12, 11, 19, 13, 16, 6,  1,
+      17, 18, 8,  14, 3,  0,  15, 10, 19, 11, 6,  7,  1,  10, 13, 12, 16, 8,
+      5,  9,  4,  0,  18, 2,  14, 15, 3,  17, 8,  17, 1,  3,  2,  12, 16, 19,
+      6,  7,  4,  9,  13, 5,  11, 0,  14, 18, 10, 15, 9,  10, 11, 6,  2,  4,
+      18, 15, 13, 8,  19, 7,  14, 5,  1,  16, 12, 0,  3,  17, 16, 15, 8,  3,
+      0,  13, 18, 19, 2,  12, 9,  6,  17, 4,  10, 14, 5,  11, 1,  7,  17, 16,
+      8,  0,  4,  18, 14, 7,  9,  5,  13, 11, 10, 19, 6,  12, 1,  15, 3,  2,
+      3,  16, 0,  2,  12, 9,  4,  15, 6,  14, 13, 18, 8,  11, 5,  10, 17, 7,
+      1,  19, 1,  3,  13, 15, 0,  14, 18, 2,  8,  12, 7,  6,  19, 10, 4,  17,
+      11, 5,  16, 9,  6,  17, 0,  16, 13, 15, 7,  18, 5,  12, 11, 19, 1,  14,
+      10, 9,  4,  8,  3,  2,  0,  7,  16, 8,  12, 2,  6,  18, 14, 5,  9,  19,
+      10, 4,  3,  17, 15, 11, 13, 1,  19, 16, 3,  4,  0,  8,  14, 5,  12, 2,
+      7,  1,  10, 6,  13, 9,  11, 18, 17, 15, 17, 15, 3,  12, 13, 18, 4,  10,
+      8,  2,  9,  1,  5,  16, 6,  14, 19, 0,  11, 7,
   };
   print(jsps[3].times, jsps[3].no_jobs);
   printf("\n");
@@ -205,29 +194,36 @@ int main() {
 }
 
 // solution
-//4  1  3  2  2  3  4  1  1  2  4  3
+// 4  1  3  2  2  3  4  1  1  2  4  3
 // times
-//4  6 10
-//8  2  2
-//10  3  9
-//5  3  6
+// 4  6 10
+// 8  2  2
+// 10  3  9
+// 5  3  6
 // orders
-//2  3  1
-//1  2  3
-//1  3  2
-//2  1  3
+// 2  3  1
+// 1  2  3
+// 1  3  2
+// 2  1  3
 // starting times
-//21  5 13
-//10 18 20
-//0 20 10
-//18  0 22
+// 21  5 13
+// 10 18 20
+// 0 20 10
+// 18  0 22
 // jobs finishing times
-//31 22 29 28
+// 31 22 29 28
 // machines finishing times
-//31 29 28
+// 31 29 28
 // schedule
-//1	2	3	4	5	6	7	8	9	10	11	12	13	14	15	16	17	18	19	20	21	22	23	24	25	26	27	28	29	30	31
-//1	3	3	3	3	3	3	3	3	3	3	2	2	2	2	2	2	2	2	4	4	4	1	1	1	1	1	1	1	1	1	1
-//2	4	4	4	4	4	1	1	1	1										2	2	3	3	3	3	3	3	3	3	3
-//3											3	3	3	1	1	1	1	1	1		2	2	4	4	4	4	4	4
-
+// 1	2	3	4	5	6	7	8	9	10	11	12	13
+// 14	15	16	17	18	19	20	21	22	23
+// 24	25	26	27	28	29	30	31
+// 1	3	3	3	3	3	3	3	3	3	3	2	2
+// 2	2	2	2	2	2	4	4	4	1	1	1
+// 1	1	1	1	1	1	1
+// 2	4	4	4	4	4	1	1	1	1
+// 2	2	3	3	3	3	3	3	3	3
+// 3
+// 3											3	3	3	1
+// 1	1	1	1	1		2	2	4	4	4	4
+// 4	4

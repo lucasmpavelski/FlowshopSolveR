@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
 
+#include "../src/flowshop-solver/heuristics/aco.hpp"
+#include "../src/flowshop-solver/heuristics/all.hpp"
 #include "../src/flowshop-solver/heuristics/hc.hpp"
+#include "../src/flowshop-solver/heuristics/ig.hpp"
 #include "../src/flowshop-solver/heuristics/ihc.hpp"
 #include "../src/flowshop-solver/heuristics/ils.hpp"
 #include "../src/flowshop-solver/heuristics/isa.hpp"
 #include "../src/flowshop-solver/heuristics/sa.hpp"
 #include "../src/flowshop-solver/heuristics/ts.hpp"
-#include "../src/flowshop-solver/heuristics/ig.hpp"
-#include "../src/flowshop-solver/heuristics/aco.hpp"
-#include "../src/flowshop-solver/heuristics/all.hpp"
 #include <algorithm>
 #include <cassert>
 #include <numeric>
@@ -72,7 +72,7 @@ int lowerBound1(const FSPData &fspData) {
     int max = 0;
     for (int k = 0; k <= i; k++) {
       int min_j = std::numeric_limits<int>::max();
-      for (int j = 0; j < unscheduled.size(); j++) {
+      for (unsigned j = 0; j < unscheduled.size(); j++) {
         int atSum =
             fspData.partialSumOnAdjacentMachines(unscheduled[j], k, i - 1);
         if (atSum < min_j)
@@ -88,7 +88,7 @@ int lowerBound1(const FSPData &fspData) {
   auto q_h = [&fspData, &unscheduled](int h) {
     std::cout << "q_" << h << ": ";
     int min_j = 10000;
-    for (int j = 0; j < unscheduled.size(); j++) {
+    for (unsigned j = 0; j < unscheduled.size(); j++) {
       int atSum = fspData.partialSumOnAdjacentMachines(
           unscheduled[j], h + 1, fspData.noMachines() - 1);
       if (atSum < min_j)
@@ -100,7 +100,7 @@ int lowerBound1(const FSPData &fspData) {
   int lb1 = 0;
   for (int i = 0; i < no_machines; i++) {
     int s = 0;
-    for (int j = 0; j < unscheduled.size(); j++) {
+    for (unsigned j = 0; j < unscheduled.size(); j++) {
       s += fspData.pt(unscheduled[j], i);
     }
     int val = r_i(i) + s + q_h(i);
@@ -135,10 +135,10 @@ int lowerBound1(const FSPData &fspData) {
 #include "../src/flowshop-solver/heuristics/ilsKickOp.hpp"
 TEST(Operator, ilsKick) {
   ilsKickOp<std::vector<int>> op(1, 0.0);
-  //for (int i = 0; i < 1000; i++) {
-    std::vector<int> a = {1,2,3,4};
-    op(a);
-    std::cerr << a[0] << a[1] << a[2] << a[3] << '\n';
+  // for (int i = 0; i < 1000; i++) {
+  std::vector<int> a = {1, 2, 3, 4};
+  op(a);
+  std::cerr << a[0] << a[1] << a[2] << a[3] << '\n';
   //}
 }
 
@@ -209,7 +209,6 @@ TEST(FLA, ADAPTIVE) {
   std::cout << adaptiveWalkLength(prob, sampling, 123u);
 }
 
-
 TEST(FLA, ADAPTIVE_WALK) {
   using std::string;
   RNG::seed(123l);
@@ -251,7 +250,7 @@ TEST(Solve, TS) {
     MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("TS");
     MHParamsValues values(&mhParamsSpecs);
     values.randomizeValues(RNG::engine);
-    std::cout << solveWithTS(prob, values.toMap()); 
+    std::cout << solveWithTS(prob, values.toMap());
   }
 }
 
@@ -291,7 +290,6 @@ TEST(Solve, IHC) {
   prob["instance"] = "binom_rand_30_20_01.dat";
   prob["stopping_criterium"] = "EVALS";
 
-
   for (int i = 0; i < 10; i++) {
     MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("IHC");
     MHParamsValues values(&mhParamsSpecs);
@@ -313,7 +311,7 @@ TEST(Solve, IG) {
   // prob["instance"] = "binom_rand_30_20_01.dat";
   // prob["stopping_criterium"] = "EVALS";
 
-    prob["problem"] = "FSP";
+  prob["problem"] = "FSP";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
@@ -346,8 +344,8 @@ TEST(Solve, ISA) {
   MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("ISA");
   MHParamsValues values(&mhParamsSpecs);
   values.randomizeValues(RNG::engine);
-  
-  std::cout << solveWithISA(prob, values.toMap()); 
+
+  std::cout << solveWithISA(prob, values.toMap());
 }
 
 TEST(Solve, ACO) {
@@ -371,9 +369,9 @@ TEST(Solve, ACO) {
   std::cout << solveWithACO(prob, values.toMap()); // 10 7 6 0 3 9 4 5 1 2 8
 }
 
-
 std::vector<std::string> all_mh = {"IHC", "ISA", "TS", "ILS", "IG", "ACO"};
-auto mh_cat_values = {0,1,2,3,4,5}; // TODO: permit values for categorical params
+auto mh_cat_values = {0, 1, 2,
+                      3, 4, 5}; // TODO: permit values for categorical params
 
 TEST(Solve, AllParamsInAllMH) {
   MHParamsSpecs allSpecs = MHParamsSpecsFactory::get("all");
@@ -381,12 +379,13 @@ TEST(Solve, AllParamsInAllMH) {
   for (auto param : allSpecs) {
     params.push_back(*param);
   }
-  int count = 0;
+  unsigned count = 0;
   for (auto mh : all_mh) {
     MHParamsSpecs specs = MHParamsSpecsFactory::get(mh);
     count += specs.noParams();
     for (auto param : specs) {
-      ASSERT_TRUE(std::find(params.begin(), params.end(), *param) != params.end());
+      ASSERT_TRUE(std::find(params.begin(), params.end(), *param) !=
+                  params.end());
     }
   }
   ASSERT_TRUE(params.size() == count + 1);

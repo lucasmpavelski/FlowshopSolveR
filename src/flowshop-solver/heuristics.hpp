@@ -1,8 +1,7 @@
 #pragma once
 
-#include <paradiseo/eo/eoInit.h>
-#include <paradiseo/mo/algo/moLocalSearch.h>
-#include <paradiseo/mo/continuator/moContinuator.h>
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
 
 #include "global.hpp"
 #include "problems/Problem.hpp"
