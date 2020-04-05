@@ -95,9 +95,12 @@ inline T mean(const T x[], const size_t n) {
 
 template <typename Itr1, typename Itr2>
 class printableSeq {
+  Itr1 beg, end;
+  const std::string sep;
+
  public:
   printableSeq(Itr1 beg, Itr2 end, const std::string& sep = " ")
-      : beg(beg), sep(sep), end(end) {}
+      : beg(beg), end(end), sep(sep) {}
 
   std::ostream& operator()(std::ostream& os = std::cout) const {
     return os << *this;
@@ -112,10 +115,6 @@ class printableSeq {
       os << pa.sep << *p;
     return os;
   }
-
-  const std::string sep;
-  Itr1 beg;
-  Itr2 end;
 };
 
 template <typename Container,

@@ -6,10 +6,10 @@
 template <class EOT>
 class NeigborhoodStatBase : public moStatBase<EOT> {
  public:
-  virtual void initNeighborhood(EOT& sol) {}
-  virtual void neighborCall(EOT& sol) {}
-  virtual void lastNeighborhoodCall(EOT& sol) {}
-  virtual void operator()(EOT& sol) override {}
+  virtual void initNeighborhood(EOT&) {}
+  virtual void neighborCall(EOT& ) {}
+  virtual void lastNeighborhoodCall(EOT&) {}
+  virtual void operator()(EOT&) override {}
 };
 
 template <class EOT, class T>

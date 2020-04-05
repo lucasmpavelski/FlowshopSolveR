@@ -1,9 +1,5 @@
 #pragma once
 
-#include <eoEvalFunc.h>
-#include <eoInt.h>
-#include <eoScalarFitness.h>
-
 #include <algorithm>
 #include <cstdlib>
 #include <exception>
@@ -16,15 +12,14 @@
 #include <utility>
 #include <vector>
 
-#include "problems/FSPData.hpp"
+#include <paradiseo/eo/eo>
 
-using FSPMax = eoInt<eoMaximizingFitness>;
-using FSPMin = eoInt<eoMinimizingFitness>;
-using FSP = FSPMin;
+#include "flowshop-solver/problems/FSPData.hpp"
 
 enum class Objective { MAKESPAN, FLOWTIME };
 
-static std::ostream& operator<<(std::ostream& o, const Objective& obj) {
+[[maybe_unused]] static std::ostream& operator<<(std::ostream& o,
+                                                 const Objective& obj) {
   switch (obj) {
     case Objective::MAKESPAN:
       o << "MAKESPAN";
@@ -43,8 +38,9 @@ class FSPEvalFunc : public eoEvalFunc<EOT> {
  public:
   using Fitness = typename EOT::Fitness;
   FSPData fsp_data;
-  int no_evals;
+  std::valarray<int> Ct;  // vector of completion times
   Objective ObjT;
+  int no_evals;
 
   FSPEvalFunc(FSPData fd, Objective ObjT = Objective::MAKESPAN)
       : fsp_data{std::move(fd)}, Ct(fsp_data.noJobs()), ObjT(ObjT) {
@@ -74,18 +70,16 @@ class FSPEvalFunc : public eoEvalFunc<EOT> {
   int noMachines() const { return fsp_data.noMachines(); }
   const FSPData& getData() const { return fsp_data; }
   virtual std::string type() const { return "PERM"; };
-  virtual Objective objective() const { return Objective; };
+  Objective objective() const { return ObjT; };
 
   void printOn(std::ostream& o) {
     o << "FSPEvalFunc\n"
       << "  type: " << type() << '\n'
-      << "  objective: " << objective << '\n'
+      << "  objective: " << objective() << '\n'
       << fsp_data;
   }
 
  protected:
-  std::valarray<int> Ct;  // vector of completion times
-
   virtual double makespan(const EOT& s) { return Ct[s.size() - 1]; }
 
   virtual double flowtime(const EOT& s) {

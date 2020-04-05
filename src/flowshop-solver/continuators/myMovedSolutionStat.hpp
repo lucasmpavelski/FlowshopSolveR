@@ -13,7 +13,7 @@ class myMovedSolutionStat : public moStat<EOT, bool> {
 
   using moStat<EOT, bool>::value;
 
-  void init(EOT& sol) final override { value() = true; }
-  void operator()(EOT& sol) final override { value() = true; }
+  void init(EOT&) final override { value() = true; }
+  void operator()(EOT&) final override { value() = true; }
   void reset() { value() = false; }
 };

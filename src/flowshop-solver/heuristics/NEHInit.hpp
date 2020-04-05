@@ -7,30 +7,32 @@
 #include <utility>
 #include <vector>
 
-#include <mo>
-
-#include "global.hpp"
+#include "flowshop-solver/global.hpp"
+#include "paradiseo/eo/eoEvalFunc.h"
+#include "paradiseo/eo/eoInit.h"
+#include "paradiseo/mo/comparator/moSolComparator.h"
 
 template <class EOT>
 class NEHInit : public eoInit<EOT> {
   eoEvalFunc<EOT>& eval;
+  const int _size;
   moSolComparator<EOT> comp;
 
  public:
-  const int size;
-
   NEHInit(eoEvalFunc<EOT>& eval,
           int size,
           moSolComparator<EOT> comp = moSolComparator<EOT>())
-      : eval(eval), size(size), comp(comp) {}
+      : eval(eval), _size(size), comp(comp) {}
+
+  int size() const { return _size; }
 
   virtual void operator()(EOT& _fsp) {
-    std::vector<int> order(size);
+    std::vector<int> order(_size);
     init(order);
     _fsp.resize(0);
     _fsp.push_back(order[0]);
     EOT tmp;
-    for (int k = 1; k < order.size(); k++) {
+    for (unsigned k = 1; k < order.size(); k++) {
       int length = _fsp.size();
       EOT vBest;
       vBest.invalidate();
@@ -85,7 +87,6 @@ class NEHInitOrdered : public NEHInit<EOT> {
 template <class EOT>
 class NEHInitRandom : public NEHInit<EOT> {
   int cycle;
-  using NEHInit<EOT>::size;
 
  public:
   NEHInitRandom(eoEvalFunc<EOT>& eval,
@@ -95,8 +96,10 @@ class NEHInitRandom : public NEHInit<EOT> {
       : NEHInit<EOT>(eval, size, comp), cycle(cycle) {}
 
  protected:
+  using NEHInit<EOT>::size;
+
   virtual void init(std::vector<int>& order) override {
-    int n = size;
+    int n = size();
     order.resize(n);
     std::iota(std::begin(order), std::end(order), 0);
     std::vector<int> a(cycle);

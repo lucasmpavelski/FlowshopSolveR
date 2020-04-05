@@ -13,7 +13,7 @@ class FitnessHistory : public moStatBase<EOT> {
 
   FitnessHistory() { fitness.reserve(100); }
 
-  void init(EOT& sol) final override { fitness.clear(); }
+  void init(EOT&) final override { fitness.clear(); }
 
   void operator()(EOT& sol) final override { fitness.push_back(sol.fitness()); }
 

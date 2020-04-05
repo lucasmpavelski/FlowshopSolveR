@@ -13,7 +13,6 @@
 Result solveWithHC(
     const std::unordered_map<std::string, std::string>& problem_specs,
     const std::unordered_map<std::string, double>& param_values) {
-  double result = 0.0;
   MHParamsSpecs specs = MHParamsSpecsFactory::get("HC");
   MHParamsValues params(&specs);
   params.readValues(param_values);
@@ -29,10 +28,8 @@ Result solveWithHC(
   const std::string mh = params.mhName();
 
   // continuator
-  moContinuator<Ngh>& continuator = prob.continuator();
   eoEvalFunc<EOT>& fullEval = prob.eval();
   moEval<Ngh>& evalN = prob.neighborEval();
-  moCheckpoint<Ngh>& checkpoint = prob.checkpoint();
   moCheckpoint<Ngh>& checkpointGlobal = prob.checkpointGlobal();
 
   // debug
@@ -66,9 +63,8 @@ Result solveWithHC(
       break;
     default:
       throw std::runtime_error(
-        "Unknown HC.Comp.Strat " + 
-        std::to_string(params.categorical("HC.Comp.Strat"))
-      );
+          "Unknown HC.Comp.Strat " +
+          std::to_string(params.categorical("HC.Comp.Strat")));
       break;
   }
 
@@ -141,9 +137,8 @@ Result solveWithHC(
       algo = &rand_best;
       break;
     default:
-      throw std::runtime_error(
-          "Unknonwn HC.Algo value " +
-          std::to_string(params.categorical("HC.Algo")));
+      throw std::runtime_error("Unknonwn HC.Algo value " +
+                               std::to_string(params.categorical("HC.Algo")));
       break;
   }
 

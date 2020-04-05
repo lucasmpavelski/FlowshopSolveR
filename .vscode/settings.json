@@ -1,7 +1,9 @@
 {
-    "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
     "files.associations": {
         "*.tcc": "cpp",
+        "*.hpp": "cpp",
+        "*.h": "cpp",
+        "*.cpp": "cpp",
         "deque": "cpp",
         "string": "cpp",
         "vector": "cpp",
@@ -56,6 +58,9 @@
         "sstream": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "valarray": "cpp"
-    }
+        "valarray": "cpp",
+        "eo": "cpp",
+        "mo": "cpp"
+    },
+    "C_Cpp.intelliSenseEngineFallback": "Disabled"
 }

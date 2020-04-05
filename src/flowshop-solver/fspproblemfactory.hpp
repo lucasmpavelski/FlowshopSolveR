@@ -16,7 +16,7 @@ class FSPProblemFactory {
       lower_bounds_data;
 
  public:
-  static void init(const std::string data_folder, bool quiet = false) {
+  static void init(const std::string data_folder) {
     FSPProblemFactory::data_folder = data_folder;
     loadLowerBoundsData();
 
@@ -55,7 +55,7 @@ class FSPProblemFactory {
         throw std::runtime_error("Error while reading lower bounds data!");
       }
       std::unordered_map<std::string, std::string> line;
-      for (int i = 0; i < vline.size(); i++) {
+      for (unsigned i = 0; i < vline.size(); i++) {
         line[header[i]] = vline[i];
       }
       lower_bounds_data.emplace_back(line);

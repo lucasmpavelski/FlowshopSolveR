@@ -1,15 +1,14 @@
-#include <iostream>
 #include <array>
+#include <iostream>
 
 #include <string>
 
 #include "flowshop-solver/fspproblemfactory.hpp"
-#include "flowshop-solver/specsdata.hpp"
 #include "flowshop-solver/global.hpp"
 #include "flowshop-solver/heuristics/all.hpp"
+#include "flowshop-solver/specsdata.hpp"
 
-int main(int argc, char *argv[])
-{
+int main(int, char *[]) {
   long seed = 123; // std::stol(argv[1]);
   std::cerr << seed << '\n';
   RNG::seed(seed);

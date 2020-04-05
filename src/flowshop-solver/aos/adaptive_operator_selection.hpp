@@ -21,9 +21,9 @@ class OperatorSelection {
   OpT& getOperator(const int idx) { return operators.at(idx); };
 
   // main interface
-  virtual void reset(double d){};  // on init algorithm
+  virtual void reset(double){};  // on init algorithm
   virtual OpT& selectOperator() { return operators[0]; };
-  virtual void feedback(const double cf, const double pf){};
+  virtual void feedback(const double, const double){};
   virtual void update(){};  // on finish generation
   virtual std::ostream& printOn(std::ostream& os) = 0;
 

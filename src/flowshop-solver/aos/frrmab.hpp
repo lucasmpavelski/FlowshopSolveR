@@ -50,7 +50,7 @@ struct SlidingWindow {
       return *this;
     }
 
-    self_type operator++(int dummy) { return operator++(); }
+    self_type operator++(int) { return operator++(); }
 
     bool operator==(const self_type& rhs) const {
       return curr == rhs.curr && done == rhs.done;
@@ -212,7 +212,7 @@ class FRRMAB : public OperatorSelection<OpT> {
 };
 
 template <typename OpT>
-void FRRMAB<OpT>::reset(double d) {
+void FRRMAB<OpT>::reset(double) {
   last_op = -1;
   fir_records.clear(Indexed<double>(-1, 0.0));
   using std::fill;

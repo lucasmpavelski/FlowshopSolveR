@@ -1,25 +1,22 @@
 #pragma once
 
-#include <unordered_map>
-
-#include <paradiseo/mo/perturb/moRestartPerturb.h>
 #include <paradiseo/mo/acceptCrit/moAlwaysAcceptCrit.h>
 #include <paradiseo/mo/algo/moILS.h>
+#include <paradiseo/mo/perturb/moRestartPerturb.h>
 
-#include "heuristics.hpp"
-#include "specsdata.hpp"
-#include "fspproblemfactory.hpp"
-#include "fastnehheuristic.hpp"
+#include <unordered_map>
+
 #include "MHParamsValues.hpp"
-#include "op_cooling_schedule.hpp"
 #include "NEHInit.hpp"
+#include "fastnehheuristic.hpp"
+#include "fspproblemfactory.hpp"
+#include "heuristics.hpp"
+#include "op_cooling_schedule.hpp"
+#include "specsdata.hpp"
 
-
-Result solveWithIHC(const std::unordered_map<std::string, std::string> &problem_specs,
-                   const std::unordered_map<std::string, double> &param_values)
-{
-  double result = 0.0;
-
+Result solveWithIHC(
+    const std::unordered_map<std::string, std::string>& problem_specs,
+    const std::unordered_map<std::string, double>& param_values) {
   MHParamsSpecs specs = MHParamsSpecsFactory::get("IHC");
   MHParamsValues params(&specs);
   params.readValues(param_values);
@@ -35,8 +32,8 @@ Result solveWithIHC(const std::unordered_map<std::string, std::string> &problem_
   const std::string mh = params.mhName();
 
   // continuator
-  eoEvalFunc<EOT> &fullEval = prob.eval();
-  moEval<Ngh> &evalN = prob.neighborEval();
+  eoEvalFunc<EOT>& fullEval = prob.eval();
+  moEval<Ngh>& evalN = prob.neighborEval();
   moCheckpoint<Ngh>& checkpoint = prob.checkpoint();
   moCheckpoint<Ngh>& checkpointGlobal = prob.checkpointGlobal();
 
@@ -49,30 +46,29 @@ Result solveWithIHC(const std::unordered_map<std::string, std::string> &problem_
   //  checkpointGlobal.add(printg);
 
   // comparator strategy
-  moSolComparator<EOT> compSS0;              // comp sol/sol strict
-  moSolNeighborComparator<Ngh> compSN0;      // comp sol/Ngh strict
-  moNeighborComparator<Ngh> compNN0;         // comp Ngh/Ngh strict
-  moEqualSolComparator<EOT> compSS1;         // comp sol/sol with equal
-  moEqualSolNeighborComparator<Ngh> compSN1; // comp sol/Ngh with equal
-  moEqualNeighborComparator<Ngh> compNN1;    // comp Ngh/Ngh with equal
-  moSolComparator<EOT> *compSS = nullptr;
-  moSolNeighborComparator<Ngh> *compSN = nullptr;
-  moNeighborComparator<Ngh> *compNN = nullptr;
-  switch (params.categorical("IHC.Comp.Strat"))
-  {
-  case 0:
-    compSS = &compSS0;
-    compSN = &compSN0;
-    compNN = &compNN0;
-    break;
-  case 1:
-    compSS = &compSS1;
-    compSN = &compSN1;
-    compNN = &compNN1;
-    break;
-  default:
-    assert(false);
-    break;
+  moSolComparator<EOT> compSS0;               // comp sol/sol strict
+  moSolNeighborComparator<Ngh> compSN0;       // comp sol/Ngh strict
+  moNeighborComparator<Ngh> compNN0;          // comp Ngh/Ngh strict
+  moEqualSolComparator<EOT> compSS1;          // comp sol/sol with equal
+  moEqualSolNeighborComparator<Ngh> compSN1;  // comp sol/Ngh with equal
+  moEqualNeighborComparator<Ngh> compNN1;     // comp Ngh/Ngh with equal
+  moSolComparator<EOT>* compSS = nullptr;
+  moSolNeighborComparator<Ngh>* compSN = nullptr;
+  moNeighborComparator<Ngh>* compNN = nullptr;
+  switch (params.categorical("IHC.Comp.Strat")) {
+    case 0:
+      compSS = &compSS0;
+      compSN = &compSN0;
+      compNN = &compNN0;
+      break;
+    case 1:
+      compSS = &compSS1;
+      compSN = &compSN1;
+      compNN = &compNN1;
+      break;
+    default:
+      assert(false);
+      break;
   }
 
   // initialization
@@ -80,24 +76,25 @@ Result solveWithIHC(const std::unordered_map<std::string, std::string> &problem_
   NEHInit<EOT> init1(fullEval, N, *compSS);
   int cycle = 3;
   NEHInitRandom<EOT> init2(fullEval, N, cycle, *compSS);
-  //FastNEH fastNeh(prob.getData());
-  //FastNEHRandom init2(prob.getData());
-  eoInit<EOT> *init = nullptr;
+  // FastNEH fastNeh(prob.getData());
+  // FastNEHRandom init2(prob.getData());
+  eoInit<EOT>* init = nullptr;
 
-  switch (params.categorical("IHC.Init.Strat"))
-  {
-  case 0:
-    init = &init0;
-    break;
-  case 1:
-    init = &init1;
-    break;
-  case 2:
-    init = &init2;
-    break;
-  default:
-    throw std::runtime_error("Unknonwn IHC.Init.Strat value " + std::to_string(params.categorical("Init.Strat")));
-    break;
+  switch (params.categorical("IHC.Init.Strat")) {
+    case 0:
+      init = &init0;
+      break;
+    case 1:
+      init = &init1;
+      break;
+    case 2:
+      init = &init2;
+      break;
+    default:
+      throw std::runtime_error(
+          "Unknonwn IHC.Init.Strat value " +
+          std::to_string(params.categorical("Init.Strat")));
+      break;
   }
 
   // neighborhood size
@@ -110,19 +107,19 @@ Result solveWithIHC(const std::unordered_map<std::string, std::string> &problem_
 
   moOrderNeighborhood<Ngh> neighborhood0(nh_size);
   moRndWithoutReplNeighborhood<Ngh> neighborhood1(nh_size);
-  moNeighborhood<Ngh> *neighborhood = nullptr;
-  switch (params.categorical("IHC.Neighborhood.Strat"))
-  {
-  case 0:
-    neighborhood = &neighborhood0;
-    break;
-  case 1:
-    neighborhood = &neighborhood1;
-    break;
-  default:
-    throw std::runtime_error("Unknonwn Neighborhood.Strat value " +
-                                 std::to_string(params.categorical("Neighborhood.Strat")));
-    break;
+  moNeighborhood<Ngh>* neighborhood = nullptr;
+  switch (params.categorical("IHC.Neighborhood.Strat")) {
+    case 0:
+      neighborhood = &neighborhood0;
+      break;
+    case 1:
+      neighborhood = &neighborhood1;
+      break;
+    default:
+      throw std::runtime_error(
+          "Unknonwn Neighborhood.Strat value " +
+          std::to_string(params.categorical("Neighborhood.Strat")));
+      break;
   }
   // HC algorithms
   moFirstImprHC<Ngh> fi(*neighborhood, fullEval, evalN, checkpoint, *compNN,
@@ -131,26 +128,26 @@ Result solveWithIHC(const std::unordered_map<std::string, std::string> &problem_
                        *compSN);
   moRandomBestHC<Ngh> rand_best(*neighborhood, fullEval, evalN, checkpoint,
                                 *compNN, *compSN);
-  moLocalSearch<Ngh> *algo = nullptr;
-  switch (params.categorical("IHC.Algo"))
-  {
-  case 0:
-    algo = &fi;
-    break;
-  case 1:
-    algo = &best;
-    break;
-  case 2:
-    algo = &rand_best;
-    break;
-  default:
-    throw std::runtime_error("Unknonwn IHC.Algo value " + std::to_string(params.categorical("IHC.Algo")));
-    break;
+  moLocalSearch<Ngh>* algo = nullptr;
+  switch (params.categorical("IHC.Algo")) {
+    case 0:
+      algo = &fi;
+      break;
+    case 1:
+      algo = &best;
+      break;
+    case 2:
+      algo = &rand_best;
+      break;
+    default:
+      throw std::runtime_error("Unknonwn IHC.Algo value " +
+                               std::to_string(params.categorical("IHC.Algo")));
+      break;
   }
 
   moRestartPerturb<Ngh> perturb(*init, fullEval, 0);
   moAlwaysAcceptCrit<Ngh> accept;
   moILS<Ngh, Ngh> ils(*algo, fullEval, checkpointGlobal, perturb, accept);
-  
+
   return runExperiment(*init, ils, prob);
 }

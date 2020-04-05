@@ -2,32 +2,33 @@
 
 #include <algorithm>
 
-#include <comparator/moNeighborComparator.h>
-#include <comparator/moSolComparator.h>
-#include <comparator/moSolNeighborComparator.h>
-#include <explorer/moNeighborhoodExplorer.h>
-#include <neighborhood/moNeighborhood.h>
-#include <utils/eoRNG.h>
-
-#include "global.hpp"
-#include "heuristics/neighborhood_checkpoint.hpp"
-#include "problems/FSPEvalFunc.hpp"
+#include "../global.hpp"
+#include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
+#include "flowshop-solver/problems/FSPEvalFunc.hpp"
+#include "paradiseo/eo/utils/eoRNG.h"
+#include "paradiseo/mo/comparator/moNeighborComparator.h"
+#include "paradiseo/mo/comparator/moSolComparator.h"
+#include "paradiseo/mo/comparator/moSolNeighborComparator.h"
+#include "paradiseo/mo/explorer/moNeighborhoodExplorer.h"
+#include "paradiseo/mo/neighborhood/moNeighborhood.h"
 
 /**
  * Explorer for a simple Hill-climbing
  */
-template <class Neighbor>
+template <class Neighbor, class EOT = typename Neighbor::EOT>
 class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
- public:
-  typedef typename Neighbor::EOT EOT;
+  eoEvalFunc<EOT>& eval;
+  int size;
+  moSolComparator<EOT>& solComparator;
+  NeigborhoodCheckpoint<Neighbor> neighborhoodCheckpoint;
+  // true if the solution has changed
+  bool improve;
+  bool LO;
+  std::vector<int> RandJOB;
+  // EOT solTMP, best;
+  unsigned k;
 
-  /**
-   * Constructor
-   * @param _neighborhood the neighborhood
-   * @param _eval the evaluation function
-   * @param _neighborComparator a neighbor comparator
-   * @param _solNeighborComparator solution vs neighbor comparator
-   */
+ public:
   IGexplorer(eoEvalFunc<EOT>& _fullEval,
              int size,
              moSolComparator<EOT>& _solComparator,
@@ -58,7 +59,7 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
    * updateParam: NOTHING TO DO
    * @param _solution unused solution
    */
-  virtual void updateParam(EOT& _solution) {
+  virtual void updateParam(EOT&) {
     if (k < RandJOB.size() - 1)
       k++;
     else {
@@ -77,7 +78,7 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
    * terminate: NOTHING TO DO
    * @param _solution unused solution
    */
-  virtual void terminate(EOT& _solution) {}
+  virtual void terminate(EOT&) {}
 
   /**
    * Explore the neighborhood of a solution
@@ -97,7 +98,7 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
     eval(solTMP);
     EOT best = solTMP;
     std::vector<int> ties;
-    for (; position < _solution.size(); position++) {
+    for (; position < static_cast<int>(_solution.size()); position++) {
       if (position == j)
         continue;
       solTMP = _solution;
@@ -131,36 +132,24 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
    * @param _solution the solution
    * @return true if an ameliorated neighbor was be found
    */
-  virtual bool isContinue(EOT& _solution) { return !LO; }
+  virtual bool isContinue(EOT&) { return !LO; }
 
   /**
    * move the solution with the best neighbor
    * @param _solution the solution to move
    */
-  virtual void move(EOT& _solution) {}
+  virtual void move(EOT&) {}
 
   /**
    * accept test if an amelirated neighbor was be found
    * @param _solution the solution
    * @return true if the best neighbor ameliorate the fitness
    */
-  virtual bool accept(EOT& _solution) { return false; }
+  virtual bool accept(EOT&) { return false; }
 
   /**
    * Return the class Name
    * @return the class name as a std::string
    */
   virtual std::string className() const { return "IGexplorer"; }
-
- private:
-  moSolComparator<EOT>& solComparator;
-  NeigborhoodCheckpoint<Neighbor> neighborhoodCheckpoint;
-  // true if the solution has changed
-  bool improve;
-  bool LO;
-  std::vector<int> RandJOB;
-  // EOT solTMP, best;
-  eoEvalFunc<EOT>& eval;
-  int size;
-  int k;
 };

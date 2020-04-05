@@ -9,7 +9,7 @@ template <class Neighbor>
 class dummyAspiration : public moAspiration<Neighbor> {
  public:
   typedef typename Neighbor::EOT EOT;
-  void init(EOT& _sol) {}
-  void update(EOT& _sol, Neighbor& _neighbor) {}
-  bool operator()(EOT& _sol, Neighbor& _neighbor) { return false; }
+  void init(EOT&) {}
+  void update(EOT&, Neighbor&) {}
+  bool operator()(EOT&, Neighbor&) { return false; }
 };

@@ -7,7 +7,7 @@ class falseContinuator : public moContinuator<Neighbor> {
  public:
   using EOT = typename Neighbor::EOT;
 
-  bool operator()(EOT& _solution) final override { return false; }
+  bool operator()(EOT&) final override { return false; }
 
-  void init(EOT& _solution) final override {}
+  void init(EOT&) final override {}
 };

@@ -2,9 +2,9 @@
 
 #include <vector>
 
+#include "paradiseo/eo/eoEvalFunc.h"
 #include "paradiseo/eo/eoOp.h"
 #include "paradiseo/mo/algo/moLocalSearch.h"
-#include "paradiseo/eo/eoEvalFunc.h"
 
 template <class Ngh>
 class IGLocalSearchPartialSolution : public eoMonOp<typename Ngh::EOT> {
@@ -33,7 +33,7 @@ class IGLocalSearchPartialSolution : public eoMonOp<typename Ngh::EOT> {
   ivec deconstruction(EOT& sol) {
     ivec removedJobs;
     removedJobs.reserve(destructionSize);
-    for (int i = 0; i < destructionSize; i++) {
+    for (unsigned i = 0; i < destructionSize; i++) {
       int pos = rng.random(sol.size());
       removedJobs.push_back(sol[pos]);
       sol.erase(sol.begin() + pos);
@@ -52,10 +52,10 @@ class IGLocalSearchPartialSolution : public eoMonOp<typename Ngh::EOT> {
     sol.insert(sol.begin(), job);
     sol.invalidate();
     evalFunction(sol);
-    int bestPosition = 0;
+    unsigned bestPosition = 0;
     EOT bestFitness;
     bestFitness.fitness(sol.fitness());
-    for (int i = 1; i <= temp.size(); i++) {
+    for (unsigned i = 1; i <= temp.size(); i++) {
       sol = temp;
       sol.insert(sol.begin() + i, job);
       sol.invalidate();

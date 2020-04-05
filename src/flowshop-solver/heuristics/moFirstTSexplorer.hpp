@@ -6,7 +6,7 @@
  */
 template <class Neighbor>
 class moFirstTSexplorer : public moNeighborhoodExplorer<Neighbor> {
-public:
+ public:
   typedef typename Neighbor::EOT EOT;
   typedef moNeighborhood<Neighbor> Neighborhood;
 
@@ -25,17 +25,20 @@ public:
    * @param _diversification the diversification box
    * @param _aspiration the aspiration criteria
    */
-  moFirstTSexplorer(Neighborhood &_neighborhood, moEval<Neighbor> &_eval,
-                    moNeighborComparator<Neighbor> &_neighborComparator,
-                    moSolNeighborComparator<Neighbor> &_solNeighborComparator,
-                    moTabuList<Neighbor> &_tabuList,
-                    moIntensification<Neighbor> &_intensification,
-                    moDiversification<Neighbor> &_diversification,
-                    moAspiration<Neighbor> &_aspiration)
+  moFirstTSexplorer(Neighborhood& _neighborhood,
+                    moEval<Neighbor>& _eval,
+                    moNeighborComparator<Neighbor>& _neighborComparator,
+                    moSolNeighborComparator<Neighbor>& _solNeighborComparator,
+                    moTabuList<Neighbor>& _tabuList,
+                    moIntensification<Neighbor>& _intensification,
+                    moDiversification<Neighbor>& _diversification,
+                    moAspiration<Neighbor>& _aspiration)
       : moNeighborhoodExplorer<Neighbor>(_neighborhood, _eval),
         neighborComparator(_neighborComparator),
-        solNeighborComparator(_solNeighborComparator), tabuList(_tabuList),
-        intensification(_intensification), diversification(_diversification),
+        solNeighborComparator(_solNeighborComparator),
+        tabuList(_tabuList),
+        intensification(_intensification),
+        diversification(_diversification),
         aspiration(_aspiration) {
     isAccept = false;
   }
@@ -50,7 +53,7 @@ public:
    * criteria
    * @param _solution
    */
-  virtual void initParam(EOT &_solution) {
+  virtual void initParam(EOT& _solution) {
     tabuList.init(_solution);
     intensification.init(_solution);
     diversification.init(_solution);
@@ -62,9 +65,8 @@ public:
    * update params of tabu list, intensification box, diversification box and
    * aspiration criteria
    * @param _solution
-    */
-  virtual void updateParam(EOT &_solution) {
-
+   */
+  virtual void updateParam(EOT& _solution) {
     if ((*this).moveApplied()) {
       tabuList.add(_solution, selectedNeighbor);
       intensification.add(_solution, selectedNeighbor);
@@ -81,13 +83,13 @@ public:
   /**
    * terminate : _solution becomes the best so far
    */
-  virtual void terminate(EOT &_solution) { _solution = bestSoFar; };
+  virtual void terminate(EOT& _solution) { _solution = bestSoFar; };
 
   /**
    * Explore the neighborhood of a solution
    * @param _solution
    */
-  virtual void operator()(EOT &_solution) {
+  virtual void operator()(EOT& _solution) {
     bool found = false;
     intensification(_solution);
     diversification(_solution);
@@ -157,34 +159,34 @@ public:
    * @param _solution the solution
    * @return true
    */
-  virtual bool isContinue(EOT &_solution) { return true; };
+  virtual bool isContinue(EOT&) { return true; };
 
   /**
    * accept test if an ameliorated neighbor was found
    * @param _solution the solution
    * @return true if the best neighbor ameliorate the fitness
    */
-  virtual bool accept(EOT &_solution) { return isAccept; };
+  virtual bool accept(EOT&) { return isAccept; };
 
   /**
    * Give the current best found so far
    * @return the best solution so far
    */
-  const EOT &getBest() { return bestSoFar; };
+  const EOT& getBest() { return bestSoFar; };
 
-protected:
+ protected:
   using moNeighborhoodExplorer<Neighbor>::neighborhood;
   using moNeighborhoodExplorer<Neighbor>::eval;
 
   // comparator between solution and neighbor or between neighbors
-  moNeighborComparator<Neighbor> &neighborComparator;
-  moSolNeighborComparator<Neighbor> &solNeighborComparator;
+  moNeighborComparator<Neighbor>& neighborComparator;
+  moSolNeighborComparator<Neighbor>& solNeighborComparator;
 
   // Tabu components
-  moTabuList<Neighbor> &tabuList;
-  moIntensification<Neighbor> &intensification;
-  moDiversification<Neighbor> &diversification;
-  moAspiration<Neighbor> &aspiration;
+  moTabuList<Neighbor>& tabuList;
+  moIntensification<Neighbor>& intensification;
+  moDiversification<Neighbor>& diversification;
+  moAspiration<Neighbor>& aspiration;
 
   // Best so far Solution
   EOT bestSoFar;

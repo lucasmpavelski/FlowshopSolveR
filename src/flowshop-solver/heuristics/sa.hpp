@@ -2,15 +2,16 @@
 
 #include <unordered_map>
 
-#include "heuristics.hpp"
-#include "fspproblemfactory.hpp"
 #include "MHParamsValues.hpp"
-#include "op_cooling_schedule.hpp"
 #include "NEHInit.hpp"
+#include "fspproblemfactory.hpp"
+#include "heuristics.hpp"
+#include "op_cooling_schedule.hpp"
 #include "specsdata.hpp"
 
-Result solveWithSA(const std::unordered_map<std::string, std::string>& problem_specs,
-                   const std::unordered_map<std::string, double>& param_values) {
+Result solveWithSA(
+    const std::unordered_map<std::string, std::string>& problem_specs,
+    const std::unordered_map<std::string, double>& param_values) {
   using Problem = FSPProblem;
   Problem prob = FSPProblemFactory::get(problem_specs);
   MHParamsSpecs specs = MHParamsSpecsFactory::get("SA");
@@ -24,37 +25,34 @@ Result solveWithSA(const std::unordered_map<std::string, std::string>& problem_s
   const int N = prob.size(0);
   const int max_nh_size = pow(N - 1, 2);
   const std::string mh = params.mhName();
-  
-  // continuator
-  moContinuator<Ngh> &continuator = prob.continuator();
-  eoEvalFunc<EOT> &fullEval = prob.eval();
-  moEval<Ngh> &evalN = prob.neighborEval();
 
-  moCheckpoint<Ngh>& checkpoint = prob.checkpoint();
+  // continuator
+  eoEvalFunc<EOT>& fullEval = prob.eval();
+  moEval<Ngh>& evalN = prob.neighborEval();
+
   moCheckpoint<Ngh>& checkpointGlobal = prob.checkpointGlobal();
 
   // comparator strategy
-  moSolComparator<EOT> compSS0;              // comp sol/sol strict
-  moSolNeighborComparator<Ngh> compSN0;      // comp sol/Ngh strict
-  moNeighborComparator<Ngh> compNN0;         // comp Ngh/Ngh strict
-  moEqualSolComparator<EOT> compSS1;         // comp sol/sol with equal
-  moEqualSolNeighborComparator<Ngh> compSN1; // comp sol/Ngh with equal
-  moEqualNeighborComparator<Ngh> compNN1;    // comp Ngh/Ngh with equal
-  moSolComparator<EOT> *compSS = nullptr;
-  moSolNeighborComparator<Ngh> *compSN = nullptr;
-  moNeighborComparator<Ngh> *compNN = nullptr;
+  moSolComparator<EOT> compSS0;               // comp sol/sol strict
+  moSolNeighborComparator<Ngh> compSN0;       // comp sol/Ngh strict
+  moNeighborComparator<Ngh> compNN0;          // comp Ngh/Ngh strict
+  moEqualSolComparator<EOT> compSS1;          // comp sol/sol with equal
+  moEqualSolNeighborComparator<Ngh> compSN1;  // comp sol/Ngh with equal
+  moEqualNeighborComparator<Ngh> compNN1;     // comp Ngh/Ngh with equal
+  moSolComparator<EOT>* compSS = nullptr;
+  moSolNeighborComparator<Ngh>* compSN = nullptr;
   switch (params.categorical("SA.Comp.Strat")) {
-  case 0:
-    compSS = &compSS0;
-    compSN = &compSN0;
-    break;
-  case 1:
-    compSS = &compSS1;
-    compSN = &compSN1;
-    break;
-  default:
-    assert(false);
-    break;
+    case 0:
+      compSS = &compSS0;
+      compSN = &compSN0;
+      break;
+    case 1:
+      compSS = &compSS1;
+      compSN = &compSN1;
+      break;
+    default:
+      assert(false);
+      break;
   }
 
   // initialization
@@ -62,24 +60,25 @@ Result solveWithSA(const std::unordered_map<std::string, std::string>& problem_s
   NEHInit<EOT> init1(fullEval, N, *compSS);
   int cycle = 3;
   NEHInitRandom<EOT> init2(fullEval, N, cycle, *compSS);
-  //FastNEH fastNeh(prob.getData());
-  //FastNEHRandom init2(prob.getData());
-  eoInit<EOT> *init = nullptr;
+  // FastNEH fastNeh(prob.getData());
+  // FastNEHRandom init2(prob.getData());
+  eoInit<EOT>* init = nullptr;
 
   switch (params.categorical("SA.Init.Strat")) {
-  case 0:
-    init = &init0;
-    break;
-  case 1:
-    init = &init1;
-    break;
-  case 2:
-    init = &init2;
-    break;
-  default:
-    throw std::runtime_error("Unknonwn SA.Init.Strat value " + 
-    std::to_string(params.categorical("SA.Init.Strat")));
-    break;
+    case 0:
+      init = &init0;
+      break;
+    case 1:
+      init = &init1;
+      break;
+    case 2:
+      init = &init2;
+      break;
+    default:
+      throw std::runtime_error(
+          "Unknonwn SA.Init.Strat value " +
+          std::to_string(params.categorical("SA.Init.Strat")));
+      break;
   }
 
   // neighborhood size
@@ -90,22 +89,22 @@ Result solveWithSA(const std::unordered_map<std::string, std::string>& problem_s
       int((no_nh_sizes + 1) * params.real("SA.Neighborhood.Size") / 10.0);
   const int nh_size = std::min(max_nh_size, min_nh_size + scale * nh_interval);
 
-    // neighborhood (fixed with strategy = RANDOM)
-    moRndWithoutReplNeighborhood<Ngh> neighborhood(nh_size);
-    // cooling schedule
-    moSimpleCoolingSchedule<EOT> cooling0(
-        params.real("SA.Init.Temp"), params.real("SA.Alpha"),
-        params.integer("SA.Span.Simple"), params.real("SA.Final.Temp"));
-    moDynSpanCoolingSchedule<EOT> cooling1(
-        params.real("SA.Init.Temp"), params.real("SA.Alpha"),
-        params.integer("SA.Span.Tries.Max"), params.integer("SA.Span.Move.Max"),
-        params.integer("SA.Nb.Span.Max"));
-    opCoolingSchedule<EOT> cooling2(
-          prob.getData(), params.real("SA.T"), params.real("SA.Final.Temp"),
-          params.real("SA.Beta"));
+  // neighborhood (fixed with strategy = RANDOM)
+  moRndWithoutReplNeighborhood<Ngh> neighborhood(nh_size);
+  // cooling schedule
+  moSimpleCoolingSchedule<EOT> cooling0(
+      params.real("SA.Init.Temp"), params.real("SA.Alpha"),
+      params.integer("SA.Span.Simple"), params.real("SA.Final.Temp"));
+  moDynSpanCoolingSchedule<EOT> cooling1(
+      params.real("SA.Init.Temp"), params.real("SA.Alpha"),
+      params.integer("SA.Span.Tries.Max"), params.integer("SA.Span.Move.Max"),
+      params.integer("SA.Nb.Span.Max"));
+  opCoolingSchedule<EOT> cooling2(prob.getData(), params.real("SA.T"),
+                                  params.real("SA.Final.Temp"),
+                                  params.real("SA.Beta"));
 
-    moCoolingSchedule<EOT> *cooling = nullptr;
-    switch (params.categorical("SA.Algo")) {
+  moCoolingSchedule<EOT>* cooling = nullptr;
+  switch (params.categorical("SA.Algo")) {
     case 0:
       cooling = &cooling0;
       break;
@@ -118,9 +117,10 @@ Result solveWithSA(const std::unordered_map<std::string, std::string>& problem_s
     default:
       assert(false);
       break;
-    }
+  }
 
-  moSA<Ngh> algo(neighborhood, fullEval, evalN, *cooling, *compSN, checkpointGlobal);
+  moSA<Ngh> algo(neighborhood, fullEval, evalN, *cooling, *compSN,
+                 checkpointGlobal);
 
   return runExperiment(*init, algo, prob);
 }

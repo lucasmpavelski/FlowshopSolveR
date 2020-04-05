@@ -18,7 +18,7 @@ class Random : public OperatorSelection<OpT> {
 
   void update() final override{};
 
-  void feedback(const double cf, const double pf) final override {}
+  void feedback(const double, const double) final override {}
 
   std::ostream& printOn(std::ostream& os) final override {
     os << "  strategy: Random\n";

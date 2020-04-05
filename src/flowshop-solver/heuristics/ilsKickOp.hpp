@@ -27,7 +27,7 @@ class ilsKickOp : public eoMonOp<Chrom> {
 
     for (unsigned int swap = 0; swap < howManySwaps; swap++) {
       // generate two different indices
-      int i, j, diff = n * strength;
+      unsigned i, j, diff = n * strength;
       do {
         i = eo::rng.random(n);
         j = eo::rng.random(diff * 2) - diff;

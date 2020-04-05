@@ -53,7 +53,7 @@ class moHighResTimeContinuator : public moContinuator<Neighbor> {
    * Returns false when the running time is reached.
    * @param _sol the current solution
    */
-  bool operator()(EOT& _sol) final override {
+  bool operator()(EOT&) final override {
     auto now = std::chrono::system_clock::now();
     auto duration = std::chrono::duration_cast<TimeT>(now - start);
     bool res = (duration.count() < max);

@@ -1,7 +1,14 @@
 #pragma once
 
 #include <paradiseo/eo/eoSwapMutation.h>
-#include <paradiseo/mo/perturb/moMonOpPerturb.h>
+#include <paradiseo/mo/comparator/moComparator.h>
+#include <paradiseo/mo/comparator/moEqualNeighborComparator.h>
+#include <paradiseo/mo/comparator/moEqualSolComparator.h>
+#include <paradiseo/mo/comparator/moEqualSolNeighborComparator.h>
+#include <paradiseo/mo/comparator/moNeighborComparator.h>
+#include <paradiseo/mo/comparator/moSolNeighborComparator.h>
+#include <paradiseo/mo/mo.h>
+#include <paradiseo/mo/neighborhood/moOrderNeighborhood.h>
 
 #include <algorithm>
 #include <unordered_map>
@@ -84,7 +91,7 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
    * @param _sol the current solution
    * @param _neighbor the current neighbor
    */
-  void add(EOT& _sol, Ngh&) final override{};
+  void add(EOT&, Ngh&) final override{};
 
   /**
    * update the memory
@@ -120,7 +127,7 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
   int maxCoeffCol(const dmat& matrix, int row) {
     double max = matrix[row][0];
     int ret = 0;
-    for (int col = 1; col < matrix.size(); col++) {
+    for (unsigned col = 1; col < matrix.size(); col++) {
       if (max < matrix[row][col]) {
         max = matrix[row][col];
         ret = col;
@@ -131,7 +138,7 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
 
   double sumCol(const dmat& matrix, int row) {
     double s = 0.0;
-    for (int col = 1; col < matrix.size(); col++) {
+    for (unsigned col = 1; col < matrix.size(); col++) {
       s += matrix[row][col];
     }
     return s;

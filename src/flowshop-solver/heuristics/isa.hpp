@@ -3,14 +3,15 @@
 #include <unordered_map>
 
 #include "../heuristics.hpp"
-#include "fspproblemfactory.hpp"
 #include "MHParamsValues.hpp"
-#include "op_cooling_schedule.hpp"
 #include "NEHInit.hpp"
+#include "fspproblemfactory.hpp"
+#include "op_cooling_schedule.hpp"
 #include "specsdata.hpp"
 
-Result solveWithISA(const std::unordered_map<std::string, std::string>& problem_specs,
-                   const std::unordered_map<std::string, double>& param_values) {
+Result solveWithISA(
+    const std::unordered_map<std::string, std::string>& problem_specs,
+    const std::unordered_map<std::string, double>& param_values) {
   using Problem = FSPProblem;
   Problem prob = FSPProblemFactory::get(problem_specs);
   MHParamsSpecs specs = MHParamsSpecsFactory::get("ISA");
@@ -23,36 +24,35 @@ Result solveWithISA(const std::unordered_map<std::string, std::string>& problem_
 
   const int N = prob.size(0);
   const int max_nh_size = pow(N - 1, 2);
-  
+
   // continuator
-  eoEvalFunc<EOT> &fullEval = prob.eval();
-  moEval<Ngh> &evalN = prob.neighborEval();
+  eoEvalFunc<EOT>& fullEval = prob.eval();
+  moEval<Ngh>& evalN = prob.neighborEval();
 
   moCheckpoint<Ngh>& checkpoint = prob.checkpoint();
   moCheckpoint<Ngh>& checkpointGlobal = prob.checkpointGlobal();
 
   // comparator strategy
-  moSolComparator<EOT> compSS0;              // comp sol/sol strict
-  moSolNeighborComparator<Ngh> compSN0;      // comp sol/Ngh strict
-  moNeighborComparator<Ngh> compNN0;         // comp Ngh/Ngh strict
-  moEqualSolComparator<EOT> compSS1;         // comp sol/sol with equal
-  moEqualSolNeighborComparator<Ngh> compSN1; // comp sol/Ngh with equal
-  moEqualNeighborComparator<Ngh> compNN1;    // comp Ngh/Ngh with equal
-  moSolComparator<EOT> *compSS = nullptr;
-  moSolNeighborComparator<Ngh> *compSN = nullptr;
-  moNeighborComparator<Ngh> *compNN = nullptr;
+  moSolComparator<EOT> compSS0;               // comp sol/sol strict
+  moSolNeighborComparator<Ngh> compSN0;       // comp sol/Ngh strict
+  moNeighborComparator<Ngh> compNN0;          // comp Ngh/Ngh strict
+  moEqualSolComparator<EOT> compSS1;          // comp sol/sol with equal
+  moEqualSolNeighborComparator<Ngh> compSN1;  // comp sol/Ngh with equal
+  moEqualNeighborComparator<Ngh> compNN1;     // comp Ngh/Ngh with equal
+  moSolComparator<EOT>* compSS = nullptr;
+  moSolNeighborComparator<Ngh>* compSN = nullptr;
   switch (params.categorical("ISA.Comp.Strat")) {
-  case 0:
-    compSS = &compSS0;
-    compSN = &compSN0;
-    break;
-  case 1:
-    compSS = &compSS1;
-    compSN = &compSN1;
-    break;
-  default:
-    assert(false);
-    break;
+    case 0:
+      compSS = &compSS0;
+      compSN = &compSN0;
+      break;
+    case 1:
+      compSS = &compSS1;
+      compSN = &compSN1;
+      break;
+    default:
+      assert(false);
+      break;
   }
 
   // initialization
@@ -60,24 +60,25 @@ Result solveWithISA(const std::unordered_map<std::string, std::string>& problem_
   NEHInit<EOT> init1(fullEval, N, *compSS);
   int cycle = 3;
   NEHInitRandom<EOT> init2(fullEval, N, cycle, *compSS);
-  //FastNEH fastNeh(prob.getData());
-  //FastNEHRandom init2(prob.getData());
-  eoInit<EOT> *init = nullptr;
+  // FastNEH fastNeh(prob.getData());
+  // FastNEHRandom init2(prob.getData());
+  eoInit<EOT>* init = nullptr;
 
   switch (params.categorical("ISA.Init.Strat")) {
-  case 0:
-    init = &init0;
-    break;
-  case 1:
-    init = &init1;
-    break;
-  case 2:
-    init = &init2;
-    break;
-  default:
-    throw std::runtime_error("Unknonwn ISA.Init.Strat value " + 
-      std::to_string(params.categorical("ISA.Init.Strat")));
-    break;
+    case 0:
+      init = &init0;
+      break;
+    case 1:
+      init = &init1;
+      break;
+    case 2:
+      init = &init2;
+      break;
+    default:
+      throw std::runtime_error(
+          "Unknonwn ISA.Init.Strat value " +
+          std::to_string(params.categorical("ISA.Init.Strat")));
+      break;
   }
 
   // neighborhood size
@@ -88,22 +89,22 @@ Result solveWithISA(const std::unordered_map<std::string, std::string>& problem_
       int((no_nh_sizes + 1) * params.real("ISA.Neighborhood.Size") / 10.0);
   const int nh_size = std::min(max_nh_size, min_nh_size + scale * nh_interval);
 
-    // neighborhood (fixed with strategy = RANDOM)
-    moRndWithoutReplNeighborhood<Ngh> neighborhood(nh_size);
-    // cooling schedule
-    moSimpleCoolingSchedule<EOT> cooling0(
-        params.real("ISA.Init.Temp"), params.real("ISA.Alpha"),
-        params.integer("ISA.Span.Simple"), params.real("ISA.Final.Temp"));
-    moDynSpanCoolingSchedule<EOT> cooling1(
-        params.real("ISA.Init.Temp"), params.real("ISA.Alpha"),
-        params.integer("ISA.Span.Tries.Max"), params.integer("ISA.Span.Move.Max"),
-        params.integer("ISA.Nb.Span.Max"));
-    opCoolingSchedule<EOT> cooling2(
-          prob.getData(), params.real("ISA.T"), params.real("ISA.Final.Temp"),
-          params.real("ISA.Beta"));
+  // neighborhood (fixed with strategy = RANDOM)
+  moRndWithoutReplNeighborhood<Ngh> neighborhood(nh_size);
+  // cooling schedule
+  moSimpleCoolingSchedule<EOT> cooling0(
+      params.real("ISA.Init.Temp"), params.real("ISA.Alpha"),
+      params.integer("ISA.Span.Simple"), params.real("ISA.Final.Temp"));
+  moDynSpanCoolingSchedule<EOT> cooling1(
+      params.real("ISA.Init.Temp"), params.real("ISA.Alpha"),
+      params.integer("ISA.Span.Tries.Max"), params.integer("ISA.Span.Move.Max"),
+      params.integer("ISA.Nb.Span.Max"));
+  opCoolingSchedule<EOT> cooling2(prob.getData(), params.real("ISA.T"),
+                                  params.real("ISA.Final.Temp"),
+                                  params.real("ISA.Beta"));
 
-    moCoolingSchedule<EOT> *cooling = nullptr;
-    switch (params.categorical("ISA.Algo")) {
+  moCoolingSchedule<EOT>* cooling = nullptr;
+  switch (params.categorical("ISA.Algo")) {
     case 0:
       cooling = &cooling0;
       break;
@@ -116,14 +117,13 @@ Result solveWithISA(const std::unordered_map<std::string, std::string>& problem_
     default:
       assert(false);
       break;
-    }
+  }
 
   moSA<Ngh> algo(neighborhood, fullEval, evalN, *cooling, *compSN, checkpoint);
-
 
   moRestartPerturb<Ngh> perturb(*init, fullEval, 0);
   moAlwaysAcceptCrit<Ngh> accept;
   moILS<Ngh, Ngh> ils(algo, fullEval, checkpointGlobal, perturb, accept);
-  
+
   return runExperiment(*init, ils, prob);
 }

@@ -21,7 +21,7 @@ class FitnessReward : public moStatBase<EOT> {
     // std::cerr << "initialFitness:" << initialFitness << '\n';
   }
 
-  void operator()(EOT& sol) final override {}
+  void operator()(EOT&) final override {}
 
   void lastCall(EOT& sol) final override {
     if (sol.invalid())

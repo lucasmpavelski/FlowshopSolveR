@@ -26,7 +26,8 @@ class NIFSPEvalFunc : public FSPEvalFunc<EOT> {
   std::valarray<int> S;
   std::valarray<int> H;
 
-  virtual void completionTime(const EOT& _fsp, std::valarray<int>& Ct) override {
+  virtual void completionTime(const EOT& _fsp,
+                              std::valarray<int>& Ct) override {
     const int _N = _fsp.size();
     const int M = noMachines();
     const int N = noJobs();
@@ -45,7 +46,8 @@ class NIFSPEvalFunc : public FSPEvalFunc<EOT> {
       int max = H[(j - 1) * N + 0];
       for (int i = 1; i < _N; i++) {
         int tmp = H[(j - 1) * N + i] - H[j * N + i - 1];
-        if (tmp > max) max = tmp;
+        if (tmp > max)
+          max = tmp;
       }
       S[j] = S[j - 1] + max;
     }
@@ -54,10 +56,10 @@ class NIFSPEvalFunc : public FSPEvalFunc<EOT> {
     for (int i = 1; i < _N; i++)
       Ct[i] = Ct[i - 1] + p[(M - 1) * N + _fsp[i]];
 
-    //std::cout << "n last machine time = " << S[M - 1] << "\n";
-    //std::cout << "Ct:\n";
-    //for (int i = 0; i < _N; i++)
+    // std::cout << "n last machine time = " << S[M - 1] << "\n";
+    // std::cout << "Ct:\n";
+    // for (int i = 0; i < _N; i++)
     //  std::cout << Ct[i] << " ";
-    //std::cout << "Ct:\n";
+    // std::cout << "Ct:\n";
   }
 };

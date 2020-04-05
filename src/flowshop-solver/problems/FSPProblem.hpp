@@ -1,23 +1,15 @@
 #pragma once
 
-#include "FSPEvalFunc.hpp"
-#include "NIFSPEvalFunc.hpp"
-#include "NWFSPEvalFunc.hpp"
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
+
 #include "Problem.hpp"
 #include "continuators/myMovedSolutionStat.hpp"
-#include "fastfspeval.hpp"
 #include "flowshop-solver/moHiResTimeContinuator.hpp"
-#include "paradiseo/eo/eoInt.h"
-#include "paradiseo/eo/eoScalarFitness.h"
-#include "paradiseo/mo/continuator/moBestSoFarStat.h"
-#include "paradiseo/mo/continuator/moCheckpoint.h"
-#include "paradiseo/mo/continuator/moCombinedContinuator.h"
-#include "paradiseo/mo/continuator/moContinuator.h"
-#include "paradiseo/mo/continuator/moEvalsContinuator.h"
-#include "paradiseo/mo/continuator/moFitContinuator.h"
-#include "paradiseo/mo/continuator/moStatBase.h"
-#include "paradiseo/mo/eval/moFullEvalByCopy.h"
-#include "paradiseo/mo/problems/permutation/moShiftNeighbor.h"
+#include "flowshop-solver/problems/FSPEvalFunc.hpp"
+#include "flowshop-solver/problems/NIFSPEvalFunc.hpp"
+#include "flowshop-solver/problems/NWFSPEvalFunc.hpp"
+#include "flowshop-solver/problems/fastfspeval.hpp"
 
 using FSPMax = eoInt<eoMaximizingFitness>;
 using FSPMin = eoInt<eoMinimizingFitness>;
@@ -48,13 +40,13 @@ class TimeStat : public moStat<EOT, int> {
     start = std::chrono::system_clock::now();
   }
 
-  void operator()(EOT& sol) final override {
+  void operator()(EOT&) final override {
     auto now = std::chrono::system_clock::now();
     value() = std::chrono::duration_cast<TimeT>(now - start).count();
   };
 };
 
-template <class EOT, class Fitness = typename EOT::Fitness>
+template <class EOT>
 class myTimeFitnessPrinter : public moStatBase<EOT> {
   TimeStat<EOT>& timer;
   EOT best;
@@ -299,7 +291,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
                                                    const FSPData& dt) {
     std::unique_ptr<moEval<Ngh>> ret(nullptr);
     if (type == "PERM" && obj == "MAKESPAN") {
-      ret.reset(new FastFSPNeighborEval(dt, *eval_func, movedStat));
+      ret.reset(new FastFSPNeighborEval(dt, *eval_func));
     } else {
       ret.reset(new moFullEvalByCopy<Ngh>(*eval_func));
     }

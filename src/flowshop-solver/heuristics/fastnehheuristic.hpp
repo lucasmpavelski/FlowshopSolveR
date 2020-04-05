@@ -1,17 +1,16 @@
 #pragma once
 
+#include "FSPOrderHeuristics.hpp"
 #include "problems/FSPData.hpp"
 #include "problems/FSPEvalFunc.hpp"
 #include "problems/fastfspeval.hpp"
-
-#include "FSPOrderHeuristics.hpp"
 
 class FastNEH : public eoInit<FSP> {
  public:
   using ivec = std::vector<int>;
 
-  CompiledSchedule compiledSchedule;
   const FSPData& fspData;
+  CompiledSchedule compiledSchedule;
   ivec initialOrder;
 
   FastNEH(const FSPData& fspData)
@@ -22,7 +21,7 @@ class FastNEH : public eoInit<FSP> {
     ivec initialOrder = getInitialOrder();
     sol.resize(0);
     sol.push_back(initialOrder[0]);
-    for (unsigned i = 1; i < fspData.noJobs(); i++) {
+    for (int i = 1; i < fspData.noJobs(); i++) {
       int jobToInsert = initialOrder[i];
       auto insert = findInsertionPosition(sol, jobToInsert);
       sol.insert(sol.begin() + insert.first, jobToInsert);
@@ -30,9 +29,8 @@ class FastNEH : public eoInit<FSP> {
     }
   }
 
-  virtual std::pair<int, FSP::Fitness> findInsertionPosition(
-      FSP& sol,
-      int jobToInsert) {
+  virtual std::pair<int, FSP::Fitness> findInsertionPosition(FSP& sol,
+                                                             int jobToInsert) {
     sol.push_back(jobToInsert);
     compiledSchedule.compile(fspData, sol);
     double minFit = std::numeric_limits<double>::infinity();

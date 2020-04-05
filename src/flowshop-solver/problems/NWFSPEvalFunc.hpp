@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include <eoEvalFunc.h>
-
 #include "FSPEvalFunc.hpp"
+
+#include <paradiseo/eo/eo>
 
 template <class EOT>
 class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
@@ -32,6 +32,7 @@ class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
     // Ci = sum delay + totalProcessinTime
     int delay = 0;
     Ct[0] = fsp_data.jobProcTimesRef()[_fsp[0]];
+
     for (int i = 1; i < _N; i++) {
       delay += delayMatrix[_fsp[i - 1] * N + _fsp[i]];
       Ct[i] = delay + fsp_data.jobProcTimesRef()[_fsp[i]];
@@ -57,10 +58,14 @@ class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
           int max = 0;
           for (int r = 1; r <= M; r++) {
             int s = 0;
-            for (int h = 1; h < r; h++) s += p[h * N + i];
-            for (int h = 0; h < r - 1; h++) s -= p[h * N + j];
-            if (s < 0) s = 0;
-            if (s > max) max = s;
+            for (int h = 1; h < r; h++)
+              s += p[h * N + i];
+            for (int h = 0; h < r - 1; h++)
+              s -= p[h * N + j];
+            if (s < 0)
+              s = 0;
+            if (s > max)
+              max = s;
           }
           _delayMatrix[i * N + j] = p[0 * N + i] + max;
         } else {

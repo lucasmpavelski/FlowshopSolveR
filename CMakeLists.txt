@@ -29,7 +29,7 @@ add_definitions(-DDATA_FOLDER="${CMAKE_SOURCE_DIR}/data")
 add_definitions(-DDEPRECATED_MESSAGES="")
 
 #set(CMAKE_VERBOSE_MAKEFILE TRUE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fPIC -v -Wall -Wno-logical-op-parentheses -Wno-deprecated-register -lpthread -pthread ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -g -fPIC -v -Wall -Wextra -Wno-logical-op-parentheses -Wno-deprecated-register -Wno-pragma-once-outside-header")
 
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ ")
 
@@ -109,7 +109,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/module")
 find_package(Paradiseo COMPONENTS moeo eoutils eo)
-include_directories(${PARADISEO_INCLUDE_DIR})
+include_directories(SYSTEM ${PARADISEO_INCLUDE_DIR})
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 

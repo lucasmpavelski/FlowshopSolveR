@@ -1,9 +1,9 @@
 #pragma once
 
-#include <unordered_map>
-
 #include <paradiseo/mo/continuator/moBestNoImproveContinuator.h>
 #include <paradiseo/mo/continuator/moCombinedContinuator.h>
+
+#include <unordered_map>
 
 #include "MHParamsValues.hpp"
 #include "NEHInit.hpp"
@@ -18,8 +18,6 @@
 Result solveWithTS(
     const std::unordered_map<std::string, std::string>& problem_specs,
     const std::unordered_map<std::string, double>& param_values) {
-  double result = 0.0;
-
   MHParamsSpecs specs = MHParamsSpecsFactory::get("TS");
   MHParamsValues params(&specs);
   params.readValues(param_values);
@@ -29,13 +27,10 @@ Result solveWithTS(
 
   FSPProblem prob = FSPProblemFactory::get(problem_specs);
   const int N = prob.size(0);
-  const int M = prob.size(1);
   const int max_nh_size = pow(N - 1, 2);
   const std::string mh = params.mhName();
-  const double max_ct = prob.upperBound();
 
   // continuator
-  moContinuator<Ngh>& continuator = prob.continuator();
   eoEvalFunc<EOT>& fullEval = prob.eval();
   moEval<Ngh>& evalN = prob.neighborEval();
 
@@ -194,9 +189,8 @@ Result solveWithTS(
       algo = &algo2;
       break;
     default:
-      throw std::runtime_error(
-          "Unknown value for TS.Algo: " +
-          std::to_string(params.categorical("TS.Algo")));
+      throw std::runtime_error("Unknown value for TS.Algo: " +
+                               std::to_string(params.categorical("TS.Algo")));
       break;
   }
 

@@ -1,14 +1,13 @@
 #pragma once
 
-#include <comparator/moSolComparator.h>
-#include <eoEvalFunc.h>
-#include <eoOp.h>
-#include <utils/eoRNG.h>
-
 #include <vector>
 
-#include "aos/adaptive_operator_selection.hpp"
+#include "flowshop-solver/aos/adaptive_operator_selection.hpp"
 #include "heuristics/FitnessReward.hpp"
+#include "paradiseo/eo/eoEvalFunc.h"
+#include "paradiseo/eo/eoOp.h"
+#include "paradiseo/eo/utils/eoRNG.h"
+#include "paradiseo/mo/comparator/moComparator.h"
 
 /**
  * the main algorithm of the local search
@@ -42,7 +41,7 @@ class AdaptiveDestruction : public eoMonOp<EOT> {
     int d = operator_selection.selectOperator();
     firstIteration = false;
 
-    assert(d <= sol.size());
+    assert(d <= static_cast<int>(sol.size()));
     int index;
     int length = sol.size();
     std::vector<int> D;
@@ -70,7 +69,6 @@ class AdaptiveDestruction : public eoMonOp<EOT> {
       sol.insert(sol.begin() + index, D[k]);
       sol.fitness(vBest.fitness());
     }
-    std::array<double, 1> feats = {1};
     return true;
   }
 };

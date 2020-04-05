@@ -19,7 +19,7 @@ class NeutralityFLA : public NeigborhoodStat<EOT, double>,
 
   using NeigborhoodStat<EOT, double>::value;
 
-  void init(EOT& sol) final override {
+  void init(EOT&) final override {
     value() = -1.0;
     equalCount = totalCount = 0;
     currentFitness.invalidate();
@@ -36,11 +36,11 @@ class NeutralityFLA : public NeigborhoodStat<EOT, double>,
     totalCount++;
   }
 
-  void lastCall(EOT& sol) final override {
+  void lastCall(EOT&) final override {
     value() = double(equalCount) / totalCount;
   }
 
-  void operator()(EOT& sol) final override {}
+  void operator()(EOT&) final override {}
 
   double compute() final override { return value(); };
 };

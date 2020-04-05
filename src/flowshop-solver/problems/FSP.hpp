@@ -1,6 +1,6 @@
 #pragma once
 
-#include "paradiseo/eo/eoInt.h"
+#include <paradiseo/eo/eoInt.h>
 #include "paradiseo/eo/eoScalarFitness.h"
 #include "paradiseo/mo/problems/permutation/moShiftNeighbor.h"
 

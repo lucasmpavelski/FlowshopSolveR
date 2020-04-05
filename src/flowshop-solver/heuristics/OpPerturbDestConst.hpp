@@ -12,18 +12,20 @@
  */
 template <class EOT>
 class OpPerturbDestConst : public eoMonOp<EOT> {
+  eoEvalFunc<EOT>& eval;
+  int d;  // nb de deconstruction
+  moSolComparator<EOT> comp;
+
  public:
   enum strat { random, ordered } nh_strategy;
 
   OpPerturbDestConst(eoEvalFunc<EOT>& eval,
                      int d,
-                     moSolComparator<EOT> comp = moSolComparator<EOT>(),
-                     const int nh_size = -1,
-                     strat nh_strategy = strat::ordered)
+                     moSolComparator<EOT> comp = moSolComparator<EOT>())
       : eval(eval), d(d), comp(comp) {}
 
   virtual bool operator()(EOT& sol) {
-    assert(d <= sol.size());
+    // assert(d <= sol.size());
     int length = sol.size();
     std::vector<int> D;
     EOT tmp;
@@ -54,9 +56,4 @@ class OpPerturbDestConst : public eoMonOp<EOT> {
     }
     return true;
   }
-
- private:
-  int d;  // nb de deconstruction
-  eoEvalFunc<EOT>& eval;
-  moSolComparator<EOT> comp;
 };

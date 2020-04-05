@@ -22,7 +22,7 @@ class BestInsertionExplorer
   bool improve;
   bool LO;
   std::vector<int> RandJOB;
-  int k;
+  unsigned k;
 
  public:
   BestInsertionExplorer(moEval<Ngh>& neighborEval,
@@ -45,7 +45,7 @@ class BestInsertionExplorer
     k = 0;
   }
 
-  virtual void updateParam(EOT& _solution) final override {
+  virtual void updateParam(EOT&) final override {
     if (k < RandJOB.size() - 1)
       k++;
     else {
@@ -61,7 +61,7 @@ class BestInsertionExplorer
   }
 
   virtual void operator()(EOT& _solution) final override {
-    const unsigned n = _solution.size();
+    const int n = static_cast<int>(_solution.size());
     EOT tmp = _solution;
     auto insertPtr = std::find(tmp.begin(), tmp.end(), RandJOB[k]);
     int insertPosition = std::distance(tmp.begin(), insertPtr);
@@ -72,7 +72,7 @@ class BestInsertionExplorer
     // Ngh neighbor, bestNeighbor;
     // bestNeighbor.fitness(std::numeric_limits<double>::max());
     int bestPosition = -1;
-    for (unsigned position = 0; position <= n; position++) {
+    for (int position = 0; position <= n; position++) {
       if (insertPosition == position)
         continue;
       neighbor.set(insertPosition, position, n);
@@ -91,8 +91,8 @@ class BestInsertionExplorer
     }
   }
 
-  virtual bool isContinue(EOT& _solution) final override { return !LO; }
-  virtual void move(EOT& _solution) final override {}
-  virtual bool accept(EOT& _solution) final override { return false; }
-  virtual void terminate(EOT& _solution) final override {}
+  virtual bool isContinue(EOT&) final override { return !LO; }
+  virtual void move(EOT&) final override {}
+  virtual bool accept(EOT&) final override { return false; }
+  virtual void terminate(EOT&) final override {}
 };
