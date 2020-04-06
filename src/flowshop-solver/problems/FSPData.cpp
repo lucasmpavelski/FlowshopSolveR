@@ -32,12 +32,12 @@ FSPData::FSPData(const std::string& filename) {
     getline_check(buffer);
     // processing times of the job j on each machine
     getline_check(buffer);
-    start = buffer.find_first_not_of(" ");
+    start = buffer.find_first_not_of(' ');
     for (int i = 0; i < no_machines; i++) {
-      end = buffer.find_first_of(" ", start);
+      end = buffer.find_first_of(' ', start);
       proc_times[i * no_jobs + j] =
           atoi(buffer.substr(start, end - start).data());
-      start = buffer.find_first_not_of(" ", end);
+      start = buffer.find_first_not_of(' ', end);
     }
   }
   // closing of the input file

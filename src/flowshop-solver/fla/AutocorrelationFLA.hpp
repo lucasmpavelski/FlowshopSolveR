@@ -16,7 +16,7 @@ class AutocorrelationFLA : public FitnessHistoryFLA<EOT> {
  protected:
   using citerator = typename FitnessHistory<EOT>::citerator;
 
-  virtual double compute(citerator begin, citerator end) {
+  double compute(citerator begin, citerator end) override {
     const int n = std::distance(begin, end);
     if (n == 1)
       return 1.0;
@@ -24,7 +24,7 @@ class AutocorrelationFLA : public FitnessHistoryFLA<EOT> {
     auto varAcc = [mean](double sum, double current) {
       return sum + (current - mean) * (current - mean);
     };
-    const double var = std::accumulate(begin, end, 0, varAcc) / (n - 1);
+    const double var = std::accumulate(begin, end, 0, varAcc) / (n - 1.0);
     const double scale = 1.0 / std::max((n - delay) * var, 1e-6);
     double sum = 0.0;
     for (int i = 0; i < n - delay; i++) {

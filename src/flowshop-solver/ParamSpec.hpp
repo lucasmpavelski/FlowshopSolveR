@@ -22,7 +22,7 @@ class ParamSpec {
             float _upper_bound)
       : lower_bound(_lower_bound),
         upper_bound(_upper_bound),
-        name(_name),
+        name(std::move(_name)),
         type(_type) {}
 
   virtual ~ParamSpec() = default;
@@ -56,7 +56,7 @@ class ParamSpec {
     return "";
   }
 
-  virtual float fromStrValue(std::string s) const {
+  virtual float fromStrValue(const std::string& s) const {
     switch (type) {
       case Type::REAL:
         return std::stof(s.c_str());
@@ -95,11 +95,9 @@ class CatParamSpec : public ParamSpec {
  public:
   std::vector<std::string> cats;
 
-  CatParamSpec(std::string name, std::vector<std::string> cats)
-      : ParamSpec(name, ParamSpec::Type::CAT, 0, cats.size() - 1e-6),
+  CatParamSpec(std::string name, const std::vector<std::string>& cats)
+      : ParamSpec(std::move(name), ParamSpec::Type::CAT, 0, cats.size() - 1e-6),
         cats(cats) {}
-
-  virtual ~CatParamSpec() = default;
 
   void printRange(std::ostream& o) const override {
     o << "(";
@@ -110,7 +108,7 @@ class CatParamSpec : public ParamSpec {
 
   std::string toStrValue(float num) const override { return cats[int(num)]; }
 
-  float fromStrValue(std::string s) const override {
+  float fromStrValue(const std::string& s) const override {
     auto r = std::find(cats.begin(), cats.end(), s);
     if (r != cats.end())
       return std::distance(cats.begin(), r);

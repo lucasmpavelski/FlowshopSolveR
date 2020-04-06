@@ -18,14 +18,15 @@
 
 std::string instances_folder = TEST_FIXTURES_FOLDER;
 
-void testLoadData(void) {
+void testLoadData() {
   using std::cout;
   using std::endl;
   FSPData fsp_data{instances_folder + "test.txt"};
   assert(fsp_data.maxCT() == 125);
-  int pt[] = {5, 9, 9, 4, 9, 3, 4, 8, 8, 10, 5, 8, 10, 1, 8, 7, 1, 8, 6, 2};
+  std::array<int, 20> pt = {5, 9, 9,  4, 9, 3, 4, 8, 8, 10,
+                            5, 8, 10, 1, 8, 7, 1, 8, 6, 2};
   const auto &pt_ref = fsp_data.procTimesRef();
-  assert(std::equal(std::begin(pt_ref), std::end(pt_ref), pt));
+  assert(std::equal(std::begin(pt_ref), std::end(pt_ref), std::begin(pt)));
   assert(fsp_data.machineProcTimesRef()[0] == 27);
   assert(fsp_data.jobProcTimesRef()[0] == 33);
 }
@@ -174,8 +175,8 @@ TEST(FSPTaillardAcelleration, Evaluation) {
   ASSERT_EQ(sol.fitness(), csd.makespan[3]);
 }
 
-bool auxMoveNeighborCompare(std::initializer_list<int> init, int from, int to,
-                            std::initializer_list<int> result) {
+auto auxMoveNeighborCompare(std::initializer_list<int> init, int from, int to,
+                            std::initializer_list<int> result) -> bool {
   FSP sol;
   sol.assign(init);
   FSPNeighbor ng(from, to, sol.size());
@@ -419,10 +420,8 @@ TEST(TaillardAcceleration, DestructionConstruction) {
   ASSERT_EQ(sol, sol2);
 }
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) {
-  argc = 2;
-  char *argvv[] = {"", "--gtest_filter=*"};
-  testing::InitGoogleTest(&argc, argvv);
+auto main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) -> int {
+  testing::InitGoogleTest(&argc, argv);
   // testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

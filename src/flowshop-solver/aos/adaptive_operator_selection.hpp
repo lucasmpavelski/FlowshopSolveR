@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "global.hpp"
+#include "flowshop-solver/global.hpp"
 
 template <typename OpT>
 class OperatorSelection {
@@ -11,26 +11,27 @@ class OperatorSelection {
 
  public:
   // lifecycle
-  OperatorSelection(std::vector<OpT> operators) : operators{operators} {};
+  OperatorSelection(std::vector<OpT> operators)
+      : operators{std::move(operators)} {};
 
-  virtual ~OperatorSelection(){};
+  virtual ~OperatorSelection() = default;
 
   // accessors
-  int noOperators() const { return operators.size(); };
-  bool doAdapt() const { return noOperators() > 1; };
-  OpT& getOperator(const int idx) { return operators.at(idx); };
+  auto noOperators() const -> int { return operators.size(); };
+  auto doAdapt() const -> bool { return noOperators() > 1; };
+  auto getOperator(const int idx) -> OpT& { return operators.at(idx); };
 
   // main interface
   virtual void reset(double){};  // on init algorithm
-  virtual OpT& selectOperator() { return operators[0]; };
+  virtual auto selectOperator() -> OpT& { return operators[0]; };
   virtual void feedback(const double, const double){};
   virtual void update(){};  // on finish generation
-  virtual std::ostream& printOn(std::ostream& os) = 0;
+  virtual auto printOn(std::ostream& os) -> std::ostream& = 0;
 
   // misc
   template <typename OpT2>
-  friend std::ostream& operator<<(std::ostream& os,
-                                  OperatorSelection<OpT2> const& aos) {
+  friend auto operator<<(std::ostream& os, OperatorSelection<OpT2> const& aos)
+      -> std::ostream& {
     os << "AdaptiveOperatorSelection:\n";
     if (aos.doAdapt()) {
       os << "  operators:";

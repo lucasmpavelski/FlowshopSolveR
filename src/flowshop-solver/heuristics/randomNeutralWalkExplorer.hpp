@@ -26,7 +26,7 @@ class randomNeutralWalkExplorer : public moNeighborhoodExplorer<Neighbor> {
   bool firstNeutralNghFound;
 
  public:
-  typedef moNeighborhood<Neighbor> Neighborhood;
+  using Neighborhood = moNeighborhood<Neighbor>;
   using moNeighborhoodExplorer<Neighbor>::neighborhood;
   using moNeighborhoodExplorer<Neighbor>::eval;
 

@@ -10,8 +10,8 @@ template <typename OpT>
 class ProbabilityMatching : public OperatorSelection<OpT> {
  public:
   enum class RewardType { AvgAbs, AvgNorm, ExtAbs, ExtNorm };
-  typedef std::vector<double> real_vec;
-  typedef std::vector<int> int_vec;
+  using real_vec = std::vector<double>;
+  using int_vec = std::vector<int>;
 
  private:
   const double alpha;
@@ -28,7 +28,7 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
   real_vec maior_S;
 
   void updateRewards();
-  double updateQualities();
+  auto updateQualities() -> double;
 
  public:
   using OperatorSelection<OpT>::doAdapt;
@@ -51,13 +51,12 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
     reset(std::numeric_limits<double>::infinity());
   };
 
-  void reset(const double best_f) final override;
+  void reset(const double) final;
+  auto selectOperator() -> OpT& final;
+  void feedback(const double, const double) final;
+  void update() final;
 
-  OpT& selectOperator() final override;
-  void feedback(const double cf, const double pf) final override;
-  void update() final override;
-
-  std::ostream& printOn(std::ostream& os) final override {
+  auto printOn(std::ostream& os) -> std::ostream& final {
     os << "  strategy: ProbabilityMatching\n"
        << "  alpha: " << alpha << '\n'
        << "  p_min: " << p_min << '\n'
@@ -65,7 +64,8 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
     return os;
   }
 
-  friend std::ostream& operator<<(std::ostream& os, RewardType const& rt) {
+  friend auto operator<<(std::ostream& os, RewardType const& rt)
+      -> std::ostream& {
     switch (rt) {
       case RewardType::AvgAbs:
         os << "AvgAbs";
@@ -97,8 +97,8 @@ void ProbabilityMatching<OpT>::reset(double best_f) {
 }
 
 template <typename OpT>
-OpT& ProbabilityMatching<OpT>::selectOperator() {
-  const double rnd = RNG::realUniform<double>();
+auto ProbabilityMatching<OpT>::selectOperator() -> OpT& {
+  const auto rnd = RNG::realUniform<double>();
   double aux = 0.0;
   for (int k = 0; k < noOperators(); k++) {
     aux += prob[k];
@@ -107,9 +107,7 @@ OpT& ProbabilityMatching<OpT>::selectOperator() {
       return this->getOperator(k);
     }
   }
-  throw_assert(false, "probabilities are invalid : ["
-                          << printSeq(prob.begin(), prob.end()) << "]"
-                          << ", sum = " << sum(prob.begin(), prob.end()));
+  assert(false);
   return this->getOperator(0);
 }
 
@@ -152,7 +150,7 @@ void ProbabilityMatching<OpT>::updateRewards() {
       break;
     }
     case RewardType::AvgNorm: {
-      double rew_linha[noOperators()];
+      std::vector<double> rew_linha(noOperators());
       double max_rew_linha = 0.0;
       // calcula o r_linha
       for (int k = 0; k < noOperators(); ++k) {
@@ -172,7 +170,7 @@ void ProbabilityMatching<OpT>::updateRewards() {
       break;
     }
     case RewardType::ExtNorm: {
-      double rew_linha[noOperators()];
+      std::vector<double> rew_linha(noOperators());
       double max_rew_linha = 0.000001;
       // calcula r_linha
       for (int k = 0; k < noOperators(); k++) {
@@ -190,7 +188,7 @@ void ProbabilityMatching<OpT>::updateRewards() {
 }
 
 template <typename OpT>
-double ProbabilityMatching<OpT>::updateQualities() {
+auto ProbabilityMatching<OpT>::updateQualities() -> double {
   double q_total = 0.0;
   for (int k = 0; k < noOperators(); ++k) {
     quality[k] = quality[k] + alpha * (reward[k] - quality[k]);

@@ -10,7 +10,7 @@
 template <class Neighbor, class TimeT = std::chrono::milliseconds>
 class moHighResTimeContinuator : public moContinuator<Neighbor> {
  public:
-  typedef typename Neighbor::EOT EOT;
+  using EOT = typename Neighbor::EOT;
 
   /**
    * Constructor
@@ -53,7 +53,7 @@ class moHighResTimeContinuator : public moContinuator<Neighbor> {
    * Returns false when the running time is reached.
    * @param _sol the current solution
    */
-  bool operator()(EOT&) final override {
+  bool operator()(EOT&) final {
     auto now = std::chrono::system_clock::now();
     auto duration = std::chrono::duration_cast<TimeT>(now - start);
     bool res = (duration.count() < max);
@@ -67,7 +67,7 @@ class moHighResTimeContinuator : public moContinuator<Neighbor> {
    * reset the start time
    * @param _solution a solution
    */
-  void init(EOT&) final override {
+  void init(EOT&) final {
     if (resetFirstInit) {
       setStartingTime(std::chrono::system_clock::now());
       resetFirstInit = false;
@@ -75,13 +75,6 @@ class moHighResTimeContinuator : public moContinuator<Neighbor> {
     }
     if (!external)
       start = std::chrono::system_clock::now();
-  }
-
-  /**
-   * Class name
-   */
-  virtual std::string className(void) const {
-    return "moHighResTimeContinuator";
   }
 
  private:

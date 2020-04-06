@@ -26,11 +26,11 @@ struct SlidingWindow {
     bool done;
 
    public:
-    typedef iterator self_type;
-    typedef T& reference;
-    typedef ValT value_type;
-    typedef std::forward_iterator_tag iterator_category;
-    typedef int difference_type;
+    using self_type = iterator;
+    using reference = T&;
+    using value_type = ValT;
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = int;
 
     iterator(Itr begin, Itr end, int curr_pos, bool finish)
         : begin_itr(begin),
@@ -38,10 +38,10 @@ struct SlidingWindow {
           curr(begin + curr_pos),
           done(finish) {}
 
-    self_type begin() { return begin_itr; }
-    self_type end() { return end_itr; }
+    auto begin() -> self_type { return begin_itr; }
+    auto end() -> self_type { return end_itr; }
 
-    self_type operator++() {
+    auto operator++() -> self_type {
       curr++;
       if (curr == end_itr) {
         curr = begin_itr;
@@ -50,18 +50,18 @@ struct SlidingWindow {
       return *this;
     }
 
-    self_type operator++(int) { return operator++(); }
+    auto operator++(int) -> self_type { return operator++(); }
 
-    bool operator==(const self_type& rhs) const {
+    auto operator==(const self_type& rhs) const -> bool {
       return curr == rhs.curr && done == rhs.done;
     }
 
-    bool operator!=(const self_type& rhs) const {
+    auto operator!=(const self_type& rhs) const -> bool {
       return curr != rhs.curr || done != rhs.done;
     }
 
-    Itr operator->() { return curr; }
-    reference operator*() { return *curr; }
+    auto operator-> () -> Itr { return curr; }
+    auto operator*() -> reference { return *curr; }
   };
 
   SlidingWindow(const int size, const T& init)
@@ -70,28 +70,30 @@ struct SlidingWindow {
   SlidingWindow(const std::initializer_list<T>& init)
       : data(init), curr_begin(0) {}
 
-  typedef typename std::vector<T>::iterator it_type;
+  using it_type = typename std::vector<T>::iterator;
 
-  iterator<it_type, T> begin() {
+  auto begin() -> iterator<it_type, T> {
     return iterator<it_type, T>(data.begin(), data.end(), curr_begin, false);
   }
-  iterator<it_type, T> end() {
+  auto end() -> iterator<it_type, T> {
     return iterator<it_type, T>(data.begin(), data.end(), curr_begin, true);
   }
 
-  iterator<it_type, const T> begin() const {
+  auto begin() const -> iterator<it_type, const T> {
     return iterator<it_type, const T>(data.begin(), data.end(), curr_begin,
                                       false);
   }
-  iterator<it_type, const T> end() const {
+  auto end() const -> iterator<it_type, const T> {
     return iterator<it_type, const T>(data.begin(), data.end(), curr_begin,
                                       true);
   }
 
-  std::size_t size() const { return data.size(); }
+  auto size() const -> std::size_t { return data.size(); }
 
-  T& operator[](const size_type& index) { return data[index]; }
-  const T& operator[](const size_type& index) const { return data[index]; }
+  auto operator[](const size_type& index) -> T& { return data[index]; }
+  auto operator[](const size_type& index) const -> const T& {
+    return data[index];
+  }
 
   void append(T el) {
     data[curr_begin] = el;
@@ -100,7 +102,7 @@ struct SlidingWindow {
 
   void clear(T el) { std::fill(data.begin(), data.end(), el); }
 
-  SlidingWindow& operator<<(T& el) {
+  auto operator<<(T& el) -> SlidingWindow& {
     append(el);
     return *this;
   }
@@ -116,17 +118,17 @@ class Indexed {
 };
 
 template <typename T>
-bool operator==(const Indexed<T>& a, const Indexed<T>& b) {
+auto operator==(const Indexed<T>& a, const Indexed<T>& b) -> bool {
   return a.idx == b.idx && a.val == b.val;
 }
 
 template <typename T>
-bool operator<(const Indexed<T>& a, const Indexed<T>& b) {
+auto operator<(const Indexed<T>& a, const Indexed<T>& b) -> bool {
   return a.idx == b.idx && a.val == b.val;
 }
 
 template <typename T>
-Indexed<T> makeIndexed(const T& val, int idx = 0) {
+auto makeIndexed(const T& val, int idx = 0) -> Indexed<T> {
   return Indexed<T>(val, idx);
 }
 
@@ -159,16 +161,16 @@ class FRRMAB : public OperatorSelection<OpT> {
     reset(0.0);
   };
 
-  void reset(double d) final override;
+  void reset(double d) final;
 
-  void update() final override { std::fill(fir.begin(), fir.end(), 0.0); };
-  OpT& selectOperator() final override;
-  void feedback(const double cf, const double pf) final override {
+  void update() final { std::fill(fir.begin(), fir.end(), 0.0); };
+  auto selectOperator() -> OpT& final;
+  void feedback(const double cf, const double pf) final {
     if (cf < pf)
       fir[last_op] += (pf - cf) / pf;
   };
 
-  std::ostream& printOn(std::ostream& os) final override {
+  auto printOn(std::ostream& os) -> std::ostream& final {
     os << "  strategy: FRRMAB\n"
        << "  window_size: " << fir_records.size() << '\n'
        << "  scale: " << scale << '\n'
@@ -179,7 +181,7 @@ class FRRMAB : public OperatorSelection<OpT> {
  private:
   void assignCredits();
 
-  double intpow(double base, int exp) {
+  auto intpow(double base, int exp) -> double {
     double result = 1.0;
     while (exp != 0) {
       if ((exp & 1) == 1)
@@ -197,9 +199,9 @@ class FRRMAB : public OperatorSelection<OpT> {
 
   SlidingWindow<Indexed<double>> fir_records;
 
-  typedef std::vector<double> real_vec;
-  typedef std::vector<int> int_vec;
-  typedef std::vector<bool> bool_vec;
+  using real_vec = std::vector<double>;
+  using int_vec = std::vector<int>;
+  using bool_vec = std::vector<bool>;
 
   real_vec fir;
   real_vec frr;
@@ -225,7 +227,7 @@ void FRRMAB<OpT>::reset(double) {
 };
 
 template <typename OpT>
-OpT& FRRMAB<OpT>::selectOperator() {
+auto FRRMAB<OpT>::selectOperator() -> OpT& {
   if (last_op != -1)
     assignCredits();
 
@@ -249,8 +251,7 @@ OpT& FRRMAB<OpT>::selectOperator() {
         }
       }
     }
-    throw_assert(idx != -1, "invalid operators usage counters in MAB : ["
-                                << printSeq(num.begin(), num.end()) << "]");
+    assert(idx != -1);
   }
   last_op = idx;
   return this->getOperator(idx);
@@ -287,7 +288,7 @@ void FRRMAB<OpT>::assignCredits() {
 }
 
 template <typename OpT>
-std::ostream& operator<<(std::ostream& os, FRRMAB<OpT> const& fm) {
+auto operator<<(std::ostream& os, FRRMAB<OpT> const& fm) -> std::ostream& {
   os << static_cast<OperatorSelection<OpT> const&>(fm) << "\n"
      << "  scale: " << fm.scale << "\n"
      << "  decay: " << fm.decay << "\n"

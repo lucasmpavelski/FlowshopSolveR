@@ -4,7 +4,10 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/include/"
+                "${workspaceFolder}/src/**",
+                "/usr/local/include/",
+                "/usr/local/include/paradiseo/eo",
+                "/usr/local/include/paradiseo/mo"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

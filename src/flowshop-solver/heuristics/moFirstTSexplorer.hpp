@@ -1,14 +1,17 @@
 #ifndef _moFirstTSexplorer_h
 #define _moFirstTSexplorer_h
 
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
+
 /**
  * Explorer for a Tabu Search
  */
 template <class Neighbor>
 class moFirstTSexplorer : public moNeighborhoodExplorer<Neighbor> {
  public:
-  typedef typename Neighbor::EOT EOT;
-  typedef moNeighborhood<Neighbor> Neighborhood;
+  using EOT = typename Neighbor::EOT;
+  using Neighborhood = moNeighborhood<Neighbor>;
 
   using moNeighborhoodExplorer<Neighbor>::currentNeighbor;
   using moNeighborhoodExplorer<Neighbor>::selectedNeighbor;

@@ -18,7 +18,7 @@ class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
    * Apply move on a solution regarding a key
    * @param _sol the solution to move
    */
-  virtual void move(EOT& _sol) {
+  void move(EOT& _sol) override {
     if (static_cast<int>(key) >= 0) {
       unsigned int tmp;
       size = _sol.size();

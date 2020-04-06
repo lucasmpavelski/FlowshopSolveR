@@ -1,11 +1,9 @@
 #pragma once
 
-#include <acceptCrit/moAcceptanceCriterion.h>
-#include <comparator/moSolComparator.h>
-#include <memory/moDummyMemory.h>
-#include <utils/eoRNG.h>
-
 #include <cmath>
+
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
 
 /**
  * Acceptance Criterion for extreme intensification : accept if the new solution
@@ -15,9 +13,10 @@ template <class Neighbor>
 class acceptCritTemperature : public moAcceptanceCriterion<Neighbor>,
                               public moDummyMemory<Neighbor> {
   double threshold;
+  moSolComparator<typename Neighbor::EOT> compare;
 
  public:
-  typedef typename Neighbor::EOT EOT;
+  using EOT = typename Neighbor::EOT;
 
   /*
     default constructor:
@@ -32,8 +31,8 @@ class acceptCritTemperature : public moAcceptanceCriterion<Neighbor>,
    * @param _sol2 the new solution after local search
    * @return true if the new solution is better than previous one
    */
-  bool operator()(EOT& _sol1, EOT& _sol2) {
-    if (_sol2.fitness() < _sol1.fitness()) {
+  auto operator()(EOT& _sol1, EOT& _sol2) -> bool override {
+    if (compare(_sol1, _sol2)) {
       return true;
     } else {
       return rng.uniform() <=

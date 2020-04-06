@@ -7,8 +7,8 @@
 template <class Neighbor>
 class moFirstBestTSexplorer : public moNeighborhoodExplorer<Neighbor> {
  public:
-  typedef typename Neighbor::EOT EOT;
-  typedef moNeighborhood<Neighbor> Neighborhood;
+  using EOT = typename Neighbor::EOT;
+  using Neighborhood = moNeighborhood<Neighbor>;
 
   using moNeighborhoodExplorer<Neighbor>::currentNeighbor;
   using moNeighborhoodExplorer<Neighbor>::selectedNeighbor;

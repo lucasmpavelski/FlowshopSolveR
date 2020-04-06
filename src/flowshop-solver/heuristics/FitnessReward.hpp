@@ -9,9 +9,9 @@ class FitnessReward : public moStatBase<EOT> {
   double finalFitness = -1;
 
  public:
-  FitnessReward() {}
+  FitnessReward() = default;
 
-  void init(EOT& sol) final override {
+  void init(EOT& sol) final {
     // discart first iteration (no destruction to be rewarded)
     if (sol.invalid() || firstIteration) {
       firstIteration = false;
@@ -21,9 +21,9 @@ class FitnessReward : public moStatBase<EOT> {
     // std::cerr << "initialFitness:" << initialFitness << '\n';
   }
 
-  void operator()(EOT&) final override {}
+  void operator()(EOT&) final {}
 
-  void lastCall(EOT& sol) final override {
+  void lastCall(EOT& sol) final {
     if (sol.invalid())
       return;
     finalFitness = sol.fitness();

@@ -91,8 +91,8 @@ std::vector<FSPProblem::EOT> adaptiveWalk(
 }
 
 double adaptiveWalkLength(
-    std::unordered_map<std::string, std::string> prob_params,
-    std::unordered_map<std::string, std::string> sampling_params,
+    const std::unordered_map<std::string, std::string>& prob_params,
+    const std::unordered_map<std::string, std::string>& sampling_params,
     unsigned seed) {
   rng.reseed(seed);
   FSPProblem problem = FSPProblemFactory::get(prob_params);
@@ -193,8 +193,8 @@ std::vector<double> randomWalk(
 }
 
 double walkSamplingAutocorr(
-    std::unordered_map<std::string, std::string> prob_params,
-    std::unordered_map<std::string, std::string> sampling_params,
+    const std::unordered_map<std::string, std::string>& prob_params,
+    const std::unordered_map<std::string, std::string>& sampling_params,
     unsigned seed) {
   auto fits = randomWalk(prob_params, sampling_params, seed);
   double fits_mean = std::accumulate(begin(fits), end(fits), 0.0) / fits.size();
@@ -234,8 +234,8 @@ struct SolutionStatisticsResult {
 };
 
 SolutionStatisticsResult solutionStatistics(
-    std::unordered_map<std::string, std::string> prob_params,
-    std::unordered_map<std::string, std::string> sampling_params,
+    const std::unordered_map<std::string, std::string>& prob_params,
+    const std::unordered_map<std::string, std::string>& sampling_params,
     unsigned seed) {
   rng.reseed(seed);
   using ProblemTp = FSPProblem;
@@ -255,7 +255,7 @@ SolutionStatisticsResult solutionStatistics(
 
   SolutionStatisticsResult res;
 
-  const int no_samples = std::atoi(sampling_params["No.Samples"].c_str());
+  const int no_samples = std::atoi(sampling_params.at("No.Samples").c_str());
 
   for (int i = 0; i < no_samples; i++) {
     init0(sol);
@@ -292,7 +292,7 @@ SolutionStatisticsResult solutionStatistics(
 }
 
 std::vector<double> enumerateAll(
-    std::unordered_map<std::string, std::string> prob_params) {
+    const std::unordered_map<std::string, std::string>& prob_params) {
   std::vector<double> res;
 
   using ProblemTp = FSPProblem;
@@ -348,7 +348,8 @@ struct graph {
   struct lo_sample {
     EOT sol;
     int no_steps;
-    lo_sample(EOT sol, int no_steps) : sol{sol}, no_steps{no_steps} {};
+    lo_sample(EOT sol, int no_steps)
+        : sol{std::move(sol)}, no_steps{no_steps} {};
   };
 
   std::vector<EOT> nodes;
@@ -460,7 +461,7 @@ EOT randomWalkStep(EOT& sol,
 }
 
 graph<FSPProblem::EOT> sampleLON(
-    std::unordered_map<std::string, std::string> prob_params,
+    const std::unordered_map<std::string, std::string>& prob_params,
     std::unordered_map<std::string, std::string> sampling_params,
     unsigned seed) {
   rng.reseed(seed);

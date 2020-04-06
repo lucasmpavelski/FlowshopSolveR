@@ -26,7 +26,7 @@ class myBestSoFarStat : public moBestSoFarStat<EOT> {
   myBestSoFarStat(bool _reInitSol = true) : moBestSoFarStat<EOT>(_reInitSol) {}
 
   using moBestSoFarStat<EOT>::operator();
-  void lastCall(EOT& sol) final override { operator()(sol); }
+  void lastCall(EOT& sol) final { operator()(sol); }
 };
 
 template <class EOT, class TimeT = std::chrono::milliseconds>
@@ -40,7 +40,7 @@ class TimeStat : public moStat<EOT, int> {
     start = std::chrono::system_clock::now();
   }
 
-  void operator()(EOT&) final override {
+  void operator()(EOT&) final {
     auto now = std::chrono::system_clock::now();
     value() = std::chrono::duration_cast<TimeT>(now - start).count();
   };
@@ -58,11 +58,11 @@ class myTimeFitnessPrinter : public moStatBase<EOT> {
     std::puts("runtime,fitness");
   }
 
-  ~myTimeFitnessPrinter() {
+  ~myTimeFitnessPrinter() override {
     std::cout << timer.value() << ',' << best.fitness() << '\n';
   }
 
-  void operator()(EOT& sol) final override {
+  void operator()(EOT& sol) final {
     if (compare(best, sol)) {
       std::cout << timer.value() << ',' << sol.fitness() << '\n';
       best.fitness(sol.fitness());
@@ -93,10 +93,10 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   prefixedPrinter printg;
   myTimeFitnessPrinter<EOT> timeFintessPrinter;
 
-  FSPProblem(FSPData dt,
-             std::string type,
-             std::string obj,
-             const std::string& _budget,
+  FSPProblem(const FSPData& dt,
+             const std::string& type,
+             const std::string& obj,
+             std::string _budget,
              std::string _stopping_criterium,
              unsigned lower_bound = 0)
       : Problem<FSPNeighbor>(),
@@ -104,8 +104,8 @@ struct FSPProblem : public Problem<FSPNeighbor> {
         eval_counter(*eval_func),
         eval_neighbor(getNeighborEvalFunc(type, obj, dt)),
         eval_neighbor_counter(*eval_neighbor),
-        stopping_criterium(_stopping_criterium),
-        budget(_budget),
+        stopping_criterium(std::move(_stopping_criterium)),
+        budget(std::move(_budget)),
         lower_bound(lower_bound),
         print("local_best:", " "),
         printg("global best:", " "),
@@ -126,11 +126,9 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   moEval<Ngh>& neighborEval() override { return eval_neighbor_counter; }
   moContinuator<Ngh>& continuator() override { return *continuator_ptr; }
 
-  moCheckpoint<Ngh>& checkpoint() final override { return *checkpoint_ptr; };
+  moCheckpoint<Ngh>& checkpoint() final { return *checkpoint_ptr; };
 
-  moCheckpoint<Ngh>& checkpointGlobal() final override {
-    return *checkpointGlobal_ptr;
-  };
+  moCheckpoint<Ngh>& checkpointGlobal() final { return *checkpointGlobal_ptr; };
 
   int size(int i = 0) const override {
     switch (i) {
@@ -152,8 +150,9 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     eval_counter.setValue("0");
     eval_neighbor_counter.setValue("0");
     continuator_ptr.reset(newContinuator());
-    checkpoint_ptr.reset(new moCheckpoint<Ngh>(*continuator_ptr));
-    checkpointGlobal_ptr.reset(new moCheckpoint<Ngh>(*continuator_ptr));
+    checkpoint_ptr = std::make_unique<moCheckpoint<Ngh>>(*continuator_ptr);
+    checkpointGlobal_ptr =
+        std::make_unique<moCheckpoint<Ngh>>(*continuator_ptr);
     bestFound = myBestSoFarStat<EOT>(true);
     EOT dummy;
     checkpoint_ptr->add(bestFound);
@@ -268,17 +267,17 @@ struct FSPProblem : public Problem<FSPNeighbor> {
                                                 const FSPData& dt) {
     std::unique_ptr<FSPEvalFunc<EOT>> ret(nullptr);
     if (type == "PERM" && obj == "MAKESPAN") {
-      ret.reset(new PermFSPEvalFunc<EOT>(dt, Objective::MAKESPAN));
+      ret = std::make_unique<PermFSPEvalFunc<EOT>>(dt, Objective::MAKESPAN);
     } else if (type == "PERM" && obj == "FLOWTIME") {
-      ret.reset(new PermFSPEvalFunc<EOT>(dt, Objective::FLOWTIME));
+      ret = std::make_unique<PermFSPEvalFunc<EOT>>(dt, Objective::FLOWTIME);
     } else if (type == "NOWAIT" && obj == "MAKESPAN") {
-      ret.reset(new NWFSPEvalFunc<EOT>(dt, Objective::MAKESPAN));
+      ret = std::make_unique<NWFSPEvalFunc<EOT>>(dt, Objective::MAKESPAN);
     } else if (type == "NOWAIT" && obj == "FLOWTIME") {
-      ret.reset(new NWFSPEvalFunc<EOT>(dt, Objective::FLOWTIME));
+      ret = std::make_unique<NWFSPEvalFunc<EOT>>(dt, Objective::FLOWTIME);
     } else if (type == "NOIDLE" && obj == "MAKESPAN") {
-      ret.reset(new NIFSPEvalFunc<EOT>(dt, Objective::MAKESPAN));
+      ret = std::make_unique<NIFSPEvalFunc<EOT>>(dt, Objective::MAKESPAN);
     } else if (type == "NOIDLE" && obj == "FLOWTIME") {
-      ret.reset(new NIFSPEvalFunc<EOT>(dt, Objective::FLOWTIME));
+      ret = std::make_unique<NIFSPEvalFunc<EOT>>(dt, Objective::FLOWTIME);
     } else {
       throw std::runtime_error("No FSP problem for type " + type +
                                " and objective " + obj);
@@ -289,12 +288,11 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   std::unique_ptr<moEval<Ngh>> getNeighborEvalFunc(const std::string& type,
                                                    const std::string& obj,
                                                    const FSPData& dt) {
-    std::unique_ptr<moEval<Ngh>> ret(nullptr);
     if (type == "PERM" && obj == "MAKESPAN") {
-      ret.reset(new FastFSPNeighborEval(dt, *eval_func));
+      return std::make_unique<FastFSPNeighborEval>(dt, *eval_func);
     } else {
-      ret.reset(new moFullEvalByCopy<Ngh>(*eval_func));
+      return std::make_unique<moFullEvalByCopy<Ngh>>(*eval_func);
     }
-    return ret;
+    return nullptr;
   }
 };

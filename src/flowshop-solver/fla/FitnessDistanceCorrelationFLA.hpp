@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fla/FitnessHistoryFLA.hpp"
+#include "flowshop-solver/fla/FitnessHistoryFLA.hpp"
 
 template <class EOT>
 class FitnessDistanceCorrelationFLA : public FitnessHistoryFLA<EOT> {
@@ -11,7 +11,7 @@ class FitnessDistanceCorrelationFLA : public FitnessHistoryFLA<EOT> {
  protected:
   using citerator = typename FitnessHistory<EOT>::citerator;
 
-  virtual double compute(citerator begin, citerator end) {
+  double compute(citerator begin, citerator end) override {
     auto last = end;
     const int n = std::distance(begin, last);
     if (n == 1)

@@ -38,13 +38,13 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
         eval(_fullEval),
         size(size),
         solComparator(_solComparator),
-        neighborhoodCheckpoint{neighborhoodCheckpoint} {}
+        neighborhoodCheckpoint{std::move(neighborhoodCheckpoint)} {}
 
   /**
    * initParam: NOTHING TO DO
    * @param _solution unused solution
    */
-  virtual void initParam(EOT& _solution) {
+  void initParam(EOT& _solution) override {
     improve = false;
     LO = false;
     RandJOB.resize(size);
@@ -59,7 +59,7 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
    * updateParam: NOTHING TO DO
    * @param _solution unused solution
    */
-  virtual void updateParam(EOT&) {
+  void updateParam(EOT&) override {
     if (k < RandJOB.size() - 1)
       k++;
     else {
@@ -78,13 +78,13 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
    * terminate: NOTHING TO DO
    * @param _solution unused solution
    */
-  virtual void terminate(EOT&) {}
+  void terminate(EOT&) override {}
 
   /**
    * Explore the neighborhood of a solution
    * @param _solution the current solution
    */
-  virtual void operator()(EOT& _solution) {
+  void operator()(EOT& _solution) override {
     neighborhoodCheckpoint.initNeighborhood(_solution);
     int j = 0;
     while (_solution[j] != RandJOB[k]) {
@@ -132,24 +132,18 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
    * @param _solution the solution
    * @return true if an ameliorated neighbor was be found
    */
-  virtual bool isContinue(EOT&) { return !LO; }
+  bool isContinue(EOT&) override { return !LO; }
 
   /**
    * move the solution with the best neighbor
    * @param _solution the solution to move
    */
-  virtual void move(EOT&) {}
+  void move(EOT&) override {}
 
   /**
    * accept test if an amelirated neighbor was be found
    * @param _solution the solution
    * @return true if the best neighbor ameliorate the fitness
    */
-  virtual bool accept(EOT&) { return false; }
-
-  /**
-   * Return the class Name
-   * @return the class name as a std::string
-   */
-  virtual std::string className() const { return "IGexplorer"; }
+  bool accept(EOT&) override { return false; }
 };

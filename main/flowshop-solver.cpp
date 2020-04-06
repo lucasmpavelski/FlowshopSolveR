@@ -25,7 +25,7 @@
     exit(1);                                                                   \
   }
 
-int main(int argc, char *argv[]) {
+auto main(int argc, char *argv[]) -> int {
   using namespace std::string_literals;
   std::ios::sync_with_stdio(true);
 
@@ -41,8 +41,8 @@ int main(int argc, char *argv[]) {
   auto seed = addParam(123l, "seed");
 
   std::unordered_map<std::string, std::string> prob_data;
-  auto addProblemParam = [&prob_data, &addParam](std::string name,
-                                                 std::string def) {
+  auto addProblemParam = [&prob_data, &addParam](const std::string &name,
+                                                 const std::string &def) {
     prob_data[name] = addParam(def, name);
   };
   addProblemParam("problem", "FSP");

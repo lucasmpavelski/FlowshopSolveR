@@ -5,24 +5,19 @@
 #include <random>
 
 // paradiseo libs
-#include <continuator/moBestNoImproveContinuator.h>
-#include <continuator/moContinuator.h>
-#include <eo>
-#include <mo>
-#include <neighborhood/moNeighborhood.h>
-#include <utils/eoParam.h>
-#include <sampling/moAutocorrelationSampling.h>
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
 
 #include "problems/FSPEvalFunc.hpp"
+#include "problems/FSPProblem.hpp"
 #include "problems/NIFSPEvalFunc.hpp"
 #include "problems/NWFSPEvalFunc.hpp"
-#include "problems/FSPProblem.hpp"
 
+#include "heuristics/FSPOrderHeuristics.hpp"
 #include "heuristics/NEHInit.hpp"
 #include "heuristics/dummyAspiration.hpp"
 #include "heuristics/moFirstBestTS.hpp"
 #include "heuristics/moFirstTS.hpp"
-#include "heuristics/FSPOrderHeuristics.hpp"
 
 #include "MHParamsSpecs.hpp"
 #include "MHParamsValues.hpp"
@@ -35,27 +30,25 @@ int main(int argc, char *argv[]) {
   cout << "SEED: " << RNG::seed() << "\n";
 
   eoParser parser(argc, argv);
-  string s =
-          " --instance=../../data/instances/generated_intances/"
-          "generated_instances_taill-like/"
-          "taill-like_20_10_2010109.gen"
-          " --obj=PERM "
-          " --specs_file=../../data/specs/ils_specs.txt"
-          " --budget=low"
-          " --no_samples=5"
-          " --log_file=test.log"
-          " --result_file=test.out"
-          ;
-  //std::stringstream test_input(s);
-  //parser.readFrom(test_input);
-  string instance    = "";
-  string obj         = "";
-  string specs_file  = "";
-  string budget      = "";
-  int no_samples     = 5;
-  string log_file    = parser.ProgramName() + ".log";
+  string s = " --instance=../../data/instances/generated_intances/"
+             "generated_instances_taill-like/"
+             "taill-like_20_10_2010109.gen"
+             " --obj=PERM "
+             " --specs_file=../../data/specs/ils_specs.txt"
+             " --budget=low"
+             " --no_samples=5"
+             " --log_file=test.log"
+             " --result_file=test.out";
+  // std::stringstream test_input(s);
+  // parser.readFrom(test_input);
+  string instance = "";
+  string obj = "";
+  string specs_file = "";
+  string budget = "";
+  int no_samples = 5;
+  string log_file = parser.ProgramName() + ".log";
   string result_file = parser.ProgramName() + ".txt";
-  string str_status  = parser.ProgramName() + ".status";
+  string str_status = parser.ProgramName() + ".status";
   instance =
       parser.createParam(instance, "instance", "Instance path", 'I').value();
   obj = parser.createParam(obj, "obj", "Objective", 'O').value();
@@ -70,13 +63,15 @@ int main(int argc, char *argv[]) {
                  .createParam(log_file, "log_file",
                               "File path to log all evaluations", 'S', "", true)
                  .value();
-  result_file = parser
-                    .createParam(result_file, "result_file",
-                                 "Write the best configuration found", 'S', "", true)
-                    .value();
-  budget =
-      parser.createParam(budget, "budget", "Problem budget (low,med,high)", 'B', "", true)
+  result_file =
+      parser
+          .createParam(result_file, "result_file",
+                       "Write the best configuration found", 'S', "", true)
           .value();
+  budget = parser
+               .createParam(budget, "budget", "Problem budget (low,med,high)",
+                            'B', "", true)
+               .value();
 
   eoValueParam<string> statusParam(str_status.c_str(), "status", "Status file",
                                    'S');
@@ -89,16 +84,6 @@ int main(int argc, char *argv[]) {
     std::ofstream os(statusParam.value().c_str());
     os << parser;
   }
-
-  int eval_multiplier = 0;
-  if (budget == "low")
-    eval_multiplier = 10;
-  else if (budget == "med")
-    eval_multiplier = 100;
-  else if (budget == "high")
-    eval_multiplier = 1000;
-  else
-    assert(false);
 
   FSPData data(instance);
   FSPProblem prob(data, obj, "MAKESPAN", "budget", "EVALS");
@@ -130,7 +115,7 @@ int main(int argc, char *argv[]) {
     params.printValues(log) << result << '\n';
     if (result < best_result) {
       best_result = result;
-      best        = params;
+      best = params;
     }
   }
   auto end = std::chrono::system_clock::now();

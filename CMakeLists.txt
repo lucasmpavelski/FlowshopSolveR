@@ -33,6 +33,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -pthread -lpthread -g 
 
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ ")
 
+# set(CMAKE_CXX_CLANG_TIDY
+#   clang-tidy;
+#   -header-filter=.;
+#   -checks=-*,clang-diagnostic-*,clang-analyzer-*,-clang-diagnostic-c++98-compat,performance-*,bugprone-*,modernize-*;)
+
+
 #####################################################################################
 ### include required modules & utilities
 #####################################################################################

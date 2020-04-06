@@ -17,7 +17,7 @@ class FastNEH : public eoInit<FSP> {
       : fspData(fspData),
         compiledSchedule(fspData.noJobs(), fspData.noMachines()) {}
 
-  void operator()(FSP& sol) final override {
+  void operator()(FSP& sol) final {
     ivec initialOrder = getInitialOrder();
     sol.resize(0);
     sol.push_back(initialOrder[0]);

@@ -17,15 +17,14 @@ class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
       : FSPEvalFunc<EOT>(std::move(fd), ObjT),
         delayMatrix(computeDelayMatrix()) {}
 
-  std::string type() const final override { return "NOWAIT"; }
+  std::string type() const final { return "NOWAIT"; }
 
  private:
   /** delayMatrix[i][j] = the values between the start of any two consecutive
    * jobs i and j */
   std::valarray<int> delayMatrix;
 
-  virtual void completionTime(const EOT& _fsp,
-                              std::valarray<int>& Ct) final override {
+  void completionTime(const EOT& _fsp, std::valarray<int>& Ct) final {
     const int N = noJobs();
     const int _N = _fsp.size();
     // for each job...

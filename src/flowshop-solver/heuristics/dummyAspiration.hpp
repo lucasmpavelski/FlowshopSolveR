@@ -8,8 +8,8 @@
 template <class Neighbor>
 class dummyAspiration : public moAspiration<Neighbor> {
  public:
-  typedef typename Neighbor::EOT EOT;
-  void init(EOT&) {}
-  void update(EOT&, Neighbor&) {}
-  bool operator()(EOT&, Neighbor&) { return false; }
+  using EOT = typename Neighbor::EOT;
+  void init(EOT&) override {}
+  void update(EOT&, Neighbor&) override {}
+  bool operator()(EOT&, Neighbor&) override { return false; }
 };

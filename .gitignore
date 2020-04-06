@@ -26,3 +26,4 @@ R/RFlowshopSolvers_*.tar.gz
 *.swp
 packrat/lib*/
 .RData
+.clangd/*

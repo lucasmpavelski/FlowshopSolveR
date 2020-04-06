@@ -1,4 +1,3 @@
-include_directories(${PARADISEO_INCLUDE_DIR})
 set(FSP_SOURCES
   aos/probability_matching.hpp
   aos/adaptive_operator_selection.hpp

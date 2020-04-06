@@ -13,7 +13,7 @@ class AdaptiveWalkLengthFLA : public FitnessHistoryFLA<EOT> {
  protected:
   using citerator = typename FitnessHistory<EOT>::citerator;
 
-  virtual double compute(citerator begin, citerator end) {
+  double compute(citerator begin, citerator end) override {
     const int n = std::distance(begin, end);
     return n;
   }

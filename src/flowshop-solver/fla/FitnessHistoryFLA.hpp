@@ -11,7 +11,7 @@ class FitnessHistoryFLA : public FitnessLandscapeMetric {
   FitnessHistoryFLA(const FitnessHistory<EOT>& fitnessHistory)
       : fitnessHistory{fitnessHistory} {}
 
-  double compute() {
+  double compute() override {
     return compute(fitnessHistory.cbegin(), fitnessHistory.cend());
   }
 

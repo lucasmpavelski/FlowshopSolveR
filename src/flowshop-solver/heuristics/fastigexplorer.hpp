@@ -68,7 +68,7 @@ class DestructionConstruction : public eoMonOp<EOT> {
     }
   }
 
-  virtual bool operator()(EOT& sol) final override {
+  bool operator()(EOT& sol) final {
     auto removed = destruction(sol);
     construction(sol, removed);
     return true;

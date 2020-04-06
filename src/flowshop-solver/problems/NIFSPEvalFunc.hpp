@@ -20,14 +20,13 @@ class NIFSPEvalFunc : public FSPEvalFunc<EOT> {
         S(noMachines()),
         H(noMachines() * noJobs()) {}
 
-  std::string type() const final override { return "NOIDLE"; }
+  std::string type() const final { return "NOIDLE"; }
 
  private:
   std::valarray<int> S;
   std::valarray<int> H;
 
-  virtual void completionTime(const EOT& _fsp,
-                              std::valarray<int>& Ct) override {
+  void completionTime(const EOT& _fsp, std::valarray<int>& Ct) override {
     const int _N = _fsp.size();
     const int M = noMachines();
     const int N = noJobs();

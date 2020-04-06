@@ -3,27 +3,27 @@
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
-#include "global.hpp"
-#include "problems/Problem.hpp"
+#include "flowshop-solver/global.hpp"
+#include "flowshop-solver/problems/Problem.hpp"
 
 struct Result {
   double fitness = 0, no_evals = 0, time = 0;
 
-  friend bool operator==(const Result& a, const Result& b) {
+  friend auto operator==(const Result& a, const Result& b) -> bool {
     return a.fitness == b.fitness && a.no_evals == b.no_evals;
   }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Result& res) {
+inline auto operator<<(std::ostream& os, const Result& res) -> std::ostream& {
   return os << "fitness: " << res.fitness << '\n'
             << "no_evals: " << res.no_evals << '\n'
             << "time: " << res.time << '\n';
 }
 
 template <class Ngh, class EOT = typename Ngh::EOT>
-Result runExperiment(eoInit<EOT>& init,
-                     moLocalSearch<Ngh>& algo,
-                     Problem<Ngh>& prob) {
+auto runExperiment(eoInit<EOT>& init,
+                   moLocalSearch<Ngh>& algo,
+                   Problem<Ngh>& prob) -> Result {
   EOT sol;
   prob.checkpoint().init(sol);
   double time = Measure<>::execution([&init, &algo, &sol] {
@@ -37,7 +37,7 @@ Result runExperiment(eoInit<EOT>& init,
   return res;
 }
 
-inline int getNhSize(int N, double proportion) {
+inline auto getNhSize(int N, double proportion) -> int {
   const int max_nh_size = pow(N - 1, 2);
   const int min_nh_size = (N >= 20) ? 11 : 2;
   const int nh_interval = (N >= 20) ? 10 : 1;

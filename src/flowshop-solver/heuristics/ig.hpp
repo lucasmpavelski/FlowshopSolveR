@@ -34,7 +34,7 @@
 template <class OpT>
 class OperatorSelectionFactory {
  public:
-  OperatorSelectionFactory() {}
+  OperatorSelectionFactory() = default;
 
   std::shared_ptr<OperatorSelection<OpT>> create(std::vector<OpT> options,
                                                  const MHParamsValues& params,

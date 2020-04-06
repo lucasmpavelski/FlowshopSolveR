@@ -1,8 +1,9 @@
 #pragma once
 
-#include "fla/FitnessLandscapeMetric.hpp"
-#include "heuristics/neighborhood_stat.hpp"
-#include "paradiseo/mo/comparator/moSolComparator.h"
+#include <paradiseo/mo/mo>
+
+#include "flowshop-solver/fla/FitnessLandscapeMetric.hpp"
+#include "flowshop-solver/heuristics/neighborhood_stat.hpp"
 
 template <class EOT>
 class NeutralityFLA : public NeigborhoodStat<EOT, double>,
@@ -19,28 +20,26 @@ class NeutralityFLA : public NeigborhoodStat<EOT, double>,
 
   using NeigborhoodStat<EOT, double>::value;
 
-  void init(EOT&) final override {
+  void init(EOT&) final {
     value() = -1.0;
     equalCount = totalCount = 0;
     currentFitness.invalidate();
   }
 
-  void initNeighborhood(EOT& sol) final override {
+  void initNeighborhood(EOT& sol) final {
     currentFitness.fitness(sol.fitness());
   }
 
-  void neighborCall(EOT& sol) final override {
+  void neighborCall(EOT& sol) final {
     if (compare.equals(currentFitness, sol)) {
       equalCount++;
     }
     totalCount++;
   }
 
-  void lastCall(EOT&) final override {
-    value() = double(equalCount) / totalCount;
-  }
+  void lastCall(EOT&) final { value() = double(equalCount) / totalCount; }
 
-  void operator()(EOT&) final override {}
+  void operator()(EOT&) final {}
 
-  double compute() final override { return value(); };
+  double compute() final { return value(); };
 };

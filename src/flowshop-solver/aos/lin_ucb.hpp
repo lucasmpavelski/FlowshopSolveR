@@ -12,7 +12,7 @@ class ProblemContext {
   std::vector<FitnessLandscapeMetric*> metrics;
 
  public:
-  std::vector<double> compute() {
+  auto compute() -> std::vector<double> {
     std::vector<double> values;
     for (auto& metric : metrics) {
       values.push_back(metric->compute());
@@ -22,7 +22,7 @@ class ProblemContext {
 
   void add(FitnessLandscapeMetric& metric) { metrics.emplace_back(&metric); }
 
-  int size() const { return metrics.size(); }
+  auto size() const -> int { return metrics.size(); }
 };
 
 using Eigen::MatrixXd;
@@ -54,9 +54,9 @@ class LinUCB : public OperatorSelection<OpT> {
     assert(alpha >= 0);
   }
 
-  void update() final override{};
+  void update() final{};
 
-  void feedback(const double cf, const double pf) final override {
+  void feedback(const double cf, const double pf) final {
     double reward = pf - cf;
     std::vector<double> features = context.compute();
     x = Eigen::Map<VectorXd>(features.data(), features.size());
@@ -69,7 +69,7 @@ class LinUCB : public OperatorSelection<OpT> {
     p(opIdx) = theta[opIdx].transpose() * x + alpha * std::sqrt(prod);
   }
 
-  std::ostream& printOn(std::ostream& os) final override {
+  auto printOn(std::ostream& os) -> std::ostream& final {
     os << "  strategy: LinUCB MAB\n"
        << "  alpha: " << alpha << '\n';
     return os;
@@ -77,7 +77,7 @@ class LinUCB : public OperatorSelection<OpT> {
 
   using OperatorSelection<OpT>::getOperator;
 
-  OpT& selectOperator() final override {
+  auto selectOperator() -> OpT& final {
     p.maxCoeff(&opIdx);
     return getOperator(opIdx);
   }

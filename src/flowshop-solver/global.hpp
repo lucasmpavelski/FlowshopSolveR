@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 // Paradiseo includes
@@ -16,18 +17,18 @@
 #include <paradiseo/mo/mo>
 
 template <class EnumT, class Number>
-EnumT fromNumeric(Number n) {
+auto fromNumeric(Number n) -> EnumT {
   return static_cast<EnumT>(n);  //(std::underlying_type<EnumT>(n));
 }
 
 template <class EnumT>
-int asInt(EnumT e) {
+auto asInt(EnumT e) -> int {
   return static_cast<int>(e);
 }
 
 struct EnumClassHash {
   template <typename T>
-  std::size_t operator()(T t) const {
+  auto operator()(T t) const -> std::size_t {
     return asInt(t);
   }
 };
@@ -39,15 +40,15 @@ template <class T>
 using StrToEnumT = std::unordered_map<std::string, T>;
 
 template <class T>
-StrToEnumT<T> StrToEnumMap();
+auto StrToEnumMap() -> StrToEnumT<T>;
 
 template <class T>
-EnumToStrT<T> EnumToStrMap() {
+auto EnumToStrMap() -> EnumToStrT<T> {
   return flipEnumMap(StrToEnumMap<T>());
 };
 
 template <class T>
-EnumToStrT<T> flipEnumMap(const StrToEnumT<T>& map) {
+auto flipEnumMap(const StrToEnumT<T>& map) -> EnumToStrT<T> {
   EnumToStrT<T> reversed;
   for (auto p : map)
     reversed[p.second] = p.first;
@@ -55,12 +56,12 @@ EnumToStrT<T> flipEnumMap(const StrToEnumT<T>& map) {
 }
 
 template <class T>
-T strToEnum(const std::string& s) {
+auto strToEnum(const std::string& s) -> T {
   return StrToEnumMap<T>().at(s);
 };
 
 template <class T>
-std::string enumToStr(const T& e) {
+auto enumToStr(const T& e) -> std::string {
   return EnumToStrMap<T>().at(e);
 };
 
@@ -70,7 +71,8 @@ class prefixedPrinter : public eoStdoutMonitor {
                   std::string _delim = ",",
                   unsigned int _width = 20,
                   char _fill = ' ')
-      : eoStdoutMonitor{_delim, _width, _fill}, prefix{_prefix, "prefix"} {
+      : eoStdoutMonitor{std::move(_delim), _width, _fill},
+        prefix{std::move(_prefix), "prefix"} {
     // add(prefix);
   }
 
@@ -78,17 +80,17 @@ class prefixedPrinter : public eoStdoutMonitor {
 };
 
 template <class Itr, class Val = typename std::iterator_traits<Itr>::value_type>
-inline Val sum(Itr b, Itr e) {
+inline auto sum(Itr b, Itr e) -> Val {
   return std::accumulate(b, e, Val(0));
 }
 
 template <typename T>
-inline T sum(const T x[], const size_t n) {
+inline auto sum(const T x[], const size_t n) -> T {
   return std::accumulate(x, x + n, T(0));
 }
 
 template <typename T>
-inline T mean(const T x[], const size_t n) {
+inline auto mean(const T x[], const size_t n) -> T {
   T s = sum(x, n);
   return s / T(n);
 }
@@ -99,15 +101,15 @@ class printableSeq {
   const std::string sep;
 
  public:
-  printableSeq(Itr1 beg, Itr2 end, const std::string& sep = " ")
-      : beg(beg), end(end), sep(sep) {}
+  printableSeq(Itr1 beg, Itr2 end, std::string sep = " ")
+      : beg(beg), end(end), sep(std::move(sep)) {}
 
-  std::ostream& operator()(std::ostream& os = std::cout) const {
+  auto operator()(std::ostream& os = std::cout) const -> std::ostream& {
     return os << *this;
   }
 
-  friend std::ostream& operator<<(std::ostream& os,
-                                  const printableSeq<Itr1, Itr2>& pa) {
+  friend auto operator<<(std::ostream& os, const printableSeq<Itr1, Itr2>& pa)
+      -> std::ostream& {
     if (pa.beg != pa.end)
       os << *pa.beg;
     Itr1 p = pa.beg;
@@ -120,29 +122,27 @@ class printableSeq {
 template <typename Container,
           class Itr1 = typename Container::const_iterator,
           class Itr2 = typename Container::const_iterator>
-printableSeq<Itr1, Itr2> printSeq(const Container& c,
-                                  const std::string& sep = " ") {
+auto printSeq(const Container& c, const std::string& sep = " ")
+    -> printableSeq<Itr1, Itr2> {
   return printableSeq<Itr1, Itr2>(c.cbegin(), c.cend(), sep);
 }
 
 template <typename Itr1, typename Itr2>
-printableSeq<Itr1, Itr2> printSeq(Itr1 beg,
-                                  Itr2 end,
-                                  const std::string& sep = " ") {
+auto printSeq(Itr1 beg, Itr2 end, const std::string& sep = " ")
+    -> printableSeq<Itr1, Itr2> {
   return printableSeq<Itr1, Itr2>(beg, end, sep);
 }
 
 template <typename Itr1>
-printableSeq<Itr1, Itr1> printSeq_n(Itr1 beg,
-                                    const size_t n,
-                                    const std::string& sep = " ") {
+auto printSeq_n(Itr1 beg, const size_t n, const std::string& sep = " ")
+    -> printableSeq<Itr1, Itr1> {
   return printableSeq<Itr1, Itr1>(beg, beg + n, sep);
 }
 
 template <typename TimeT = std::chrono::milliseconds>
 struct Measure {
   template <typename F>
-  static typename TimeT::rep execution(F const& func) {
+  static auto execution(F const& func) -> typename TimeT::rep {
     auto start = std::chrono::system_clock::now();
     func();
     auto duration = std::chrono::duration_cast<TimeT>(
@@ -154,38 +154,38 @@ struct Measure {
 template <class T = uint32_t>
 struct ParadiseoRNGFunctor {
   using result_type = T;
-  T operator()() { return rng.rand(); }
-  T min() { return 0; }
-  T max() { return rng.rand_max(); }
+  auto operator()() -> T { return rng.rand(); }
+  auto min() -> T { return 0; }
+  auto max() -> T { return rng.rand_max(); }
 };
 
 struct RNG {
   static std::mt19937_64 engine;
   static std::random_device true_rand_engine;
 
-  static long seed(long s = true_rand_engine());
+  static auto seed(long s = true_rand_engine()) -> long;
 
-  inline static long trueRandom() { return true_rand_engine(); }
+  inline static auto trueRandom() -> long { return true_rand_engine(); }
 
-  inline static long pseudoRandom() { return engine(); };
+  inline static auto pseudoRandom() -> long { return engine(); };
 
   template <typename RealT = double>
-  inline static RealT realUniform(const RealT& from = 0.0,
-                                  const RealT& to = 1.0) {
+  inline static auto realUniform(const RealT& from = 0.0, const RealT& to = 1.0)
+      -> RealT {
     std::uniform_real_distribution<RealT> uniform_dist(from, to);
     return uniform_dist(engine);
   }
 
-  inline static int intUniform(int from, int to) {
+  inline static auto intUniform(int from, int to) -> int {
     std::uniform_int_distribution<int> uniform_dist(from, to);
     return uniform_dist(engine);
   }
 
-  inline static int intUniform(const int until = 100) {
+  inline static auto intUniform(const int until = 100) -> int {
     return intUniform(0, until);
   }
 
-  inline static bool flipCoin() {
+  inline static auto flipCoin() -> bool {
     static std::bernoulli_distribution dist(0.5);
     return dist(engine);
   }
@@ -213,12 +213,19 @@ struct RNG {
 
   struct Guard {
     Guard() { saveRNGState(); }
-    ~Guard() { restoreRNGState(); }
+    ~Guard() noexcept {
+      try {
+        restoreRNGState();
+      } catch (std::exception e) {
+        std::cerr << e.what();
+        std::exit(1);
+      }
+    }
   };
 
   struct SeedPool {
     static std::unordered_map<int, long> seeds;
-    static long get(int i) {
+    static auto get(int i) -> long {
       if (seeds.count(i) == 0)
         seeds[i] = engine();
       return seeds[i];
@@ -227,7 +234,7 @@ struct RNG {
 };
 
 template <class T = std::string>
-std::vector<T> tokenize(const T& s, char delim = ',') {
+auto tokenize(const T& s, char delim = ',') -> std::vector<T> {
   std::stringstream ss(s);
   std::vector<T> result;
   while (ss.good()) {
@@ -239,7 +246,7 @@ std::vector<T> tokenize(const T& s, char delim = ',') {
 }
 
 template <class T = std::string>
-std::vector<T> tokenize(const T& s, const T& delims) {
+auto tokenize(const T& s, const T& delims) -> std::vector<T> {
   std::vector<T> res = tokenize(s, delims[0]);
   for (char delim : delims) {
     std::vector<T> temp = res;
@@ -262,19 +269,20 @@ std::vector<T> tokenize(const T& s, const T& delims) {
 template <typename Map,
           typename Key = typename Map::key_type,
           typename Val = typename Map::mapped_type>
-Val getWithDef(const Map& m, const Key& key, const Val& defval) {
+auto getWithDef(const Map& m, const Key& key, const Val& defval) -> Val {
   auto it = m.find(key);
   return it == m.end() ? defval : it->second;
 }
 
-std::vector<std::string> getNextLineAndSplitIntoTokens(std::istream& str);
+auto getNextLineAndSplitIntoTokens(std::istream& str)
+    -> std::vector<std::string>;
 
 class CSVRow {
  public:
-  std::string const& operator[](std::size_t index) const {
+  auto operator[](std::size_t index) const -> std::string const& {
     return m_data[index];
   }
-  std::size_t size() const { return m_data.size(); }
+  auto size() const -> std::size_t { return m_data.size(); }
   void readNexthrow(std::istream& str) {
     std::string line;
     std::getline(str, line);
@@ -289,7 +297,7 @@ class CSVRow {
     // This checks for a trailing comma with no data after it.
     if (!lineStream && cell.empty()) {
       // If there was a trailing comma then add an empty element.
-      m_data.push_back("");
+      m_data.emplace_back("");
     }
   }
 
@@ -297,7 +305,7 @@ class CSVRow {
   std::vector<std::string> m_data;
 };
 
-std::istream& operator>>(std::istream& str, CSVRow& data);
+auto operator>>(std::istream& str, CSVRow& data) -> std::istream&;
 
 // trim from start (in place)
 static inline void ltrim(std::string& s) {
@@ -314,55 +322,22 @@ static inline void rtrim(std::string& s) {
 }
 
 // trim from both ends
-static inline std::string trim(std::string s) {
+[[maybe_unused]] static inline auto trim(std::string s) -> std::string {
   ltrim(s);
   rtrim(s);
   return s;
 }
 
 template <class T, class Compare>
-constexpr const T& clamp(const T& v, const T& lo, const T& hi, Compare comp) {
+constexpr auto clamp(const T& v, const T& lo, const T& hi, Compare comp)
+    -> const T& {
   return assert(!comp(hi, lo)), comp(v, lo) ? lo : comp(hi, v) ? hi : v;
 }
 
 template <class T>
-constexpr const T& clamp(const T& v, const T& lo, const T& hi) {
+constexpr auto clamp(const T& v, const T& lo, const T& hi) -> const T& {
   return (v < lo) ? lo : (v > hi) ? hi : v;
   // clamp(v, lo, hi, std::less<T>());
 }
 
-long factorial(unsigned n);
-
-struct AssertionFailureException : public std::exception {
-  using string = std::string;
-
- private:
-  const char* expression;
-  const char* file;
-  int line;
-  string message;
-  string report;
-
- public:
-  AssertionFailureException(const char* expression,
-                            const char* file,
-                            const int line,
-                            const std::string& message);
-
-  virtual const char* what() const noexcept { return report.c_str(); }
-  const char* getExpression() const noexcept { return expression; }
-  const char* getFile() const noexcept { return file; }
-  int getLine() const noexcept { return line; }
-  const char* Message() const noexcept { return message.c_str(); }
-};
-
-/// Assert that EXPRESSION evaluates to true, otherwise raise
-/// AssertionFailureException with associated MESSAGE (which may use C++
-/// stream-style message formatting)
-#define throw_assert(EXPRESSION, MESSAGE)                                 \
-  if (EXPRESSION) {                                                       \
-  } else                                                                  \
-    throw AssertionFailureException(                                      \
-        #EXPRESSION, __FILE__, __LINE__,                                  \
-        static_cast<std::ostringstream&>(std::ostringstream() << MESSAGE) \
-            .str())
+auto factorial(unsigned n) -> long;

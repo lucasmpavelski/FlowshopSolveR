@@ -1,19 +1,23 @@
-#include "../heuristics.hpp"
-#include "aco.hpp"
-#include "hc.hpp"
-#include "ig.hpp"
-#include "ihc.hpp"
-#include "ils.hpp"
-#include "isa.hpp"
-#include "sa.hpp"
-#include "ts.hpp"
+#pragma once
 
-Result solveWithAll(std::unordered_map<std::string, std::string> prob,
-                    std::unordered_map<std::string, double> params_values);
+#include <unordered_map>
 
-Result solveWith(std::string mh,
-                 std::unordered_map<std::string, std::string> prob,
-                 std::unordered_map<std::string, double> params) {
+#include "flowshop-solver/heuristics.hpp"
+#include "flowshop-solver/heuristics/aco.hpp"
+#include "flowshop-solver/heuristics/hc.hpp"
+#include "flowshop-solver/heuristics/ig.hpp"
+#include "flowshop-solver/heuristics/ihc.hpp"
+#include "flowshop-solver/heuristics/ils.hpp"
+#include "flowshop-solver/heuristics/isa.hpp"
+#include "flowshop-solver/heuristics/sa.hpp"
+#include "flowshop-solver/heuristics/ts.hpp"
+
+Result solveWithAll(const std::unordered_map<std::string, std::string>&,
+                    const std::unordered_map<std::string, double>&);
+
+Result solveWith(const std::string& mh,
+                 const std::unordered_map<std::string, std::string>& prob,
+                 const std::unordered_map<std::string, double>& params) {
   if (mh == "HC")
     return solveWithHC(prob, params);
   else if (mh == "SA")
@@ -37,8 +41,9 @@ Result solveWith(std::string mh,
   return {};
 }
 
-Result solveWithAll(std::unordered_map<std::string, std::string> prob,
-                    std::unordered_map<std::string, double> params_values) {
+Result solveWithAll(
+    const std::unordered_map<std::string, std::string>& prob,
+    const std::unordered_map<std::string, double>& params_values) {
   const MHParamsSpecs specs = MHParamsSpecsFactory::get("all");
   MHParamsValues params(&specs);
   params.readValues(params_values);

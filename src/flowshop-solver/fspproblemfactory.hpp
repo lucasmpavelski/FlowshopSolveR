@@ -16,7 +16,7 @@ class FSPProblemFactory {
       lower_bounds_data;
 
  public:
-  static void init(const std::string data_folder) {
+  static void init(const std::string& data_folder) {
     FSPProblemFactory::data_folder = data_folder;
     loadLowerBoundsData();
 

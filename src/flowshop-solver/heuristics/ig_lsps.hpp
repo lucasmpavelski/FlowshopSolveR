@@ -21,7 +21,7 @@ class IGLocalSearchPartialSolution : public eoMonOp<typename Ngh::EOT> {
         destructionSize(destructionSize),
         comparator(comparator) {}
 
-  bool operator()(EOT& sol) {
+  bool operator()(EOT& sol) override {
     EOT before = sol;
     ivec removedJobs = deconstruction(sol);
     if (sol.size() > 0)

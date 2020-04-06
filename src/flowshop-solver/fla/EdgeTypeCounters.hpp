@@ -18,20 +18,20 @@ class EdgeTypeCounters : public NeigborhoodStatBase<EOT> {
  public:
   EdgeTypeCounters(moSolComparator<EOT>& compare) : compare{compare} {}
 
-  void init(EOT& sol) final override {
+  void init(EOT& sol) final {
     equal.clear();
     better.clear();
     worse.clear();
   }
 
-  void initNeighborhood(EOT& sol) final override {
+  void initNeighborhood(EOT& sol) final {
     equal.push_back(0);
     better.push_back(0);
     worse.push_back(0);
     currentFitness.fitness(sol.fitness());
   }
 
-  void neighborCall(EOT& sol) final override {
+  void neighborCall(EOT& sol) final {
     if (compare.equals(currentFitness, sol)) {
       equal.back()++;
     } else if (compare(currentFitness, sol)) {

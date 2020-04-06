@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,-clang-diagnostic-c++98-compat'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,-clang-diagnostic-c++98-compat,bugprone-*,modernize-*,performance-*'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

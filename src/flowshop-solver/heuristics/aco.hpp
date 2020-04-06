@@ -31,7 +31,7 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
    * Init the memory
    * @param _sol the current solution
    */
-  void init(EOT& _sol) final override {
+  void init(EOT& _sol) final {
     // Set parameters, initialize pheromone trails
     t_max = 1.0 / ((1 - rho) * _sol.fitness());
     t_min = t_min_f * t_max;
@@ -40,7 +40,7 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
     // add(_sol, dummy);
   }
 
-  bool operator()(EOT& sol) final override {
+  auto operator()(EOT& sol) -> bool final {
     // ConstructSolutions
     sol.invalidate();
     sol.resize(0);
@@ -84,14 +84,14 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
    * @param _sol the current solution
    * @param _neighbor the current neighbor
    */
-  void add(EOT&, Ngh&) final override{};
+  void add(EOT&, Ngh&) final{};
 
   /**
    * update the memory
    * @param _sol the current solution
    * @param _neighbor the current neighbor
    */
-  void update(EOT& _sol, Ngh&) final override {
+  void update(EOT& _sol, Ngh&) final {
     // UpdateTrails
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
@@ -106,7 +106,7 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
   /**
    * clear the memory
    */
-  void clearMemory() final override{};
+  void clearMemory() final{};
 
  private:
   // parameters
@@ -117,19 +117,19 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
   double t_min, t_max;
   dmat pheromones, prob;
 
-  int maxCoeffCol(const dmat& matrix, int row) {
+  auto maxCoeffCol(const dmat& matrix, int row) -> int {
     double max = matrix[row][0];
     int ret = 0;
     for (unsigned col = 1; col < matrix.size(); col++) {
       if (max < matrix[row][col]) {
         max = matrix[row][col];
-        ret = col;
+        ret = static_cast<int>(col);
       }
     }
     return ret;
   }
 
-  double sumCol(const dmat& matrix, int row) {
+  auto sumCol(const dmat& matrix, int row) -> double {
     double s = 0.0;
     for (unsigned col = 1; col < matrix.size(); col++) {
       s += matrix[row][col];
@@ -138,9 +138,9 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
   }
 };
 
-Result solveWithACO(
+auto solveWithACO(
     const std::unordered_map<std::string, std::string>& problem_specs,
-    const std::unordered_map<std::string, double>& param_values) {
+    const std::unordered_map<std::string, double>& param_values) -> Result {
   MHParamsSpecs specs = MHParamsSpecsFactory::get("ACO");
   MHParamsValues params(&specs);
   params.readValues(param_values);
@@ -216,9 +216,9 @@ Result solveWithACO(
   // neighborhood size
   const int min_nh_size = (N >= 20) ? 11 : 2;
   const int nh_interval = (N >= 20) ? 10 : 1;
-  const int no_nh_sizes = (max_nh_size - min_nh_size) / nh_interval;
-  const int scale =
-      int((no_nh_sizes + 1) * params.real("ACO.Neighborhood.Size") / 10.0);
+  const int no_nh_sizes = (max_nh_size - min_nh_size) / nh_interval + 1;
+  const int scale = int(static_cast<float>(no_nh_sizes) *
+                        params.real("ACO.Neighborhood.Size") / 10.0);
   const int nh_size = std::min(max_nh_size, min_nh_size + scale * nh_interval);
 
   moOrderNeighborhood<Ngh> neighborhood0(nh_size);

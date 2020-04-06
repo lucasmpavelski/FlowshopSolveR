@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "global.hpp"
+#include "flowshop-solver/global.hpp"
 #include "heuristics/neighborhood_checkpoint.hpp"
 #include "paradiseo/mo/comparator/moNeighborComparator.h"
 #include "paradiseo/mo/explorer/moNeighborhoodExplorer.h"
@@ -35,7 +35,7 @@ class BestInsertionExplorer
         solNeighborComparator{solNeighborComparator},
         neighborEval{neighborEval} {}
 
-  virtual void initParam(EOT& _solution) final override {
+  void initParam(EOT& _solution) final {
     improve = false;
     LO = false;
     RandJOB.resize(_solution.size());
@@ -45,7 +45,7 @@ class BestInsertionExplorer
     k = 0;
   }
 
-  virtual void updateParam(EOT&) final override {
+  void updateParam(EOT&) final {
     if (k < RandJOB.size() - 1)
       k++;
     else {
@@ -60,8 +60,8 @@ class BestInsertionExplorer
     improve = false;
   }
 
-  virtual void operator()(EOT& _solution) final override {
-    const int n = static_cast<int>(_solution.size());
+  void operator()(EOT& _solution) final {
+    const auto n = static_cast<int>(_solution.size());
     EOT tmp = _solution;
     auto insertPtr = std::find(tmp.begin(), tmp.end(), RandJOB[k]);
     int insertPosition = std::distance(tmp.begin(), insertPtr);
@@ -91,8 +91,8 @@ class BestInsertionExplorer
     }
   }
 
-  virtual bool isContinue(EOT&) final override { return !LO; }
-  virtual void move(EOT&) final override {}
-  virtual bool accept(EOT&) final override { return false; }
-  virtual void terminate(EOT&) final override {}
+  bool isContinue(EOT&) final { return !LO; }
+  void move(EOT&) final {}
+  bool accept(EOT&) final { return false; }
+  void terminate(EOT&) final {}
 };

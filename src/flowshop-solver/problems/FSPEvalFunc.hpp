@@ -47,7 +47,7 @@ class FSPEvalFunc : public eoEvalFunc<EOT> {
     no_evals = 0;
   }
 
-  void operator()(EOT& s) {
+  void operator()(EOT& s) override {
     no_evals++;
     completionTime(s, Ct);
     double fit = 0.0, max = fsp_data.maxCT();
@@ -103,13 +103,12 @@ class PermFSPEvalFunc : public FSPEvalFunc<EOT> {
       : FSPEvalFunc<EOT>(std::move(fd), ObjT),
         part_ct(noJobs() * noMachines()) {}
 
-  std::string type() const final override { return "PERM"; }
+  std::string type() const final { return "PERM"; }
 
  protected:
   std::valarray<int> part_ct;  // matrice des comp time
 
-  virtual void completionTime(const EOT& _fsp,
-                              std::valarray<int>& Ct) override final {
+  void completionTime(const EOT& _fsp, std::valarray<int>& Ct) override {
     const int _N = _fsp.size();
     const int N = noJobs();
     const int M = noMachines();

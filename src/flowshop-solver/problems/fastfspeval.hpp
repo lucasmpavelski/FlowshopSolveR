@@ -65,9 +65,9 @@ struct CompiledSchedule {
   }
 
   void compile(const FSPData& fspData, const ivec& seq, int from) {
-    const int seq_size = static_cast<int>(seq.size());
+    const auto seq_size = static_cast<int>(seq.size());
     for (int i = from + 1; i <= seq_size - 1; i++) {
-      int seq_i = static_cast<int>(seq[i - 1]);
+      auto seq_i = seq[i - 1];
       for (int j = 1; j <= no_machines; j++) {
         e_(i, j) =
             std::max(e_(i, j - 1), e_(i - 1, j)) + fspData.pt(seq_i, j - 1);
@@ -80,14 +80,14 @@ struct CompiledSchedule {
       }
     }
     for (int i = seq_size - 1; i >= 1; i--) {
-      int seq_i = static_cast<int>(seq[i - 1]);
+      int seq_i = seq[i - 1];
       for (int j = no_machines; j >= 1; j--) {
         q_(i, j) =
             std::max(q_(i, j + 1), q_(i + 1, j)) + fspData.pt(seq_i, j - 1);
       }
     }
     for (int i = from + 1; i <= seq_size; i++) {
-      int seq_k = static_cast<int>(seq[seq_size - 1]);
+      int seq_k = seq[seq_size - 1];
       for (int j = 1; j <= no_machines; j++) {
         f_(i, j) =
             std::max(f_(i, j - 1), e_(i - 1, j)) + fspData.pt(seq_k, j - 1);
@@ -132,7 +132,7 @@ class FastFSPNeighborEval : public moEval<FSPNeighbor> {
             CompiledSchedule(fspData.noJobs(), fspData.noMachines())),
         compiledSolutions(fspData.noJobs()) {}
 
-  void operator()(FSP& sol, FSPNeighbor& ngh) final override {
+  void operator()(FSP& sol, FSPNeighbor& ngh) final {
     auto firstSecond = ngh.firstSecond(sol);
     int first = firstSecond.first;
     int second = firstSecond.second;

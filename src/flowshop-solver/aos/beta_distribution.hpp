@@ -9,11 +9,11 @@
 template <typename RealType = double>
 class beta_distribution {
  public:
-  typedef RealType result_type;
+  using result_type = RealType;
 
   class param_type {
    public:
-    typedef beta_distribution distribution_type;
+    using distribution_type = beta_distribution;
 
     explicit param_type(RealType a = 2.0, RealType b = 2.0)
         : a_param(a), b_param(b) {}
@@ -72,7 +72,7 @@ class beta_distribution {
   }
 
  private:
-  typedef std::gamma_distribution<result_type> gamma_dist_type;
+  using gamma_dist_type = std::gamma_distribution<result_type>;
 
   gamma_dist_type a_gamma, b_gamma;
 

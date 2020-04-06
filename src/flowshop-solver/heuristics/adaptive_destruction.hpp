@@ -28,10 +28,10 @@ class AdaptiveDestruction : public eoMonOp<EOT> {
       : eval(eval),
         fitness_reward(fitness_reward),
         operator_selection(operator_selection),
-        comp(comp),
+        comp(std::move(comp)),
         firstIteration{true} {}
 
-  bool operator()(EOT& sol) final override {
+  bool operator()(EOT& sol) final {
     // std::cerr << "destruct " << sol.fitness() << '\n';
     if (!firstIteration) {
       operator_selection.feedback(fitness_reward.current(),

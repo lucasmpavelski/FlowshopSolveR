@@ -32,7 +32,7 @@ struct FSPData {
     init();
   }
 
-  FSPData(std::vector<int> pts, int no_jobs)
+  FSPData(const std::vector<int>& pts, int no_jobs)
       : no_jobs{no_jobs},
         no_machines{static_cast<int>(pts.size() / no_jobs)},
         max_ct{0},
@@ -109,7 +109,7 @@ struct FSPData {
       }
     }
     max_ct = std::accumulate(total_job_proc_times.begin(),
-                             total_job_proc_times.end(), 0u);
+                             total_job_proc_times.end(), 0);
   }
 
   int no_jobs, no_machines, max_ct, lower_bound;

@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include <random>
 #include <vector>
 
@@ -16,18 +14,16 @@ class Random : public OperatorSelection<OpT> {
   Random(const std::vector<OpT>& strategies)
       : OperatorSelection<OpT>{strategies}, dist(0, strategies.size() - 1) {}
 
-  void update() final override{};
+  void update() final{};
 
-  void feedback(const double, const double) final override {}
+  void feedback(const double, const double) final {}
 
-  std::ostream& printOn(std::ostream& os) final override {
+  std::ostream& printOn(std::ostream& os) final {
     os << "  strategy: Random\n";
     return os;
   }
 
   using OperatorSelection<OpT>::getOperator;
 
-  OpT& selectOperator() final override {
-    return getOperator(dist(RNG::engine));
-  }
+  OpT& selectOperator() final { return getOperator(dist(RNG::engine)); }
 };
