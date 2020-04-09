@@ -8,7 +8,7 @@
 #include "flowshop-solver/heuristics/all.hpp"
 #include "flowshop-solver/specsdata.hpp"
 
-int main(int, char *[]) {
+auto main(int, char *[]) -> int {
   long seed = 123; // std::stol(argv[1]);
   std::cerr << seed << '\n';
   RNG::seed(seed);
@@ -29,10 +29,10 @@ int main(int, char *[]) {
   params["IG.Local.Search"] = 3;
   params["IG.Accept"] = 2;
   params["IG.Accept.Temperature"] = 0.5;
-  params["IG.Algo"] = 0;
-  params["IG.Destruction.Size"] = 12;
+  params["IG.Algo"] = 1;
+  params["IG.Destruction.Size"] = 2;
   params["IG.LS.Single.Step"] = 0;
-  params["IG.LSPS.Local.Search"] = 0;
+  params["IG.LSPS.Local.Search"] = 3;
   params["IG.LSPS.Single.Step"] = 0;
   params["IG.AOS.Strategy"] = 0;
   std::cout << solveWith("IG", prob, params);

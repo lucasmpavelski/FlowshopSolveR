@@ -39,15 +39,15 @@ struct CompiledSchedule {
       f_(i, 0) = 0;
   }
 
-  inline int& e_(const int j, const int m) {
+  inline auto e_(const int j, const int m) -> int& {
     return e_times[m * (no_jobs + 1) + j];
   }
 
-  inline int& q_(const int j, const int m) {
+  inline auto q_(const int j, const int m) -> int& {
     return q_times[m * (no_jobs + 1) + j];
   }
 
-  inline int& f_(const int j, const int m) {
+  inline auto f_(const int j, const int m) -> int& {
     return f_times[m * (no_jobs + 1) + j];
   }
 
@@ -86,7 +86,7 @@ struct CompiledSchedule {
             std::max(q_(i, j + 1), q_(i + 1, j)) + fspData.pt(seq_i, j - 1);
       }
     }
-    for (int i = from + 1; i <= seq_size; i++) {
+    for (int i = 1; i <= seq_size; i++) {
       int seq_k = seq[seq_size - 1];
       for (int j = 1; j <= no_machines; j++) {
         f_(i, j) =
@@ -110,12 +110,14 @@ struct CompiledSchedule {
     }
   }
 
-  inline int getMakespan(const int i) const { return makespan[i]; }
+  [[nodiscard]] inline auto getMakespan(const int i) const -> int {
+    return makespan[i];
+  }
 };
 
-int positionPairToKey(int first, int second, int size);
+auto positionPairToKey(int first, int second, int size) -> int;
 
-std::pair<int, int> keyToPositionPair(int val, int size);
+auto keyToPositionPair(int val, int size) -> std::pair<int, int>;
 
 class FastFSPNeighborEval : public moEval<FSPNeighbor> {
   const FSPData fspData;
@@ -140,19 +142,15 @@ class FastFSPNeighborEval : public moEval<FSPNeighbor> {
     auto& compiledSolution = compiledSolutions[first];
 
     auto mPtr = std::mismatch(compiledSolution.begin(), compiledSolution.end(),
-                              sol.begin());
+                              sol.begin(), sol.end());
+    int from = std::distance(sol.begin(), mPtr.second);
 
-    if (mPtr.second != sol.end()) {
-      int from = 0;  // std::distance(sol.begin(), mPtr.second);
-
-      // std::cerr << "Compiling for: " << sol << '\n';
-      // std::cerr << "Previous: " << compiledSolution << '\n';
-      // std::cerr << "Mismatch at: " << from << '\n';
+    if (mPtr.second != sol.end() || sol.size() != compiledSolution.size()) {
       EOT perm_i = sol;
       std::rotate(perm_i.begin() + first, perm_i.begin() + first + 1,
                   perm_i.end());
 
-      compiledSchedules[first].compile(fspData, perm_i, from);
+      compiledSchedules[first].compile(fspData, perm_i, std::max(0, from - 1));
       compiledSolutions[first] = sol;
     }
     if (first < second) {
@@ -163,13 +161,9 @@ class FastFSPNeighborEval : public moEval<FSPNeighbor> {
     // EOT tmp = sol;
     // ngh.move(tmp);
     // fullEval(tmp);
-
+    //
     // if (ngh.fitness() != tmp.fitness()) {
-    //   std::cerr << "ops" << ' ' << first << ' ' << second
-    //             << ' '
-    //             // << (tmp.fitness() ==
-    //             //     compiledSchedules[first].getMakespan(second - 1))
-    //             << '\n';
+    //   std::cerr << "ops" << ' ' << first << ' ' << second << '\n';
     // }
   }
 };

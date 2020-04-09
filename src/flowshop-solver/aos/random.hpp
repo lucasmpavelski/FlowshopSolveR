@@ -18,12 +18,12 @@ class Random : public OperatorSelection<OpT> {
 
   void feedback(const double, const double) final {}
 
-  std::ostream& printOn(std::ostream& os) final {
+  auto printOn(std::ostream& os) -> std::ostream& final {
     os << "  strategy: Random\n";
     return os;
   }
 
   using OperatorSelection<OpT>::getOperator;
 
-  OpT& selectOperator() final { return getOperator(dist(RNG::engine)); }
+  auto selectOperator() -> OpT& final { return getOperator(dist(RNG::engine)); }
 };

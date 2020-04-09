@@ -1,13 +1,8 @@
 #pragma once
 
-#include <paradiseo/eo/eoSwapMutation.h>
-#include <paradiseo/mo/continuator/moTrueContinuator.h>
-#include <paradiseo/mo/perturb/moMonOpPerturb.h>
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
 
-#include <unordered_map>
-
-#include "IGexplorer.hpp"
-#include "IGexplorerWithRepl.hpp"
 #include "MHParamsValues.hpp"
 #include "NEHInit.hpp"
 #include "OpPerturbDestConst.hpp"
@@ -27,6 +22,7 @@
 #include "fspproblemfactory.hpp"
 #include "heuristics.hpp"
 #include "heuristics/BestInsertionExplorer.hpp"
+#include "heuristics/InsertionStrategy.hpp"
 #include "heuristics/fastigexplorer.hpp"
 #include "ig_lsps.hpp"
 #include "specsdata.hpp"
@@ -36,9 +32,10 @@ class OperatorSelectionFactory {
  public:
   OperatorSelectionFactory() = default;
 
-  std::shared_ptr<OperatorSelection<OpT>> create(std::vector<OpT> options,
-                                                 const MHParamsValues& params,
-                                                 ProblemContext& context) {
+  auto create(std::vector<OpT> options,
+              const MHParamsValues& params,
+              ProblemContext& context)
+      -> std::shared_ptr<OperatorSelection<OpT>> {
     switch (params.categorical("IG.AOS.Strategy")) {
       case 0:
         return std::make_unique<ProbabilityMatching<int>>(options);
@@ -56,9 +53,9 @@ class OperatorSelectionFactory {
   }
 };
 
-Result solveWithIG(
+auto solveWithIG(
     const std::unordered_map<std::string, std::string>& problem_specs,
-    const std::unordered_map<std::string, double>& param_values) {
+    const std::unordered_map<std::string, double>& param_values) -> Result {
   MHParamsSpecs specs = MHParamsSpecsFactory::get("IG");
   MHParamsValues params(&specs);
   params.readValues(param_values);
@@ -137,9 +134,9 @@ Result solveWithIG(
   // neighborhood size
   const int min_nh_size = (N >= 20) ? 11 : 2;
   const int nh_interval = (N >= 20) ? 10 : 1;
-  const int no_nh_sizes = (max_nh_size - min_nh_size) / nh_interval;
+  const int no_nh_sizes = (max_nh_size - min_nh_size) / nh_interval + 1;
   const int scale =
-      int((no_nh_sizes + 1) * params.real("IG.Neighborhood.Size") / 10.0);
+      static_cast<int>(0.1 * no_nh_sizes * params.real("IG.Neighborhood.Size"));
   const int nh_size = std::min(max_nh_size, min_nh_size + scale * nh_interval);
 
   moOrderNeighborhood<Ngh> neighborhood0(nh_size);
@@ -273,7 +270,8 @@ Result solveWithIG(
   moRandomBestHC<Ngh> algo2_lsps(*neighborhood_lsps, fullEval, evalN,
                                  continuator, *compNN,
                                  *compSN);  // rndBestHC
-  IGexplorer<Ngh> igexplorer_lsps(fullEval, N_lsps, *compSS);
+  BestInsertionExplorer<EOT> igexplorer_lsps(evalN, neighborhoodCheckpoint,
+                                             *compNN, *compSN);
   moLocalSearch<Ngh> algo3_lsps(igexplorer_lsps, continuator, fullEval);
 
   moLocalSearch<Ngh>* igLSPSLocalSearh = nullptr;
@@ -302,7 +300,8 @@ Result solveWithIG(
     igLSPSLocalSearh->setContinuator(singleStepContinuator);
   }
 
-  IGLocalSearchPartialSolution<Ngh> igLSPS(fullEval, *igLSPSLocalSearh,
+  InsertFirstBest<Ngh> insert(evalN);
+  IGLocalSearchPartialSolution<Ngh> igLSPS(insert, *igLSPSLocalSearh,
                                            destruction_size, *compSS);
   moMonOpPerturb<Ngh> perturb1(igLSPS, fullEval);
 

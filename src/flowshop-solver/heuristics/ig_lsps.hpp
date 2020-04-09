@@ -2,36 +2,39 @@
 
 #include <vector>
 
-#include "paradiseo/eo/eoEvalFunc.h"
-#include "paradiseo/eo/eoOp.h"
-#include "paradiseo/mo/algo/moLocalSearch.h"
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
 
-template <class Ngh>
+#include "flowshop-solver/heuristics/InsertionStrategy.hpp"
+
+template <class Ngh, class EOT = typename Ngh::EOT>
 class IGLocalSearchPartialSolution : public eoMonOp<typename Ngh::EOT> {
- public:
-  using EOT = typename Ngh::EOT;
-  using ivec = std::vector<int>;
+  InsertionStrategy<Ngh>& insert;
+  moLocalSearch<Ngh>& localSearch;
+  const unsigned destructionSize;
+  moSolComparator<EOT>& comparator;
 
-  IGLocalSearchPartialSolution(eoEvalFunc<EOT>& evalFunction,
+ public:
+  IGLocalSearchPartialSolution(InsertionStrategy<Ngh>& insert,
                                moLocalSearch<Ngh>& localSearch,
                                unsigned destructionSize,
                                moSolComparator<EOT>& comparator)
-      : evalFunction(evalFunction),
+      : insert(insert),
         localSearch(localSearch),
         destructionSize(destructionSize),
         comparator(comparator) {}
 
-  bool operator()(EOT& sol) override {
+  auto operator()(EOT& sol) -> bool override {
     EOT before = sol;
-    ivec removedJobs = deconstruction(sol);
+    std::vector<int> removedJobs = deconstruction(sol);
     if (sol.size() > 0)
       localSearch(sol);
     construction(sol, removedJobs);
     return before != sol;
   }
 
-  ivec deconstruction(EOT& sol) {
-    ivec removedJobs;
+  auto deconstruction(EOT& sol) -> std::vector<int> {
+    std::vector<int> removedJobs;
     removedJobs.reserve(destructionSize);
     for (unsigned i = 0; i < destructionSize; i++) {
       int pos = rng.random(sol.size());
@@ -41,38 +44,8 @@ class IGLocalSearchPartialSolution : public eoMonOp<typename Ngh::EOT> {
     return removedJobs;
   }
 
-  void construction(EOT& sol, const ivec& removedJobs) {
-    for (auto job : removedJobs) {
-      insertOnBestPosition(sol, job);
-    }
+  void construction(EOT& sol, const std::vector<int>& removedJobs) {
+    for (auto job : removedJobs)
+      insert.insertJob(sol, job);
   }
-
-  void insertOnBestPosition(EOT& sol, int job) {
-    const EOT temp = sol;
-    sol.insert(sol.begin(), job);
-    sol.invalidate();
-    evalFunction(sol);
-    unsigned bestPosition = 0;
-    EOT bestFitness;
-    bestFitness.fitness(sol.fitness());
-    for (unsigned i = 1; i <= temp.size(); i++) {
-      sol = temp;
-      sol.insert(sol.begin() + i, job);
-      sol.invalidate();
-      evalFunction(sol);
-      if (comparator(bestFitness, sol)) {
-        bestPosition = i;
-        bestFitness.fitness(sol.fitness());
-      }
-    }
-    sol = temp;
-    sol.insert(sol.begin() + bestPosition, job);
-    sol.fitness(bestFitness.fitness());
-  }
-
- private:
-  eoEvalFunc<EOT>& evalFunction;
-  moLocalSearch<Ngh>& localSearch;
-  const unsigned destructionSize;
-  moSolComparator<EOT>& comparator;
 };

@@ -113,7 +113,8 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     reset();
   }
 
-  friend std::ostream& operator<<(std::ostream& o, const FSPProblem& d) {
+  friend auto operator<<(std::ostream& o, const FSPProblem& d)
+      -> std::ostream& {
     o << d.getData() << '\n'
       << "objective: " << d.eval_func->ObjT << '\n'
       << "type: " << d.eval_func->type() << '\n'
@@ -122,15 +123,19 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     return o;
   }
 
-  eoEvalFuncCounter<EOT>& eval() override { return eval_counter; }
-  moEval<Ngh>& neighborEval() override { return eval_neighbor_counter; }
-  moContinuator<Ngh>& continuator() override { return *continuator_ptr; }
+  auto eval() -> eoEvalFuncCounter<EOT>& override { return eval_counter; }
+  auto neighborEval() -> moEval<Ngh>& override { return eval_neighbor_counter; }
+  auto continuator() -> moContinuator<Ngh>& override {
+    return *continuator_ptr;
+  }
 
-  moCheckpoint<Ngh>& checkpoint() final { return *checkpoint_ptr; };
+  auto checkpoint() -> moCheckpoint<Ngh>& final { return *checkpoint_ptr; };
 
-  moCheckpoint<Ngh>& checkpointGlobal() final { return *checkpointGlobal_ptr; };
+  auto checkpointGlobal() -> moCheckpoint<Ngh>& final {
+    return *checkpointGlobal_ptr;
+  };
 
-  int size(int i = 0) const override {
+  [[nodiscard]] auto size(int i = 0) const -> int override {
     switch (i) {
       case 0:
         return eval_func->noJobs();
@@ -168,17 +173,22 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     // checkpointGlobal_ptr->add(printg);
   }
 
-  moBestSoFarStat<EOT>& bestLocalSoFar() override { return bestFound; }
-  moBestSoFarStat<EOT>& bestSoFar() override { return bestFoundGlobal; }
+  auto bestLocalSoFar() -> moBestSoFarStat<EOT>& override { return bestFound; }
+  auto bestSoFar() -> moBestSoFarStat<EOT>& override { return bestFoundGlobal; }
 
-  int noEvals() const override {
-    return std::strtol(eval_counter.getValue().c_str(), nullptr, 10) +
-           std::strtol(eval_neighbor_counter.getValue().c_str(), nullptr, 10);
+  [[nodiscard]] auto noEvals() const -> int override {
+    return static_cast<int>(
+        std::strtol(eval_counter.getValue().c_str(), nullptr, 10) +
+        std::strtol(eval_neighbor_counter.getValue().c_str(), nullptr, 10));
   }
 
-  const FSPData& getData() const { return eval_func->getData(); }
+  [[nodiscard]] auto getData() const -> const FSPData& {
+    return eval_func->getData();
+  }
 
-  double upperBound() const override { return getData().maxCT(); }
+  [[nodiscard]] auto upperBound() const -> double override {
+    return getData().maxCT();
+  }
 
   template <class Ngh, class EOT = typename Ngh::EOT>
   struct moFitAndEvalsContinuator : public moCombinedContinuator<Ngh> {
@@ -200,7 +210,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     };
   };
 
-  moContinuator<Ngh>* newContinuator() {
+  auto newContinuator() -> moContinuator<Ngh>* {
     if (stopping_criterium == "EVALS")
       return new moEvalsContinuator<Ngh>(eval_counter, eval_neighbor_counter,
                                          getMaxEvals(), false);
@@ -218,7 +228,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     return nullptr;
   }
 
-  unsigned getMaxEvals() const {
+  [[nodiscard]] auto getMaxEvals() const -> unsigned {
     unsigned eval_multiplier = 0;
     if (budget == "low")
       eval_multiplier = 10u;
@@ -231,7 +241,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     return getData().noJobs() * getData().noMachines() * eval_multiplier;
   }
 
-  unsigned getMaxTime() {
+  auto getMaxTime() -> unsigned {
     double mult = 0;
     if (budget == "low")
       mult = 2e-4;
@@ -241,15 +251,15 @@ struct FSPProblem : public Problem<FSPNeighbor> {
       mult = 2e-2;
     else
       throw std::runtime_error("Unknown budget: " + budget);
-    return getData().noJobs() * getData().noJobs() * getData().noMachines() *
-           mult;
+    return static_cast<unsigned>(getData().noJobs() * getData().noJobs() *
+                                 getData().noMachines() * mult);
   }
 
-  unsigned getFixedTime() {
+  auto getFixedTime() -> unsigned {
     return 60 * getData().noJobs() * getData().noMachines();
   }
 
-  double getMaxFitness() {
+  auto getMaxFitness() -> double {
     double mult = 0.0;
     if (budget == "low")
       mult = 1.003;
@@ -262,9 +272,9 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     return lower_bound * mult;
   }
 
-  std::unique_ptr<FSPEvalFunc<EOT>> getEvalFunc(const std::string& type,
-                                                const std::string& obj,
-                                                const FSPData& dt) {
+  auto getEvalFunc(const std::string& type,
+                   const std::string& obj,
+                   const FSPData& dt) -> std::unique_ptr<FSPEvalFunc<EOT>> {
     std::unique_ptr<FSPEvalFunc<EOT>> ret(nullptr);
     if (type == "PERM" && obj == "MAKESPAN") {
       ret = std::make_unique<PermFSPEvalFunc<EOT>>(dt, Objective::MAKESPAN);
@@ -285,9 +295,9 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     return ret;
   }
 
-  std::unique_ptr<moEval<Ngh>> getNeighborEvalFunc(const std::string& type,
-                                                   const std::string& obj,
-                                                   const FSPData& dt) {
+  auto getNeighborEvalFunc(const std::string& type,
+                           const std::string& obj,
+                           const FSPData& dt) -> std::unique_ptr<moEval<Ngh>> {
     if (type == "PERM" && obj == "MAKESPAN") {
       return std::make_unique<FastFSPNeighborEval>(dt, *eval_func);
     } else {

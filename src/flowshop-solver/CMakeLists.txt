@@ -10,7 +10,6 @@ set(FSP_SOURCES
   heuristics/dummyAspiration.hpp
   heuristics/fastigexplorer.hpp
   heuristics/fastnehheuristic.hpp
-  heuristics/fspmoshiftneighbor.hpp
   heuristics/FSPOrderHeuristics.hpp
   heuristics/IGexplorer.hpp
   heuristics/IGexplorerWithRepl.hpp

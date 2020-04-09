@@ -420,6 +420,39 @@ TEST(TaillardAcceleration, DestructionConstruction) {
   ASSERT_EQ(sol, sol2);
 }
 
+TEST(TaillardAcceleration, RecompileNeighbor) {
+  rng.reseed(65465l);
+  FSPProblemFactory::init(DATA_FOLDER);
+  std::unordered_map<std::string, std::string> prob_dt;
+  prob_dt["problem"] = "FSP";
+  prob_dt["type"] = "PERM";
+  prob_dt["objective"] = "MAKESPAN";
+  prob_dt["budget"] = "med";
+  prob_dt["instance"] = "taillard_rand_20_20_02.dat";
+  prob_dt["stopping_criterium"] = "FIXEDTIME";
+  FSPProblem prob = FSPProblemFactory::get(prob_dt);
+
+  eoEvalFunc<FSP> &fullEval = prob.eval();
+  moEval<FSPNeighbor> &ne = prob.neighborEval();
+
+  FSP sol1;
+  sol1.assign(
+      {11, 3, 6, 19, 5, 0, 18, 13, 14, 8, 12, 9, 15, 10, 7, 16, 2, 4, 17, 1});
+  FSP sol2;
+  sol2.assign(
+      {11, 3, 6, 19, 0, 18, 14, 8, 12, 13, 9, 15, 10, 7, 5, 16, 2, 4, 17, 1});
+
+  FSPNeighbor ng;
+  ng.set(7, 7, sol1.size());
+
+  ng.set(7, 7, sol1.size());
+  ne(sol2, ng);
+
+  fullEval(sol2);
+
+  ASSERT_EQ(ng.fitness(), sol2.fitness());
+}
+
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) -> int {
   testing::InitGoogleTest(&argc, argv);
   // testing::InitGoogleTest(&argc, argv);

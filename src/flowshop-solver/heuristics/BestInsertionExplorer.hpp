@@ -2,11 +2,11 @@
 
 #include <algorithm>
 
+#include <paradiseo/mo/mo>
+
 #include "flowshop-solver/global.hpp"
-#include "heuristics/neighborhood_checkpoint.hpp"
-#include "paradiseo/mo/comparator/moNeighborComparator.h"
-#include "paradiseo/mo/explorer/moNeighborhoodExplorer.h"
-#include "paradiseo/mo/problems/permutation/moShiftNeighbor.h"
+#include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
+#include "flowshop-solver/problems/FSP.hpp"
 
 template <class EOT>
 class BestInsertionExplorer
@@ -38,8 +38,7 @@ class BestInsertionExplorer
   void initParam(EOT& _solution) final {
     improve = false;
     LO = false;
-    RandJOB.resize(_solution.size());
-    std::iota(RandJOB.begin(), RandJOB.end(), 0);
+    RandJOB = _solution;
     std::shuffle(RandJOB.begin(), RandJOB.end(),
                  ParadiseoRNGFunctor<unsigned int>());
     k = 0;
@@ -91,8 +90,8 @@ class BestInsertionExplorer
     }
   }
 
-  bool isContinue(EOT&) final { return !LO; }
+  auto isContinue(EOT&) -> bool final { return !LO; }
   void move(EOT&) final {}
-  bool accept(EOT&) final { return false; }
+  auto accept(EOT&) -> bool final { return false; }
   void terminate(EOT&) final {}
 };

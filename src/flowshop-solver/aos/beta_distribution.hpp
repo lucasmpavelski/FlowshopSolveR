@@ -18,14 +18,16 @@ class beta_distribution {
     explicit param_type(RealType a = 2.0, RealType b = 2.0)
         : a_param(a), b_param(b) {}
 
-    RealType a() const { return a_param; }
-    RealType b() const { return b_param; }
+    auto a() const -> RealType { return a_param; }
+    auto b() const -> RealType { return b_param; }
 
-    bool operator==(const param_type& other) const {
+    auto operator==(const param_type& other) const -> bool {
       return (a_param == other.a_param && b_param == other.b_param);
     }
 
-    bool operator!=(const param_type& other) const { return !(*this == other); }
+    auto operator!=(const param_type& other) const -> bool {
+      return !(*this == other);
+    }
 
    private:
     RealType a_param, b_param;
@@ -38,7 +40,7 @@ class beta_distribution {
 
   void reset() {}
 
-  param_type param() const { return param_type(a(), b()); }
+  auto param() const -> param_type { return param_type(a(), b()); }
 
   void param(const param_type& param) {
     a_gamma = gamma_dist_type(param.a());
@@ -46,28 +48,28 @@ class beta_distribution {
   }
 
   template <typename URNG>
-  result_type operator()(URNG& engine) {
+  auto operator()(URNG& engine) -> result_type {
     return generate(engine, a_gamma, b_gamma);
   }
 
   template <typename URNG>
-  result_type operator()(URNG& engine, const param_type& param) {
+  auto operator()(URNG& engine, const param_type& param) -> result_type {
     gamma_dist_type a_param_gamma(param.a()), b_param_gamma(param.b());
     return generate(engine, a_param_gamma, b_param_gamma);
   }
 
-  result_type min() const { return 0.0; }
-  result_type max() const { return 1.0; }
+  auto min() const -> result_type { return 0.0; }
+  auto max() const -> result_type { return 1.0; }
 
-  result_type a() const { return a_gamma.alpha(); }
-  result_type b() const { return b_gamma.alpha(); }
+  auto a() const -> result_type { return a_gamma.alpha(); }
+  auto b() const -> result_type { return b_gamma.alpha(); }
 
-  bool operator==(const beta_distribution<result_type>& other) const {
+  auto operator==(const beta_distribution<result_type>& other) const -> bool {
     return (param() == other.param() && a_gamma == other.a_gamma &&
             b_gamma == other.b_gamma);
   }
 
-  bool operator!=(const beta_distribution<result_type>& other) const {
+  auto operator!=(const beta_distribution<result_type>& other) const -> bool {
     return !(*this == other);
   }
 
@@ -77,24 +79,26 @@ class beta_distribution {
   gamma_dist_type a_gamma, b_gamma;
 
   template <typename URNG>
-  result_type generate(URNG& engine,
-                       gamma_dist_type& x_gamma,
-                       gamma_dist_type& y_gamma) {
+  auto generate(URNG& engine,
+                gamma_dist_type& x_gamma,
+                gamma_dist_type& y_gamma) -> result_type {
     result_type x = x_gamma(engine);
     return x / (x + y_gamma(engine));
   }
 };
 
 template <typename CharT, typename RealType>
-std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os,
-                                      const beta_distribution<RealType>& beta) {
+auto operator<<(std::basic_ostream<CharT>& os,
+                const beta_distribution<RealType>& beta)
+    -> std::basic_ostream<CharT>& {
   os << "~Beta(" << beta.a() << "," << beta.b() << ")";
   return os;
 }
 
 template <typename CharT, typename RealType>
-std::basic_istream<CharT>& operator>>(std::basic_istream<CharT>& is,
-                                      beta_distribution<RealType>& beta) {
+auto operator>>(std::basic_istream<CharT>& is,
+                beta_distribution<RealType>& beta)
+    -> std::basic_istream<CharT>& {
   std::string str;
   RealType a, b;
   if (std::getline(is, str, '(') && str == "~Beta" && is >> a &&
