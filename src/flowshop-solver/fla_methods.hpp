@@ -12,6 +12,7 @@
 #include "fspproblemfactory.hpp"
 #include "heuristics/FSPOrderHeuristics.hpp"
 #include "heuristics/IGexplorer.hpp"
+#include "heuristics/InsertionStrategy.hpp"
 #include "heuristics/NEHInit.hpp"
 #include "heuristics/OpPerturbDestConst.hpp"
 #include "heuristics/ilsKickOp.hpp"
@@ -749,8 +750,9 @@ graph<FSPProblem::EOT> sampleLON(
   if (params.categorical("IG.LSPS.Single.Step")) {
     igLSPSLocalSearh->setContinuator(singleStepContinuator);
   }
-
-  IGLocalSearchPartialSolution<Ngh> igLSPS(fullEval, *igLSPSLocalSearh,
+  auto& neEval = problem.neighborEval();
+  InsertFirstBest<Ngh> insert(neEval);
+  IGLocalSearchPartialSolution<Ngh> igLSPS(insert, *igLSPSLocalSearh,
                                            destruction_size, *compSS);
   moMonOpPerturb<Ngh> igPerturb1(igLSPS, fullEval);
 
