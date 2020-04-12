@@ -88,7 +88,9 @@ class MHParamsSpecs {
     return spec(getIdx(s));
   }
 
-  const std::shared_ptr<ParamSpec>& operator[](int i) const { return spec(i); }
+  const std::shared_ptr<ParamSpec>& operator[](unsigned i) const {
+    return spec(i);
+  }
   const std::shared_ptr<ParamSpec>& operator[](const std::string& s) const {
     return spec(s);
   }

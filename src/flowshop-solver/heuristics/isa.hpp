@@ -9,20 +9,10 @@
 #include "op_cooling_schedule.hpp"
 #include "specsdata.hpp"
 
-Result solveWithISA(
-    const std::unordered_map<std::string, std::string>& problem_specs,
-    const std::unordered_map<std::string, double>& param_values) {
-  using Problem = FSPProblem;
-  Problem prob = FSPProblemFactory::get(problem_specs);
-  MHParamsSpecs specs = MHParamsSpecsFactory::get("ISA");
-  MHParamsValues params(&specs);
-  params.readValues(param_values);
-
-  using EOT = Problem::EOT;
-  using Ngh = Problem::Ngh;
-  EOT sol;
-
+template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
+auto solveWithISA(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   const int N = prob.size(0);
+  const int M = prob.size(1);
   const int max_nh_size = pow(N - 1, 2);
 
   // continuator
@@ -99,7 +89,9 @@ Result solveWithISA(
       params.real("ISA.Init.Temp"), params.real("ISA.Alpha"),
       params.integer("ISA.Span.Tries.Max"), params.integer("ISA.Span.Move.Max"),
       params.integer("ISA.Nb.Span.Max"));
-  opCoolingSchedule<EOT> cooling2(prob.getData(), params.real("ISA.T"),
+
+  double tempScale = prob.upperBound() / (10.0 * N * M);
+  opCoolingSchedule<EOT> cooling2(params.real("ISA.T") * tempScale,
                                   params.real("ISA.Final.Temp"),
                                   params.real("ISA.Beta"));
 

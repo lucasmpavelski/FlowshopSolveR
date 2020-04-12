@@ -138,21 +138,10 @@ class MinMaxAntSystem : public moPerturbation<Ngh> {
   }
 };
 
-auto solveWithACO(
-    const std::unordered_map<std::string, std::string>& problem_specs,
-    const std::unordered_map<std::string, double>& param_values) -> Result {
-  MHParamsSpecs specs = MHParamsSpecsFactory::get("ACO");
-  MHParamsValues params(&specs);
-  params.readValues(param_values);
-
-  using EOT = FSPProblem::EOT;
-  using Ngh = FSPProblem::Ngh;
-  EOT sol;
-
-  FSPProblem prob = FSPProblemFactory::get(problem_specs);
+template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
+auto solveWithACO(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   const int N = prob.size(0);
   const int max_nh_size = pow(N - 1, 2);
-  const std::string mh = params.mhName();
 
   // continuator
   eoEvalFunc<EOT>& fullEval = prob.eval();
@@ -192,8 +181,6 @@ auto solveWithACO(
   NEHInit<EOT> init1(fullEval, N, *compSS);
   int cycle = 3;
   NEHInitRandom<EOT> init2(fullEval, N, cycle, *compSS);
-  // FastNEH fastNeh(prob.getData());
-  // FastNEHRandom init2(prob.getData());
   eoInit<EOT>* init = nullptr;
 
   switch (params.categorical("ACO.Init.Strat")) {

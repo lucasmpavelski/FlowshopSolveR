@@ -14,43 +14,46 @@ class MHParamsValues : public eoReal<eoMaximizingFitness> {
   using eoReal<eoMaximizingFitness>::begin;
   using eoReal<eoMaximizingFitness>::end;
 
-  const MHParamsSpecs* specs;
+  const MHParamsSpecs* specs{nullptr};
 
-  MHParamsValues() : eoReal<eoMaximizingFitness>(unsigned(0)), specs(nullptr) {}
+  MHParamsValues() : eoReal<eoMaximizingFitness>(unsigned(0)) {}
   MHParamsValues(const MHParamsSpecs* specs)
       : eoReal<eoMaximizingFitness>(unsigned(specs->noParams())),
         specs(specs) {}
 
-  double& operator[](const std::string& s) { return (*this)[specs->getIdx(s)]; }
-  double operator[](const std::string& s) const {
+  auto operator[](const std::string& s) -> double& {
+    return (*this)[specs->getIdx(s)];
+  }
+  auto operator[](const std::string& s) const -> double {
     return (*this)[specs->getIdx(s)];
   }
 
-  int categorical(const std::string& s) const {
+  auto categorical(const std::string& s) const -> int {
     if (!specs->isCategoric(s)) {
       throw std::runtime_error("Parameter " + s + " is not categoric");
     }
     return static_cast<int>((*this)[s]);
   }
 
-  std::string categoricalName(const std::string& s) const {
+  auto categoricalName(const std::string& s) const -> std::string {
     int index = specs->getIdx(s);
     auto paramSpec = specs->getParam(index);
-    return paramSpec->toStrValue(categorical(s));
+    return paramSpec->toStrValue(static_cast<float>(categorical(s)));
   }
 
-  int integer(const std::string& s) const {
+  auto integer(const std::string& s) const -> int {
     if (!specs->isInteger(s))
       throw std::runtime_error("Parameter " + s + " is not integer");
     return static_cast<int>((*this)[s]);
   }
-  float real(const std::string& s) const {
+
+  auto real(const std::string& s) const -> double {
     if (!specs->isReal(s))
       throw std::runtime_error("Parameter " + s + " is not real");
     return (*this)[s];
   }
 
-  std::string mhName() const { return specs->mhName(); }
+  auto mhName() const -> std::string { return specs->mhName(); }
 
   template <class RNG>
   void randomizeValues(RNG& rng) {
@@ -62,7 +65,7 @@ class MHParamsValues : public eoReal<eoMaximizingFitness> {
     }
   }
 
-  std::ostream& printValues(std::ostream& out) const {
+  auto printValues(std::ostream& out) const -> std::ostream& {
     for (unsigned i = 0; i < size(); i++) {
       auto spec = (*specs)[i];
       spec->strValue(out, operator[](i)) << '\t';
@@ -70,17 +73,25 @@ class MHParamsValues : public eoReal<eoMaximizingFitness> {
     return out;
   }
 
+  void readValues(std::unordered_map<std::string, std::string> values) {
+    for (const auto& ps : *specs) {
+      if (values.find(ps->name) == values.end())
+        throw std::runtime_error("Parameter " + ps->name + " needs a value!");
+      this->operator[](ps->name) = ps->fromStrValue(values.at(ps->name));
+    }
+  }
+
   void readValues(std::unordered_map<std::string, double> values) {
-    for (auto ps : *specs) {
+    for (const auto& ps : *specs) {
       if (values.find(ps->name) == values.end())
         throw std::runtime_error("Parameter " + ps->name + " needs a value!");
       this->operator[](ps->name) = values.at(ps->name);
     }
   }
 
-  std::unordered_map<std::string, double> toMap() const {
+  auto toMap() const -> std::unordered_map<std::string, double> {
     std::unordered_map<std::string, double> values;
-    for (auto ps : *specs)
+    for (const auto& ps : *specs)
       values[ps->name] = this->operator[](ps->name);
     return values;
   }

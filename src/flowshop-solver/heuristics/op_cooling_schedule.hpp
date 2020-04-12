@@ -14,12 +14,8 @@ class opCoolingSchedule : public moCoolingSchedule<EOT> {
    * @param _span number of iteration with equal temperature
    * @param _finalT final temperature, threshold of the stopping criteria
    */
-  opCoolingSchedule(const FSPData& fspData,
-                    double T,
-                    double _finalT,
-                    double _beta) {
-    initT =
-        T * fspData.maxCT() / (10 * fspData.noJobs() * fspData.noMachines());
+  opCoolingSchedule(double T, double _finalT, double _beta) {
+    initT = T;
     finalT = _finalT;
     beta = _beta;
   }

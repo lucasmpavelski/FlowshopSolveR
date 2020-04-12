@@ -44,6 +44,9 @@ results %>%
   ) %>% View()
   # ggplot(aes(x = name)) +
   # geom_errorbar(aes(y = mean_rpd, ymin = mean_rpd - ci, ymax = mean_rpd + ci))
+
+
+results %>% filter(instance == 'taillard_rand_50_20_09.dat', name == 'IG (d=4)') %>% pull(runs) %>% last
 ```
 
 

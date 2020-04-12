@@ -412,7 +412,7 @@ TEST(TaillardAcceleration, DestructionConstruction) {
   DestructionConstruction<FSPNeighbor> opdc(fbf, ds);
   rng.reseed(65465l);
   opdc(sol);
-
+ 
   InsertFirstBest<FSPNeighbor> fb(ne);
   DestructionConstruction<FSPNeighbor> dc(fb, ds);
   rng.reseed(65465l);

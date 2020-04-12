@@ -9,17 +9,20 @@
 /**
  * Optimization problem interface
  */
-template <class Ngh, class EOT = typename Ngh::EOT>
+template <class Neighbor, class Sol = typename Neighbor::EOT>
 struct Problem {
-  virtual eoEvalFunc<EOT>& eval() = 0;
-  virtual moEval<Ngh>& neighborEval() = 0;
-  virtual moContinuator<Ngh>& continuator() = 0;
-  virtual moCheckpoint<Ngh>& checkpoint() = 0;
-  virtual moCheckpoint<Ngh>& checkpointGlobal() = 0;
-  virtual moBestSoFarStat<EOT>& bestLocalSoFar() = 0;
-  virtual moBestSoFarStat<EOT>& bestSoFar() = 0;
-  virtual int size(int i = 0) const = 0;
+  using Ngh = Neighbor;
+  using EOT = Sol;
+
+  virtual auto eval() -> eoEvalFunc<EOT>& = 0;
+  virtual auto neighborEval() -> moEval<Ngh>& = 0;
+  virtual auto continuator() -> moContinuator<Ngh>& = 0;
+  virtual auto checkpoint() -> moCheckpoint<Ngh>& = 0;
+  virtual auto checkpointGlobal() -> moCheckpoint<Ngh>& = 0;
+  virtual auto bestLocalSoFar() -> moBestSoFarStat<EOT>& = 0;
+  virtual auto bestSoFar() -> moBestSoFarStat<EOT>& = 0;
+  virtual auto size(int i = 0) const -> int = 0;
   virtual void reset() = 0;
-  virtual double upperBound() const = 0;
-  virtual int noEvals() const = 0;
+  virtual auto upperBound() const -> double = 0;
+  virtual auto noEvals() const -> int = 0;
 };

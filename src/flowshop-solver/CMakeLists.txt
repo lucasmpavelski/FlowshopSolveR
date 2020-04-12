@@ -22,7 +22,6 @@ set(FSP_SOURCES
   heuristics/adaptive_destruction.hpp
   heuristics/plateauExplorerPerturb.hpp
   heuristics/randomNeutralWalkExplorer.hpp
-  heuristics/solveILS2.hpp
   heuristics/sa.hpp
   heuristics/hc.hpp
   heuristics/ts.hpp

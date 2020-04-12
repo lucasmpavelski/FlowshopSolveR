@@ -12,12 +12,19 @@
 #include "flowshop-solver/heuristics/sa.hpp"
 #include "flowshop-solver/heuristics/ts.hpp"
 
-Result solveWithAll(const std::unordered_map<std::string, std::string>&,
-                    const std::unordered_map<std::string, double>&);
+template <class ParamType = double>
+auto solveWith(
+    std::string mh,
+    const std::unordered_map<std::string, std::string>& problem_specs,
+    const std::unordered_map<std::string, ParamType>& params_values) -> Result {
+  FSPProblem prob = FSPProblemFactory::get(problem_specs);
+  MHParamsSpecs specs = MHParamsSpecsFactory::get(mh);
+  MHParamsValues params(&specs);
+  params.readValues(params_values);
 
-Result solveWith(const std::string& mh,
-                 const std::unordered_map<std::string, std::string>& prob,
-                 const std::unordered_map<std::string, double>& params) {
+  if (mh == "all")
+    mh = params.categoricalName("MH");
+
   if (mh == "HC")
     return solveWithHC(prob, params);
   else if (mh == "SA")
@@ -34,18 +41,7 @@ Result solveWith(const std::string& mh,
     return solveWithILS(prob, params);
   else if (mh == "ACO")
     return solveWithACO(prob, params);
-  else if (mh == "all")
-    return solveWithAll(prob, params);
   else
     throw std::runtime_error("Unknown MH: " + mh);
   return {};
-}
-
-Result solveWithAll(
-    const std::unordered_map<std::string, std::string>& prob,
-    const std::unordered_map<std::string, double>& params_values) {
-  const MHParamsSpecs specs = MHParamsSpecsFactory::get("all");
-  MHParamsValues params(&specs);
-  params.readValues(params_values);
-  return solveWith(params.categoricalName("MH"), prob, params_values);
 }

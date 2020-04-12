@@ -4,27 +4,16 @@
 
 #include "MHParamsValues.hpp"
 #include "NEHInit.hpp"
-#include "fspproblemfactory.hpp"
+#include "flowshop-solver/problems/Problem.hpp"
 #include "heuristics.hpp"
 #include "op_cooling_schedule.hpp"
 #include "specsdata.hpp"
 
-Result solveWithSA(
-    const std::unordered_map<std::string, std::string>& problem_specs,
-    const std::unordered_map<std::string, double>& param_values) {
-  using Problem = FSPProblem;
-  Problem prob = FSPProblemFactory::get(problem_specs);
-  MHParamsSpecs specs = MHParamsSpecsFactory::get("SA");
-  MHParamsValues params(&specs);
-  params.readValues(param_values);
-
-  using EOT = Problem::EOT;
-  using Ngh = Problem::Ngh;
-  EOT sol;
-
+template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
+auto solveWithSA(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   const int N = prob.size(0);
+  const int M = prob.size(1);
   const int max_nh_size = pow(N - 1, 2);
-  const std::string mh = params.mhName();
 
   // continuator
   eoEvalFunc<EOT>& fullEval = prob.eval();
@@ -99,7 +88,9 @@ Result solveWithSA(
       params.real("SA.Init.Temp"), params.real("SA.Alpha"),
       params.integer("SA.Span.Tries.Max"), params.integer("SA.Span.Move.Max"),
       params.integer("SA.Nb.Span.Max"));
-  opCoolingSchedule<EOT> cooling2(prob.getData(), params.real("SA.T"),
+
+  double tempScale = prob.upperBound() / (10.0 * N * M);
+  opCoolingSchedule<EOT> cooling2(params.real("SA.T") * tempScale,
                                   params.real("SA.Final.Temp"),
                                   params.real("SA.Beta"));
 

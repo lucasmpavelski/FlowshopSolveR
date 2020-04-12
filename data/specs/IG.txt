@@ -3,7 +3,7 @@ IG.Init.Strat                        "" c (0,1,2)
 IG.Neighborhood.Size                 "" r (0.0,9.999)
 IG.Neighborhood.Strat                "" c (0,1)
 IG.Local.Search                   "" c (0,1,2,3)
-IG.Accept                         "" c (0,1,2)
+IG.Accept                         "" c (always,better,temperature)
 IG.Accept.Temperature             "" r (0.0,5.0)    | IG.Accept == 2
 IG.Algo                           "" c (0,1)
 IG.Destruction.Size               "" i (2,8)

@@ -14,22 +14,10 @@
 #include "op_cooling_schedule.hpp"
 #include "specsdata.hpp"
 
-Result solveWithIHC(
-    const std::unordered_map<std::string, std::string>& problem_specs,
-    const std::unordered_map<std::string, double>& param_values) {
-  MHParamsSpecs specs = MHParamsSpecsFactory::get("IHC");
-  MHParamsValues params(&specs);
-  params.readValues(param_values);
-
-  using ProblemType = FSPProblem;
-  using EOT = typename ProblemType::EOT;
-  using Ngh = typename ProblemType::Ngh;
-  EOT sol;
-
-  ProblemType prob = FSPProblemFactory::get(problem_specs);
+template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
+auto solveWithIHC(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   const int N = prob.size(0);
   const int max_nh_size = pow(N - 1, 2);
-  const std::string mh = params.mhName();
 
   // continuator
   eoEvalFunc<EOT>& fullEval = prob.eval();

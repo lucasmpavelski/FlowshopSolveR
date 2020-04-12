@@ -22,19 +22,19 @@ auto main(int, char *[]) -> int {
   prob["instance"] = "taillard_rand_50_20_09.dat";
 
   prob["stopping_criterium"] = "FIXEDTIME";
-  std::unordered_map<std::string, double> params;
-  params["IG.Init.Strat"] = 0;
-  params["IG.Comp.Strat"] = 0;
-  params["IG.Neighborhood.Size"] = 9.9999;
-  params["IG.Neighborhood.Strat"] = 0;
-  params["IG.Local.Search"] = 3;
-  params["IG.Accept"] = 2;
-  params["IG.Accept.Temperature"] = 0.5;
-  params["IG.Algo"] = 0;
-  params["IG.Destruction.Size"] = 4;
-  params["IG.LS.Single.Step"] = 0;
-  params["IG.LSPS.Local.Search"] = 3;
-  params["IG.LSPS.Single.Step"] = 0;
-  params["IG.AOS.Strategy"] = 0;
+  std::unordered_map<std::string, std::string> params;
+  params["IG.Init.Strat"] = "0";
+  params["IG.Comp.Strat"] = "0";
+  params["IG.Neighborhood.Size"] = "9.9999";
+  params["IG.Neighborhood.Strat"] = "0";
+  params["IG.Local.Search"] = "3";
+  params["IG.Accept"] = "temperature";
+  params["IG.Accept.Temperature"] = "0.5";
+  params["IG.Algo"] = "0";
+  params["IG.Destruction.Size"] = "4";
+  params["IG.LS.Single.Step"] = "0";
+  params["IG.LSPS.Local.Search"] = "3";
+  params["IG.LSPS.Single.Step"] = "0";
+  params["IG.AOS.Strategy"] = "0";
   std::cout << solveWith("IG", prob, params);
 }

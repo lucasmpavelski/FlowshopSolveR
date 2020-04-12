@@ -27,6 +27,8 @@
 #include "ig_lsps.hpp"
 #include "specsdata.hpp"
 
+#include "flowshop-solver/eoFactory.hpp"
+
 template <class OpT>
 class OperatorSelectionFactory {
  public:
@@ -53,22 +55,13 @@ class OperatorSelectionFactory {
   }
 };
 
-auto solveWithIG(
-    const std::unordered_map<std::string, std::string>& problem_specs,
-    const std::unordered_map<std::string, double>& param_values) -> Result {
-  MHParamsSpecs specs = MHParamsSpecsFactory::get("IG");
-  MHParamsValues params(&specs);
-  params.readValues(param_values);
-
-  using EOT = FSPProblem::EOT;
-  using Ngh = FSPProblem::Ngh;
-  EOT sol;
-
-  FSPProblem prob = FSPProblemFactory::get(problem_specs);
+template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
+auto solveWithIG(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   const int N = prob.size(0);
   const int M = prob.size(1);
   const int max_nh_size = pow(N - 1, 2);
-  const std::string mh = params.mhName();
+  eoFactory<Ngh> factory(params);
+
   const double max_ct = prob.upperBound();
 
   // continuator
@@ -207,29 +200,9 @@ auto solveWithIG(
     algo->setContinuator(singleStepContinuator);
   }
 
-  moAlwaysAcceptCrit<Ngh> accept0;
-  // no interest to accept equal solution here !
-  moBetterAcceptCrit<Ngh> accept1(compSS0);
-  // IG accept criterion based on temperature
-  const double temperature =
-      params.real("IG.Accept.Temperature") * max_ct / (N * M * 10);
-  acceptCritTemperature<Ngh> accept2(temperature);
-
-  moAcceptanceCriterion<Ngh>* accept;
-  switch (params.categorical("IG.Accept")) {
-    case 0:
-      accept = &accept0;
-      break;
-    case 1:
-      accept = &accept1;
-      break;
-    case 2:
-      accept = &accept2;
-      break;
-    default:
-      assert(false);
-      break;
-  }
+  double temp_scale = max_ct / (N * M * 10);
+  std::unique_ptr<moAcceptanceCriterion<Ngh>> accept =
+      factory.buildAcceptanceCriterion(temp_scale);
 
   /****
   *** Perturb

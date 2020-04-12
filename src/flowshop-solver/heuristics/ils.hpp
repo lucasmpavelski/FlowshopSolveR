@@ -21,22 +21,11 @@
 #include "op_cooling_schedule.hpp"
 #include "randomNeutralWalkExplorer.hpp"
 
-Result solveWithILS(
-    const std::unordered_map<std::string, std::string>& problem_specs,
-    const std::unordered_map<std::string, double>& param_values) {
-  MHParamsSpecs specs = MHParamsSpecsFactory::get("ILS");
-  MHParamsValues params(&specs);
-  params.readValues(param_values);
-
-  using EOT = FSPProblem::EOT;
-  using Ngh = FSPProblem::Ngh;
-  EOT sol;
-
-  FSPProblem prob = FSPProblemFactory::get(problem_specs);
+template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
+auto solveWithILS(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   const int N = prob.size(0);
   const int M = prob.size(1);
   const int max_nh_size = pow(N - 1, 2);
-  const std::string mh = params.mhName();
   const double max_ct = prob.upperBound();
 
   // continuator
