@@ -2,39 +2,28 @@
 
 #include <algorithm>
 
-#include "continuators/myMovedSolutionStat.hpp"
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
+
+#include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 
 template <class Ngh, typename EOT = typename Ngh::EOT>
 class DestructionConstruction : public eoMonOp<EOT> {
-  moEval<Ngh>& neighborEval;
+  InsertionStrategy<Ngh>& _insertionStrategy;
   unsigned _destructionSize;
-  moNeighborComparator<Ngh>& neighborComparator;
-  myMovedSolutionStat<EOT>& movedStat;
-  moNeighborComparator<Ngh> defaultComparator;
 
  public:
-  DestructionConstruction(moEval<Ngh>& neighborEval,
-                          unsigned _destructionSize,
-                          myMovedSolutionStat<EOT>& movedStat,
-                          moNeighborComparator<Ngh>& neighborComparator)
-      : neighborEval{neighborEval},
-        neighborComparator{neighborComparator},
-        movedStat{movedStat} {
-    destructionSize(_destructionSize);
+  DestructionConstruction(InsertionStrategy<Ngh>& insertionStrategy,
+                          unsigned destructionSize)
+      : _insertionStrategy{insertionStrategy},
+        _destructionSize{destructionSize} {}
+
+  auto destructionSize() const -> int { return _destructionSize; }
+  void destructionSize(int _destructionSize) {
+    this->_destructionSize = _destructionSize;
   }
 
-  DestructionConstruction(moEval<Ngh>& neighborEval,
-                          unsigned _destructionSize,
-                          myMovedSolutionStat<EOT>& movedStat)
-      : DestructionConstruction{neighborEval, _destructionSize, movedStat,
-                                defaultComparator} {}
-
-  int destructionSize() const { return _destructionSize; }
-  void destructionSize(int destructionSize) {
-    _destructionSize = destructionSize;
-  }
-
-  std::vector<int> destruction(EOT& sol) {
+  auto destruction(EOT& sol) -> std::vector<int> {
     int n = sol.size();
     std::vector<int> removed;
     int ds = std::min(destructionSize(), n);
@@ -46,31 +35,14 @@ class DestructionConstruction : public eoMonOp<EOT> {
     return removed;
   }
 
-  void construction(EOT& sol, std::vector<int> jobsToInsert) {
-    movedStat(sol);
-    for (const auto& jobToInsert : jobsToInsert) {
-      sol.push_back(jobToInsert);
-      Ngh neighbor, bestNeighbor;
-      bestNeighbor.fitness(std::numeric_limits<double>::max());
-      int bestPosition = -1;
-      for (unsigned position = 0; position < sol.size(); position++) {
-        neighbor.set(sol.size() - 1, position, sol.size());
-        neighborEval(sol, neighbor);
-        if (neighborComparator(bestNeighbor, neighbor)) {
-          bestNeighbor = neighbor;
-          bestPosition = position;
-        }
-      }
-      if (bestPosition != 0)
-        bestNeighbor.move(sol);
-      movedStat(sol);
-      sol.fitness(bestNeighbor.fitness());
-    }
+  auto construction(EOT& sol, const std::vector<int>& jobsToInsert) -> bool {
+    EOT tmp = sol;
+    for (const auto& jobToInsert : jobsToInsert)
+      _insertionStrategy.insertJob(sol, jobToInsert);
+    return !std::equal(tmp.begin(), tmp.end(), sol.begin(), sol.end());
   }
 
-  bool operator()(EOT& sol) final {
-    auto removed = destruction(sol);
-    construction(sol, removed);
-    return true;
+  auto operator()(EOT& sol) -> bool final {
+    return construction(sol, destruction(sol));
   }
 };

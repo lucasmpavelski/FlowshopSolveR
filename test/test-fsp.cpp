@@ -12,6 +12,8 @@
 
 #include "problems/fastfspeval.hpp"
 
+#include "flowshop-solver/heuristics/InsertionStrategy.hpp"
+
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
@@ -403,17 +405,16 @@ TEST(TaillardAcceleration, DestructionConstruction) {
   randomInit(sol);
   FSP sol2 = sol;
 
-  myMovedSolutionStat<FSP> movedSolutionStat;
-  movedSolutionStat.init(sol);
-
   FastFSPNeighborEval ne(fspData, fullEval);
   moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
 
-  DestructionConstruction<FSPNeighbor> opdc(fullNe, ds, movedSolutionStat);
+  InsertFirstBest<FSPNeighbor> fbf(fullNe);
+  DestructionConstruction<FSPNeighbor> opdc(fbf, ds);
   rng.reseed(65465l);
   opdc(sol);
 
-  DestructionConstruction<FSPNeighbor> dc(ne, ds, movedSolutionStat);
+  InsertFirstBest<FSPNeighbor> fb(ne);
+  DestructionConstruction<FSPNeighbor> dc(fb, ds);
   rng.reseed(65465l);
   dc(sol2);
 
@@ -451,6 +452,24 @@ TEST(TaillardAcceleration, RecompileNeighbor) {
   fullEval(sol2);
 
   ASSERT_EQ(ng.fitness(), sol2.fitness());
+}
+
+TEST(TaillardAcceleration, NEH) {
+  std::vector<int> vec;
+  vec.assign({
+      16, 4, 4, 14, 12, //
+      14, 3, 4, 14, 10, //
+      18, 5, 5, 15, 13, //
+      4,  2, 2, 12, 3,  //
+      4,  2, 2, 12, 2,  //
+      3,  1, 2, 12, 1,  //
+      2,  2, 2, 11, 2,  //
+      5,  3, 4, 12, 4,  //
+      6,  4, 3, 12, 3,  //
+      7,  2, 4, 14, 4   //
+  });
+  FSPData fspData(vec, 10, false);
+  std::cerr << fspData << '\n';
 }
 
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) -> int {

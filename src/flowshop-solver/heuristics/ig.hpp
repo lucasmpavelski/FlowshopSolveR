@@ -235,10 +235,8 @@ auto solveWithIG(
   *** Perturb
   ****/
   const int destruction_size = params.integer("IG.Destruction.Size");
-  myMovedSolutionStat<FSP> movedSolutionStat;
-  checkpoint.add(movedSolutionStat);
-  DestructionConstruction<Ngh> OpPerturb(evalN, destruction_size,
-                                         movedSolutionStat);
+  InsertFirstBest<Ngh> perturbInsertion(evalN);
+  DestructionConstruction<Ngh> OpPerturb(perturbInsertion, destruction_size);
   moMonOpPerturb<Ngh> perturb0(OpPerturb, fullEval);
 
   const int N_lsps = N - destruction_size;

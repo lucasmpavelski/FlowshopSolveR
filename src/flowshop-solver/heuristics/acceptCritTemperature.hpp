@@ -35,8 +35,8 @@ class acceptCritTemperature : public moAcceptanceCriterion<Neighbor>,
     if (compare(_sol1, _sol2)) {
       return true;
     } else {
-      return rng.uniform() <=
-             std::exp((_sol1.fitness() - _sol2.fitness()) / threshold);
+      double prob = std::exp((_sol1.fitness() - _sol2.fitness()) / threshold);
+      return rng.uniform() <= prob;
     }
   }
 };

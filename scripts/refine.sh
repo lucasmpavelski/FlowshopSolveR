@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release -Gninja ..
 make refine
 cd ..
 ./build/main/refine

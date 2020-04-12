@@ -167,7 +167,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     bestFoundGlobal.init(dummy);
 
     checkpointGlobal_ptr->add(timer);
-    checkpoint_ptr->add(timeFintessPrinter);
+    checkpointGlobal_ptr->add(timeFintessPrinter);
     // printg.add(timer);
     // printg.add(bestFoundGlobal);
     // checkpointGlobal_ptr->add(printg);

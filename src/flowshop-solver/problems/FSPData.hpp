@@ -32,17 +32,27 @@ struct FSPData {
     init();
   }
 
-  FSPData(const std::vector<int>& pts, int no_jobs)
+  FSPData(const std::vector<int>& pts, int no_jobs, bool jobsPerMachines)
       : no_jobs{no_jobs},
         no_machines{static_cast<int>(pts.size() / no_jobs)},
         max_ct{0},
         proc_times(pts),
         total_job_proc_times(no_jobs),
         total_machine_proc_times(no_machines) {
+    if (!jobsPerMachines) {
+      for (int j = 0; j < no_jobs; j++) {
+        for (int m = 0; m < no_machines; m++) {
+          pt(j, m) = pts[j * no_machines + m];
+        }
+      }
+    }
     init();
   }
 
-  friend std::ostream& operator<<(std::ostream& o, const FSPData& d) {
+  FSPData(const std::vector<int>& pts, int no_jobs)
+      : FSPData{pts, no_jobs, false} {};
+
+  friend auto operator<<(std::ostream& o, const FSPData& d) -> std::ostream& {
     o << "FSPData:\n"                                 //
       << "  no_jobs: " << d.no_jobs << '\n'           //
       << "  no_machines: " << d.no_machines << '\n';  //
@@ -67,21 +77,27 @@ struct FSPData {
     return o;
   }
 
-  int noJobs() const { return no_jobs; }
-  int noMachines() const { return no_machines; }
-  int maxCT() const { return max_ct; }
-  int lowerBound() const { return lower_bound; }
-  ivec& procTimesRef() { return proc_times; }
-  const ivec& procTimesRef() const { return proc_times; }
-  ivec& machineProcTimesRef() { return total_machine_proc_times; }
-  const ivec& machineProcTimesRef() const { return total_machine_proc_times; }
-  ivec& jobProcTimesRef() { return total_job_proc_times; }
-  const ivec& jobProcTimesRef() const { return total_job_proc_times; }
+  auto noJobs() const -> int { return no_jobs; }
+  auto noMachines() const -> int { return no_machines; }
+  auto maxCT() const -> int { return max_ct; }
+  auto lowerBound() const -> int { return lower_bound; }
+  auto procTimesRef() -> ivec& { return proc_times; }
+  auto procTimesRef() const -> const ivec& { return proc_times; }
+  auto machineProcTimesRef() -> ivec& { return total_machine_proc_times; }
+  auto machineProcTimesRef() const -> const ivec& {
+    return total_machine_proc_times;
+  }
+  auto jobProcTimesRef() -> ivec& { return total_job_proc_times; }
+  auto jobProcTimesRef() const -> const ivec& { return total_job_proc_times; }
 
-  int pt(const int j, const int m) const { return proc_times[m * no_jobs + j]; }
-  int& pt(const int j, const int m) { return proc_times[m * no_jobs + j]; }
+  auto pt(const int j, const int m) const -> int {
+    return proc_times[m * no_jobs + j];
+  }
+  auto pt(const int j, const int m) -> int& {
+    return proc_times[m * no_jobs + j];
+  }
 
-  int partialSumOnAdjacentMachines(int job, int i, int h) const {
+  auto partialSumOnAdjacentMachines(int job, int i, int h) const -> int {
     assert(i <= h);
     int sm = 0;
     for (int j = i; j <= h; j++) {

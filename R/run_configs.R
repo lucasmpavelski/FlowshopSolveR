@@ -17,6 +17,7 @@ parseParams <- function(params) {
 }
 
 solveCmd <- function(mh, seed, problem_model, params, output, ...) {
+  params <- parseParams(params)
   exe_bin <- EXECUTABLE
   args <- c(
     paste0('--data_folder=', DATA),
@@ -30,28 +31,31 @@ solveCmd <- function(mh, seed, problem_model, params, output, ...) {
 }
 
 # datasets
-problems <- read_csv(file.path(EXPR, 'problems.csv')) %>%
-  mutate(problem_model = pmap(., compose(unlist, list))) %>%
-  select(problem_model)
+problems <- read_csv(file.path(EXPR, 'problems.csv')) # %>%
+  # mutate(problem_model = pmap(., compose(unlist, list))) %>%
+  # select(problem_model)
 
-configs <- read_csv(file.path(EXPR, 'configs.csv'))  %>%
-  mutate(params = map(params, parseParams))
+configs <- read_csv(file.path(EXPR, 'configs.csv')) # %>%
+  # mutate(params = map(params, parseParams))
 
 experiments <- crossing(
-    problems,
-    configs,
-    seed = 123
-  ) %>%
+  problems,
+  configs,
+  seed = c(123, 456, 789, 159, 753)
+) %>%
   mutate(
-    output = map2_chr(name, problem_model, function(x, y) {
-      file.path(EXPR, x, paste0(paste(y, collapse = '-'), '.out'))
+    output = pmap_chr(., function(...) {
+      expr <- list(...)
+      name <- expr[['name']]
+      problem_model <- as.character(expr[colnames(problems)])
+      file.path(EXPR, name, paste0(paste(problem_model, collapse = '-'), '.out'))
     })
   )
 
-# write_csv(experiments, file.path(EXPR, 'experiments.csv'))
+write_csv(experiments, file.path(EXPR, 'experiments.csv'))
 
 walk(file.path(EXPR, configs$name), dir.create, showWarnings = F)
 
 experiments %>%
-  filter(!file.exists(output)) %>%
+  filter(!file.exists(output)) %>% head() %>% select(output) %>%
   mutate(status = pmap(., solveCmd))

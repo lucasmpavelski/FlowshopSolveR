@@ -1,0 +1,50 @@
+---
+title: "Vanilla IG tests"
+output: html_notebook
+---
+
+Compare different IG configurations, with destruction size $d \in \{2, 4, 8, 12\}$:
+
+```{r echo=F}
+# loading data
+source(here::here("R/read_runs.R"), verbose = F)
+
+runs <- read_runs("vanilla-ig")
+bounds <- read_csv(here::here("data", 'taillard_instances.csv'))
+
+bounds <- bounds %>%
+  mutate(
+    instance = sprintf("taillard_rand_%d_%d_%02d.dat", no_jobs, no_machines, inst_n),
+    objective = "MAKESPAN"
+  )
+
+results <- runs %>%
+  inner_join(bounds, by = c("objective", "instance")) %>%
+  mutate(
+    max_runtime = no_jobs * no_machines * 60,
+    best_fitness60 = map_dbl(runs, ~.x %>% pull(fitness) %>% last),
+    best_fitness10 = map2_dbl(runs, max_runtime,
+                              ~.x %>% filter(runtime <= .y / 6)
+                                  %>% pull(fitness)
+                                  %>% last),
+    rpd60 = 100 * (best_fitness60 - lower_bound) / lower_bound,
+    rpd10 = 100 * (best_fitness10 - lower_bound) / lower_bound
+  )
+
+```
+
+```{r}
+View(results %>% select(instance, name, rpd60))
+results %>%
+  group_by(objective, budget, name) %>%
+  summarise(
+    mean_rpd = mean(rpd60),
+    ci = sd(rpd60) * sqrt(1 / (2 * n())),
+    n = n()
+  ) %>% View()
+  # ggplot(aes(x = name)) +
+  # geom_errorbar(aes(y = mean_rpd, ymin = mean_rpd - ci, ymax = mean_rpd + ci))
+```
+
+
+
