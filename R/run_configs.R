@@ -7,6 +7,11 @@ EXPR <- file.path(ROOT, 'runs', 'vanilla-ig')
 DATA <- file.path(ROOT, 'data')
 EXECUTABLE <- file.path(ROOT, 'build', 'main', 'fsp_solver')
 
+
+# datasets
+problems <- read_csv(file.path(EXPR, 'problems.csv'))
+configs <- read_csv(file.path(EXPR, 'configs.csv'))
+
 # auxiliar functions
 parseParams <- function(params) { 
   params <- str_split(params, ' ', simplify = T) %>%
@@ -16,7 +21,10 @@ parseParams <- function(params) {
   values
 }
 
-solveCmd <- function(mh, seed, problem_model, params, output, ...) {
+solveCmd <- function(mh, seed, params, output, ...) {
+  problem_data <- list(...)
+  problem_model <- as.character(problem_data[colnames(problems)])
+  names(problem_model) <- colnames(problems)
   params <- parseParams(params)
   exe_bin <- EXECUTABLE
   args <- c(
@@ -30,13 +38,6 @@ solveCmd <- function(mh, seed, problem_model, params, output, ...) {
   system2(exe_bin, args, stdout = output)
 }
 
-# datasets
-problems <- read_csv(file.path(EXPR, 'problems.csv')) # %>%
-  # mutate(problem_model = pmap(., compose(unlist, list))) %>%
-  # select(problem_model)
-
-configs <- read_csv(file.path(EXPR, 'configs.csv')) # %>%
-  # mutate(params = map(params, parseParams))
 
 experiments <- crossing(
   problems,
@@ -52,10 +53,11 @@ experiments <- crossing(
     })
   )
 
-write_csv(experiments, file.path(EXPR, 'experiments.csv'))
+experiments %>%
+  write_csv(file.path(EXPR, 'experiments.csv'))
 
 walk(file.path(EXPR, configs$name), dir.create, showWarnings = F)
 
 experiments %>%
-  filter(!file.exists(output)) %>% head() %>% select(output) %>%
+  filter(!file.exists(output)) %>%
   mutate(status = pmap(., solveCmd))
