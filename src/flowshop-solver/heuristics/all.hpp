@@ -12,6 +12,8 @@
 #include "flowshop-solver/heuristics/sa.hpp"
 #include "flowshop-solver/heuristics/ts.hpp"
 
+#include "flowshop-solver/eoFSPFactory.hpp"
+
 template <class ParamType = double>
 auto solveWith(
     std::string mh,
@@ -22,8 +24,11 @@ auto solveWith(
   MHParamsValues params(&specs);
   params.readValues(params_values);
 
-  if (mh == "all")
+  eoFSPFactory factory{params, prob};
+
+  if (mh == "all") {
     mh = params.categoricalName("MH");
+  }
 
   if (mh == "HC")
     return solveWithHC(prob, params);
@@ -36,7 +41,7 @@ auto solveWith(
   else if (mh == "TS")
     return solveWithTS(prob, params);
   else if (mh == "IG")
-    return solveWithIG(prob, params);
+    return solveWithIG(prob, params, factory);
   else if (mh == "ILS")
     return solveWithILS(prob, params);
   else if (mh == "ACO")

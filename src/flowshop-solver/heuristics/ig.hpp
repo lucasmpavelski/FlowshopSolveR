@@ -56,13 +56,11 @@ class OperatorSelectionFactory {
 };
 
 template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
-auto solveWithIG(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
+auto solveWithIG(Problem<Ngh>& prob,
+                 const MHParamsValues& params,
+                 eoFactory<Ngh>& factory) -> Result {
   const int N = prob.size(0);
-  const int M = prob.size(1);
   const int max_nh_size = pow(N - 1, 2);
-  eoFactory<Ngh> factory(params);
-
-  const double max_ct = prob.upperBound();
 
   // continuator
   eoEvalFunc<EOT>& fullEval = prob.eval();
@@ -200,9 +198,7 @@ auto solveWithIG(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
     algo->setContinuator(singleStepContinuator);
   }
 
-  double temp_scale = max_ct / (N * M * 10);
-  std::unique_ptr<moAcceptanceCriterion<Ngh>> accept =
-      factory.buildAcceptanceCriterion(temp_scale);
+  auto accept = factory.buildAcceptanceCriterion();
 
   /****
   *** Perturb
