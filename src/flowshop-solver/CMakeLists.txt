@@ -18,7 +18,6 @@ set(FSP_SOURCES
   heuristics/moFirstTS.hpp
   heuristics/NEHInit.hpp
   heuristics/OpPerturbDestConst.hpp
-  heuristics/adaptive_destruction.hpp
   heuristics/plateauExplorerPerturb.hpp
   heuristics/randomNeutralWalkExplorer.hpp
   heuristics/sa.hpp
