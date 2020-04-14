@@ -35,6 +35,6 @@ auto main(int, char* []) -> int {
   params["IG.LS.Single.Step"] = "0";
   params["IG.LSPS.Local.Search"] = "3";
   params["IG.LSPS.Single.Step"] = "0";
-  params["IG.AOS.Strategy"] = "random";
+  params["IG.AOS.Strategy"] = "linucb";
   std::cout << solveWith("IG", prob, params);
 }

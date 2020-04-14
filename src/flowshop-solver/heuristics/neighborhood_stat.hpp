@@ -3,19 +3,19 @@
 #include "paradiseo/eo/eoFunctor.h"
 #include "paradiseo/mo/continuator/moStatBase.h"
 
-template <class EOT>
+template <class Ngh, class EOT = typename Ngh::EOT>
 class NeigborhoodStatBase : public moStatBase<EOT> {
  public:
   virtual void initNeighborhood(EOT&) {}
-  virtual void neighborCall(EOT& ) {}
+  virtual void neighborCall(Ngh&) {}
   virtual void lastNeighborhoodCall(EOT&) {}
-  virtual void operator()(EOT&) override {}
+  void operator()(EOT&) override {}
 };
 
 template <class EOT, class T>
 class NeigborhoodStat : public eoValueParam<T>,
                         public NeigborhoodStatBase<EOT> {
  public:
-  NeigborhoodStat(T _value, std::string _description)
+  NeigborhoodStat(T _value, const std::string& _description)
       : eoValueParam<T>(_value, _description) {}
 };

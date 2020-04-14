@@ -106,7 +106,7 @@ class IGexplorer : public moNeighborhoodExplorer<Neighbor> {
       solTMP.erase(solTMP.begin() + j);
       solTMP.insert(solTMP.begin() + position, RandJOB[k]);
       eval(solTMP);
-      neighborhoodCheckpoint.neighborCall(solTMP);
+      // neighborhoodCheckpoint.neighborCall(neighbor);
       if (solComparator(best, solTMP)) {
         best = solTMP;
         ties = {position};

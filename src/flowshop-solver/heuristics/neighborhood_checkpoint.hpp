@@ -7,7 +7,7 @@
 
 template <class Neighbor, class EOT = typename Neighbor::EOT>
 class NeigborhoodCheckpoint : public moCheckpoint<Neighbor> {
-  std::vector<NeigborhoodStatBase<EOT>*> neighborhoodStats;
+  std::vector<NeigborhoodStatBase<Neighbor>*> neighborhoodStats;
   moTrueContinuator<Neighbor> tc;
 
  public:
@@ -22,7 +22,7 @@ class NeigborhoodCheckpoint : public moCheckpoint<Neighbor> {
       ns->initNeighborhood(sol);
   }
 
-  void neighborCall(EOT& neighbor) {
+  void neighborCall(Neighbor& neighbor) {
     for (auto& ns : neighborhoodStats)
       ns->neighborCall(neighbor);
   }
@@ -32,5 +32,7 @@ class NeigborhoodCheckpoint : public moCheckpoint<Neighbor> {
       ns->lastNeighborhoodCall(sol);
   }
 
-  void add(NeigborhoodStatBase<EOT>& ns) { neighborhoodStats.push_back(&ns); }
+  void add(NeigborhoodStatBase<Neighbor>& ns) {
+    neighborhoodStats.push_back(&ns);
+  }
 };

@@ -158,7 +158,7 @@ auto solveWithIG(Problem<Ngh>& prob,
   // FastIGexplorer igexplorer(evalN, *compNN, *compSN);
   moTrueContinuator<Ngh> tc;
   NeigborhoodCheckpoint<Ngh> neighborhoodCheckpoint{tc};
-  NeutralityFLA<EOT> neutralityFLA{compSS0};
+  NeutralityFLA<Ngh> neutralityFLA;
 
   if (params.categorical("IG.AOS.Strategy") == 2) {
     neighborhoodCheckpoint.add(neutralityFLA);
@@ -282,7 +282,7 @@ auto solveWithIG(Problem<Ngh>& prob,
   std::vector<int> destruction_sizes = {2, 4, 8};
   OperatorSelectionFactory<int> osf;
 
-  AdaptiveWalkLengthFLA<EOT> awSize{fitness_history};
+  AdaptiveWalkLengthFLA<EOT> awSize{fitness_history, 1.0 / N};
   AutocorrelationFLA<EOT> autocorr{fitness_history};
   FitnessDistanceCorrelationFLA<EOT> fdc{fitness_history};
   ProblemContext context;

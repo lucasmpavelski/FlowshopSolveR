@@ -45,18 +45,18 @@ class BestInsertionExplorer
   }
 
   void updateParam(EOT&) final {
-    if (k < RandJOB.size() - 1)
+    if (k < RandJOB.size() - 1) {
       k++;
-    else {
+    } else {
       k = 0;
-      std::shuffle(RandJOB.begin(), RandJOB.end(),
-                   ParadiseoRNGFunctor<unsigned int>());
+      if (improve) {
+        std::shuffle(RandJOB.begin(), RandJOB.end(),
+                     ParadiseoRNGFunctor<unsigned int>());
+        improve = false;
+      } else {
+        LO = true;
+      }
     }
-    if (k == 0 && !improve) {
-      LO = true;
-    }
-    //		improve=!improve;
-    improve = false;
   }
 
   void operator()(EOT& _solution) final {
@@ -71,6 +71,7 @@ class BestInsertionExplorer
     // Ngh neighbor, bestNeighbor;
     // bestNeighbor.fitness(std::numeric_limits<double>::max());
     int bestPosition = -1;
+    neighborhoodCheckpoint.initNeighborhood(_solution);
     for (int position = 0; position <= n; position++) {
       if (insertPosition == position)
         continue;
@@ -82,16 +83,18 @@ class BestInsertionExplorer
         bestPosition = position;
         bestNeighbor = neighbor;
       }
+      neighborhoodCheckpoint.neighborCall(neighbor);
     }
     if (solNeighborComparator(_solution, bestNeighbor)) {
       bestNeighbor.move(_solution);
       _solution.fitness(bestNeighbor.fitness());
       improve = true;
     }
+    neighborhoodCheckpoint.lastCall(_solution);
   }
 
   auto isContinue(EOT&) -> bool final { return !LO; }
   void move(EOT&) final {}
-  auto accept(EOT&) -> bool final { return false; }
+  auto accept(EOT&) -> bool final { return true; }
   void terminate(EOT&) final {}
 };

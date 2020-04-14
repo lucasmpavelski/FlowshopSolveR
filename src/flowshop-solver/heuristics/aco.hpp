@@ -235,7 +235,7 @@ auto solveWithACO(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   // iterative greedy improvement without replacement (IG)
   // FastIGexplorer igexplorer(evalN, *compNN, *compSN);
   IGexplorer<Ngh> igexplorer(fullEval, N, *compSS);
-  moLocalSearch<Ngh> algo3(igexplorer, checkpoint, fullEval);
+  // moLocalSearch<Ngh> algo3(igexplorer, checkpoint, fullEval);
   // IGexplorerWithRepl<Ngh> igWithReplexplorer(fullEval, N, *compSS); //
   // iterative greedy improvement with replacement moLocalSearch<Ngh>
   // algo4(igWithReplexplorer, checkpoint, fullEval);
@@ -250,9 +250,9 @@ auto solveWithACO(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
     case 2:
       algo = &algo2;
       break;
-    case 3:
-      algo = &algo3;
-      break;
+    // case 3:
+    //  algo = &algo3;
+    //  break;
     default:
       assert(false);
       break;
