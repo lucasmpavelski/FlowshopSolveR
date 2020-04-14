@@ -302,8 +302,8 @@ TEST(FSPTaillardAcelleration, NeighborhoodEval) {
 }
 
 #include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
+#include "flowshop-solver/heuristics/DestructionConstruction.hpp"
 #include "flowshop-solver/heuristics/OpPerturbDestConst.hpp"
-#include "flowshop-solver/heuristics/fastigexplorer.hpp"
 #include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 
 TEST(TaillardAcceleration, BestInsertionNeighborhood) {
