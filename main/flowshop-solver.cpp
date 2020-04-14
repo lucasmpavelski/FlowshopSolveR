@@ -12,20 +12,20 @@
 
 //#include "meta/Parameter.hpp"
 //#include "meta/FSPProblem.hpp"
-#include "heuristics/all.hpp"
+#include "flowshop-solver/heuristics/all.hpp"
 
 #ifndef DATA_FOLDER
 #define DATA_FOLDER "error"
 #endif
 
-#define on_error(...)                                                          \
-  {                                                                            \
-    fprintf(stderr, __VA_ARGS__);                                              \
-    fflush(stderr);                                                            \
-    exit(1);                                                                   \
+#define on_error(...)             \
+  {                               \
+    fprintf(stderr, __VA_ARGS__); \
+    fflush(stderr);               \
+    exit(1);                      \
   }
 
-auto main(int argc, char *argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
   using namespace std::string_literals;
   std::ios::sync_with_stdio(true);
 
@@ -34,15 +34,15 @@ auto main(int argc, char *argv[]) -> int {
   MHParamsSpecsFactory::init(DATA_FOLDER "/specs", true);
   FSPProblemFactory::init(DATA_FOLDER);
 
-  auto addParam = [&parser](auto val, const std::string &desc) {
+  auto addParam = [&parser](auto val, const std::string& desc) {
     return parser.createParam(val, desc, "").value();
   };
 
   auto seed = addParam(123l, "seed");
 
   std::unordered_map<std::string, std::string> prob_data;
-  auto addProblemParam = [&prob_data, &addParam](const std::string &name,
-                                                 const std::string &def) {
+  auto addProblemParam = [&prob_data, &addParam](const std::string& name,
+                                                 const std::string& def) {
     prob_data[name] = addParam(def, name);
   };
   addProblemParam("problem", "FSP");
@@ -63,7 +63,7 @@ auto main(int argc, char *argv[]) -> int {
   auto mh_specs = MHParamsSpecsFactory::get(mh);
 
   std::unordered_map<std::string, double> mh_params;
-  for (const auto &spec : mh_specs) {
+  for (const auto& spec : mh_specs) {
     mh_params[spec->name] = addParam(1.0, spec->name);
   }
 
@@ -72,7 +72,7 @@ auto main(int argc, char *argv[]) -> int {
   try {
     auto res = solveWith(mh, prob_data, mh_params);
     std::cout << res.fitness << ' ' << res.no_evals << ' ' << res.time << '\n';
-  } catch (std::exception &e) {
+  } catch (std::exception& e) {
     std::cerr << e.what() << '\n';
     std::cout << "ERROR\n";
   }

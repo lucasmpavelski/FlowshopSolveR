@@ -10,8 +10,8 @@
 #include "MHParamsValues.hpp"
 #include "NEHInit.hpp"
 #include "falseContinuator.hpp"
+#include "flowshop-solver/heuristics.hpp"
 #include "fspproblemfactory.hpp"
-#include "heuristics.hpp"
 #include "specsdata.hpp"
 
 template <class Ngh>

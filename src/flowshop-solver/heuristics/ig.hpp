@@ -3,29 +3,29 @@
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
-#include "MHParamsValues.hpp"
-#include "NEHInit.hpp"
-#include "OpPerturbDestConst.hpp"
-#include "acceptCritTemperature.hpp"
-#include "adaptive_destruction.hpp"
-#include "aos/frrmab.hpp"
-#include "aos/lin_ucb.hpp"
-#include "aos/probability_matching.hpp"
-#include "aos/random.hpp"
-#include "aos/thompson_sampling.hpp"
-#include "falseContinuator.hpp"
-#include "fla/AdaptiveWalkLengthFLA.hpp"
-#include "fla/AutocorrelationFLA.hpp"
-#include "fla/FitnessDistanceCorrelationFLA.hpp"
-#include "fla/FitnessHistory.hpp"
-#include "fla/NeutralityFLA.hpp"
-#include "fspproblemfactory.hpp"
-#include "heuristics.hpp"
-#include "heuristics/BestInsertionExplorer.hpp"
-#include "heuristics/InsertionStrategy.hpp"
-#include "heuristics/fastigexplorer.hpp"
-#include "ig_lsps.hpp"
-#include "specsdata.hpp"
+#include "flowshop-solver/MHParamsValues.hpp"
+#include "flowshop-solver/aos/frrmab.hpp"
+#include "flowshop-solver/aos/lin_ucb.hpp"
+#include "flowshop-solver/aos/probability_matching.hpp"
+#include "flowshop-solver/aos/random.hpp"
+#include "flowshop-solver/aos/thompson_sampling.hpp"
+#include "flowshop-solver/fla/AdaptiveWalkLengthFLA.hpp"
+#include "flowshop-solver/fla/AutocorrelationFLA.hpp"
+#include "flowshop-solver/fla/FitnessDistanceCorrelationFLA.hpp"
+#include "flowshop-solver/fla/FitnessHistory.hpp"
+#include "flowshop-solver/fla/NeutralityFLA.hpp"
+#include "flowshop-solver/fspproblemfactory.hpp"
+#include "flowshop-solver/heuristics.hpp"
+#include "flowshop-solver/heuristics/AdaptiveDestructionConstruction.hpp"
+#include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
+#include "flowshop-solver/heuristics/DestructionConstruction.hpp"
+#include "flowshop-solver/heuristics/InsertionStrategy.hpp"
+#include "flowshop-solver/heuristics/NEHInit.hpp"
+#include "flowshop-solver/heuristics/OpPerturbDestConst.hpp"
+#include "flowshop-solver/heuristics/acceptCritTemperature.hpp"
+#include "flowshop-solver/heuristics/falseContinuator.hpp"
+#include "flowshop-solver/heuristics/ig_lsps.hpp"
+#include "flowshop-solver/specsdata.hpp"
 
 #include "flowshop-solver/eoFactory.hpp"
 
@@ -38,19 +38,19 @@ class OperatorSelectionFactory {
               const MHParamsValues& params,
               ProblemContext& context)
       -> std::shared_ptr<OperatorSelection<OpT>> {
-    switch (params.categorical("IG.AOS.Strategy")) {
-      case 0:
-        return std::make_unique<ProbabilityMatching<int>>(options);
-      case 1:
-        return std::make_unique<FRRMAB<int>>(options);
-      case 2:
-        return std::make_unique<LinUCB<OpT>>(options, context);
-      case 3:
-        return std::make_unique<ThompsonSampling<OpT>>(options);
-      case 4:
-        return std::make_unique<Random<OpT>>(options);
-      default:
-        return {nullptr};
+    std::string name = params.categoricalName("IG.AOS.Strategy");
+    if (name == "probability_matching") {
+      return std::make_unique<ProbabilityMatching<int>>(options);
+    } else if (name == "frrmab") {
+      return std::make_unique<FRRMAB<int>>(options);
+    } else if (name == "linucb") {
+      return std::make_unique<LinUCB<OpT>>(options, context);
+    } else if (name == "thompson_sampling") {
+      return std::make_unique<ThompsonSampling<OpT>>(options);
+    } else if (name == "random") {
+      return std::make_unique<Random<OpT>>(options);
+    } else {
+      return {nullptr};
     }
   }
 };
@@ -186,7 +186,6 @@ auto solveWithIG(Problem<Ngh>& prob,
     case 3:
       algo = &algo3;
       break;
-    // case 4: algo=&algo4; break;
     default:
       assert(false);
       break;
@@ -273,9 +272,9 @@ auto solveWithIG(Problem<Ngh>& prob,
   moMonOpPerturb<Ngh> perturb1(igLSPS, fullEval);
 
   FitnessReward<EOT> fitness_reward;
-  FitnessHistory<EOT> fitness_history;
   checkpoint.add(fitness_reward);
 
+  FitnessHistory<EOT> fitness_history;
   if (params.categorical("IG.AOS.Strategy") == 2) {
     checkpoint.add(fitness_history);
   }
@@ -293,24 +292,21 @@ auto solveWithIG(Problem<Ngh>& prob,
   context.add(fdc);
   auto operator_selection{osf.create(destruction_sizes, params, context)};
 
-  AdaptiveDestruction<EOT> adaptiveDestruction(fullEval, *operator_selection,
-                                               fitness_reward);
-  moMonOpPerturb<Ngh> perturb2(adaptiveDestruction, fullEval);
+  InsertFirstBest<Ngh> insertDC{evalN};
+  AdaptiveDestructionConstruction<Ngh> adaptiveDC(insertDC, *operator_selection,
+                                                  fitness_reward);
+  moMonOpPerturb<Ngh> perturb2(adaptiveDC, fullEval);
 
   moPerturbation<Ngh>* perturb;
-  switch (params.categorical("IG.Algo")) {
-    case 0:
-      perturb = &perturb0;
-      break;
-    case 1:
-      perturb = &perturb1;
-      break;
-    case 2:
-      perturb = &perturb2;
-      break;
-    default:
-      assert(false);
-      break;
+  const std::string name = params.categoricalName("IG.Algo");
+  if (name == "rs") {
+    perturb = &perturb0;
+  } else if (name == "lsps") {
+    perturb = &perturb1;
+  } else if (name == "adaptive") {
+    perturb = &perturb2;
+  } else {
+    assert(false);
   }
 
   /****

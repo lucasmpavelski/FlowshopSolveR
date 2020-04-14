@@ -5,9 +5,9 @@ IG.Neighborhood.Strat                "" c (0,1)
 IG.Local.Search                   "" c (0,1,2,3)
 IG.Accept                         "" c (always,better,temperature)
 IG.Accept.Temperature             "" r (0.0,5.0)    | IG.Accept == 2
-IG.Algo                           "" c (0,1)
+IG.Algo                           "" c (ig,lsps,adaptive)
 IG.Destruction.Size               "" i (2,8)
 IG.LS.Single.Step                    "" c (0, 1)
 IG.LSPS.Local.Search              "" c (0,1,2,3) | IG.Algo == 1
 IG.LSPS.Single.Step                  "" c (0,1)    | IG.Algo == 1
-IG.AOS.Strategy "" c(0,1)
+IG.AOS.Strategy "" c (probability_matching,frrmab,linucb,thompson_sampling,random)

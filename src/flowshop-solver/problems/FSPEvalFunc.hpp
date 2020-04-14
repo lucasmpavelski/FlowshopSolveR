@@ -18,8 +18,8 @@
 
 enum class Objective { MAKESPAN, FLOWTIME };
 
-[[maybe_unused]] static std::ostream& operator<<(std::ostream& o,
-                                                 const Objective& obj) {
+[[maybe_unused]] static auto operator<<(std::ostream& o, const Objective& obj)
+    -> std::ostream& {
   switch (obj) {
     case Objective::MAKESPAN:
       o << "MAKESPAN";
@@ -66,11 +66,11 @@ class FSPEvalFunc : public eoEvalFunc<EOT> {
       s.fitness(fit);
   }
 
-  int noJobs() const { return fsp_data.noJobs(); }
-  int noMachines() const { return fsp_data.noMachines(); }
-  const FSPData& getData() const { return fsp_data; }
-  virtual std::string type() const { return "PERM"; };
-  Objective objective() const { return ObjT; };
+  auto noJobs() const -> int { return fsp_data.noJobs(); }
+  auto noMachines() const -> int { return fsp_data.noMachines(); }
+  auto getData() const -> const FSPData& { return fsp_data; }
+  virtual auto type() const -> std::string { return "PERM"; };
+  auto objective() const -> Objective { return ObjT; };
 
   void printOn(std::ostream& o) {
     o << "FSPEvalFunc\n"
@@ -80,9 +80,9 @@ class FSPEvalFunc : public eoEvalFunc<EOT> {
   }
 
  protected:
-  virtual double makespan(const EOT& s) { return Ct[s.size() - 1]; }
+  virtual auto makespan(const EOT& s) -> double { return Ct[s.size() - 1]; }
 
-  virtual double flowtime(const EOT& s) {
+  virtual auto flowtime(const EOT& s) -> double {
     // total flowtime computation = sum of Ci
     auto beg = std::begin(Ct);
     auto end = std::next(beg, s.size());
@@ -99,11 +99,10 @@ class PermFSPEvalFunc : public FSPEvalFunc<EOT> {
   using FSPEvalFunc<EOT>::noMachines;
   using FSPEvalFunc<EOT>::fsp_data;
 
-  PermFSPEvalFunc(FSPData fd, Objective ObjT = Objective::MAKESPAN)
-      : FSPEvalFunc<EOT>(std::move(fd), ObjT),
-        part_ct(noJobs() * noMachines()) {}
+  PermFSPEvalFunc(const FSPData& fd, Objective ObjT = Objective::MAKESPAN)
+      : FSPEvalFunc<EOT>(fd, ObjT), part_ct(noJobs() * noMachines()) {}
 
-  std::string type() const final { return "PERM"; }
+  auto type() const -> std::string final { return "PERM"; }
 
  protected:
   std::valarray<int> part_ct;  // matrice des comp time

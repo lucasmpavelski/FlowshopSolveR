@@ -17,24 +17,23 @@
 #include "problems/NWFSPEvalFunc.hpp"
 
 // NEH
-#include "heuristics/FSPOrderHeuristics.hpp"
-#include "heuristics/NEHInit.hpp"
+#include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
+#include "flowshop-solver/heuristics/NEHInit.hpp"
 
 // TS
-#include "heuristics/dummyAspiration.hpp"
-#include "heuristics/moFirstBestTS.hpp"
-#include "heuristics/moFirstTS.hpp"
+#include "flowshop-solver/heuristics/dummyAspiration.hpp"
+#include "flowshop-solver/heuristics/moFirstBestTS.hpp"
+#include "flowshop-solver/heuristics/moFirstTS.hpp"
 
 // ILS
-#include "heuristics/IGexplorer.hpp"
-#include "heuristics/IGexplorerWithRepl.hpp"
+#include "flowshop-solver/heuristics/IGexplorer.hpp"
+#include "flowshop-solver/heuristics/IGexplorerWithRepl.hpp"
 // IG components
-#include "heuristics/OpPerturbDestConst.hpp"
-#include "heuristics/acceptCritTemperature.hpp"
+#include "flowshop-solver/heuristics/OpPerturbDestConst.hpp"
+#include "flowshop-solver/heuristics/acceptCritTemperature.hpp"
 // for the kick : here swap(=exchange) because neighborhood with insert
 // NILS perturb
-#include "heuristics/randomNeutralWalkExplorer.hpp"
-#include "heuristics/solveILS2.hpp"
+#include "flowshop-solver/heuristics/randomNeutralWalkExplorer.hpp"
 
 #include "MHParamsValues.hpp"
 #include "fspproblemfactory.hpp"

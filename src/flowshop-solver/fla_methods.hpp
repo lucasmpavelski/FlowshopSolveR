@@ -9,15 +9,15 @@
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
+#include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
+#include "flowshop-solver/heuristics/IGexplorer.hpp"
+#include "flowshop-solver/heuristics/InsertionStrategy.hpp"
+#include "flowshop-solver/heuristics/NEHInit.hpp"
+#include "flowshop-solver/heuristics/OpPerturbDestConst.hpp"
+#include "flowshop-solver/heuristics/ilsKickOp.hpp"
 #include "fspproblemfactory.hpp"
-#include "heuristics/FSPOrderHeuristics.hpp"
-#include "heuristics/IGexplorer.hpp"
-#include "heuristics/InsertionStrategy.hpp"
-#include "heuristics/NEHInit.hpp"
-#include "heuristics/OpPerturbDestConst.hpp"
-#include "heuristics/ilsKickOp.hpp"
 
-#include "heuristics/ig.hpp"
+#include "flowshop-solver/heuristics/ig.hpp"
 
 std::vector<FSPProblem::EOT> adaptiveWalk(
     std::unordered_map<std::string, std::string> prob_params,

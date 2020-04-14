@@ -4,8 +4,8 @@
 
 #include "MHParamsValues.hpp"
 #include "NEHInit.hpp"
+#include "flowshop-solver/heuristics.hpp"
 #include "flowshop-solver/problems/Problem.hpp"
-#include "heuristics.hpp"
 #include "op_cooling_schedule.hpp"
 #include "specsdata.hpp"
 

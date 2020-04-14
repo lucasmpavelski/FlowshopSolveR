@@ -34,19 +34,19 @@ results <- runs %>%
 ```
 
 ```{r}
-View(results %>% select(instance, name, rpd60))
+# View(results %>% select(instance, name, rpd60))
 results %>%
   group_by(objective, budget, name) %>%
   summarise(
     mean_rpd = mean(rpd60),
     ci = sd(rpd60) * sqrt(1 / (2 * n())),
     n = n()
-  ) %>% View()
-  # ggplot(aes(x = name)) +
-  # geom_errorbar(aes(y = mean_rpd, ymin = mean_rpd - ci, ymax = mean_rpd + ci))
+  ) %>%
+  ggplot(aes(x = name)) +
+  geom_errorbar(aes(y = mean_rpd, ymin = mean_rpd - ci, ymax = mean_rpd + ci))
 
 
-results %>% filter(instance == 'taillard_rand_50_20_09.dat', name == 'IG (d=4)') %>% pull(runs) %>% last
+# results %>% filter(instance == 'taillard_rand_50_20_09.dat', name == 'IG (d=4)') %>% pull(runs) %>% last
 ```
 
 

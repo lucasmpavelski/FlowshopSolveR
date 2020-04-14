@@ -3,7 +3,7 @@
 #include "paradiseo/mo/continuator/moCheckpoint.h"
 #include "paradiseo/mo/continuator/moTrueContinuator.h"
 
-#include "heuristics/neighborhood_stat.hpp"
+#include "flowshop-solver/heuristics/neighborhood_stat.hpp"
 
 template <class Neighbor, class EOT = typename Neighbor::EOT>
 class NeigborhoodCheckpoint : public moCheckpoint<Neighbor> {

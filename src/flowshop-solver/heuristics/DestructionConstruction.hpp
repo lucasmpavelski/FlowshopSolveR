@@ -42,7 +42,7 @@ class DestructionConstruction : public eoMonOp<EOT> {
     return !std::equal(tmp.begin(), tmp.end(), sol.begin(), sol.end());
   }
 
-  auto operator()(EOT& sol) -> bool final {
+  auto operator()(EOT& sol) -> bool override {
     return construction(sol, destruction(sol));
   }
 };

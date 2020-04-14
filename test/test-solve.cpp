@@ -1,4 +1,4 @@
-#include "heuristics/ils.hpp"
+#include "flowshop-solver/heuristics/ils.hpp"
 
 /*
 void testSolveWithFactories() {
@@ -97,7 +97,7 @@ value!"); values[ps->name] = params.at(ps->name);
 
 void testSolve() {}
 
-int main(int, char *[]) {
+int main(int, char* []) {
   // testSolveWithFactories();
   testSolve();
   // testFastSolve();

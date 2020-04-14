@@ -4,7 +4,7 @@
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/MHParamsValues.hpp"
-#include "heuristics/acceptCritTemperature.hpp"
+#include "flowshop-solver/heuristics/acceptCritTemperature.hpp"
 
 template <class Ngh, class EOT = typename Ngh::EOT>
 class eoFactory {

@@ -3,9 +3,9 @@
 #include <iostream>
 #include <string>
 
-#include "heuristics/FSPOrderHeuristics.hpp"
-#include "heuristics/NEHInit.hpp"
-#include "heuristics/fastnehheuristic.hpp"
+#include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
+#include "flowshop-solver/heuristics/NEHInit.hpp"
+#include "flowshop-solver/heuristics/fastnehheuristic.hpp"
 #include "problems/FSPEvalFunc.hpp"
 #include "problems/fastfspeval.hpp"
 
@@ -15,11 +15,14 @@
 
 std::string instances_folder = TEST_FIXTURES_FOLDER;
 
-template <class FSPTp> class FSPDefaultNEH : public NEHInitOrdered<FSPTp> {
-public:
-  FSPDefaultNEH(FSPEvalFunc<FSPTp> &eval, moSolComparator<FSPTp> comp)
-      : NEHInitOrdered<FSPTp>(eval, eval.noJobs(),
-                              compareByTotalProcTimes(eval.fsp_data), comp) {}
+template <class FSPTp>
+class FSPDefaultNEH : public NEHInitOrdered<FSPTp> {
+ public:
+  FSPDefaultNEH(FSPEvalFunc<FSPTp>& eval, moSolComparator<FSPTp> comp)
+      : NEHInitOrdered<FSPTp>(eval,
+                              eval.noJobs(),
+                              compareByTotalProcTimes(eval.fsp_data),
+                              comp) {}
 };
 
 void testNEH() {

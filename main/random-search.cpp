@@ -13,32 +13,33 @@
 #include "problems/NIFSPEvalFunc.hpp"
 #include "problems/NWFSPEvalFunc.hpp"
 
-#include "heuristics/FSPOrderHeuristics.hpp"
-#include "heuristics/NEHInit.hpp"
-#include "heuristics/dummyAspiration.hpp"
-#include "heuristics/moFirstBestTS.hpp"
-#include "heuristics/moFirstTS.hpp"
+#include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
+#include "flowshop-solver/heuristics/NEHInit.hpp"
+#include "flowshop-solver/heuristics/dummyAspiration.hpp"
+#include "flowshop-solver/heuristics/moFirstBestTS.hpp"
+#include "flowshop-solver/heuristics/moFirstTS.hpp"
 
 #include "MHParamsSpecs.hpp"
 #include "MHParamsValues.hpp"
 #include "MHSolve.hpp"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   using std::cout;
   using std::string;
 
   cout << "SEED: " << RNG::seed() << "\n";
 
   eoParser parser(argc, argv);
-  string s = " --instance=../../data/instances/generated_intances/"
-             "generated_instances_taill-like/"
-             "taill-like_20_10_2010109.gen"
-             " --obj=PERM "
-             " --specs_file=../../data/specs/ils_specs.txt"
-             " --budget=low"
-             " --no_samples=5"
-             " --log_file=test.log"
-             " --result_file=test.out";
+  string s =
+      " --instance=../../data/instances/generated_intances/"
+      "generated_instances_taill-like/"
+      "taill-like_20_10_2010109.gen"
+      " --obj=PERM "
+      " --specs_file=../../data/specs/ils_specs.txt"
+      " --budget=low"
+      " --no_samples=5"
+      " --log_file=test.log"
+      " --result_file=test.out";
   // std::stringstream test_input(s);
   // parser.readFrom(test_input);
   string instance = "";

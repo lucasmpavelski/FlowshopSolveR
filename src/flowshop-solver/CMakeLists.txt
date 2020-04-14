@@ -8,7 +8,6 @@ set(FSP_SOURCES
   continuators/myMovedSolutionStat.hpp
   heuristics/acceptCritTemperature.hpp
   heuristics/dummyAspiration.hpp
-  heuristics/fastigexplorer.hpp
   heuristics/fastnehheuristic.hpp
   heuristics/FSPOrderHeuristics.hpp
   heuristics/IGexplorer.hpp

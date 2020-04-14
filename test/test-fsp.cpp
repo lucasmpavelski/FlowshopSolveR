@@ -27,7 +27,7 @@ void testLoadData() {
   assert(fsp_data.maxCT() == 125);
   std::array<int, 20> pt = {5, 9, 9,  4, 9, 3, 4, 8, 8, 10,
                             5, 8, 10, 1, 8, 7, 1, 8, 6, 2};
-  const auto &pt_ref = fsp_data.procTimesRef();
+  const auto& pt_ref = fsp_data.procTimesRef();
   assert(std::equal(std::begin(pt_ref), std::end(pt_ref), std::begin(pt)));
   assert(fsp_data.machineProcTimesRef()[0] == 27);
   assert(fsp_data.jobProcTimesRef()[0] == 33);
@@ -177,7 +177,9 @@ TEST(FSPTaillardAcelleration, Evaluation) {
   ASSERT_EQ(sol.fitness(), csd.makespan[3]);
 }
 
-auto auxMoveNeighborCompare(std::initializer_list<int> init, int from, int to,
+auto auxMoveNeighborCompare(std::initializer_list<int> init,
+                            int from,
+                            int to,
                             std::initializer_list<int> result) -> bool {
   FSP sol;
   sol.assign(init);
@@ -299,10 +301,10 @@ TEST(FSPTaillardAcelleration, NeighborhoodEval) {
   }
 }
 
-#include "heuristics/BestInsertionExplorer.hpp"
-#include "heuristics/OpPerturbDestConst.hpp"
-#include "heuristics/fastigexplorer.hpp"
-#include "heuristics/neighborhood_checkpoint.hpp"
+#include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
+#include "flowshop-solver/heuristics/OpPerturbDestConst.hpp"
+#include "flowshop-solver/heuristics/fastigexplorer.hpp"
+#include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 
 TEST(TaillardAcceleration, BestInsertionNeighborhood) {
   rng.reseed(65465l);
@@ -412,7 +414,7 @@ TEST(TaillardAcceleration, DestructionConstruction) {
   DestructionConstruction<FSPNeighbor> opdc(fbf, ds);
   rng.reseed(65465l);
   opdc(sol);
- 
+
   InsertFirstBest<FSPNeighbor> fb(ne);
   DestructionConstruction<FSPNeighbor> dc(fb, ds);
   rng.reseed(65465l);
@@ -433,8 +435,8 @@ TEST(TaillardAcceleration, RecompileNeighbor) {
   prob_dt["stopping_criterium"] = "FIXEDTIME";
   FSPProblem prob = FSPProblemFactory::get(prob_dt);
 
-  eoEvalFunc<FSP> &fullEval = prob.eval();
-  moEval<FSPNeighbor> &ne = prob.neighborEval();
+  eoEvalFunc<FSP>& fullEval = prob.eval();
+  moEval<FSPNeighbor>& ne = prob.neighborEval();
 
   FSP sol1;
   sol1.assign(
@@ -457,22 +459,22 @@ TEST(TaillardAcceleration, RecompileNeighbor) {
 TEST(TaillardAcceleration, NEH) {
   std::vector<int> vec;
   vec.assign({
-      16, 4, 4, 14, 12, //
-      14, 3, 4, 14, 10, //
-      18, 5, 5, 15, 13, //
-      4,  2, 2, 12, 3,  //
-      4,  2, 2, 12, 2,  //
-      3,  1, 2, 12, 1,  //
-      2,  2, 2, 11, 2,  //
-      5,  3, 4, 12, 4,  //
-      6,  4, 3, 12, 3,  //
-      7,  2, 4, 14, 4   //
+      16, 4, 4, 14, 12,  //
+      14, 3, 4, 14, 10,  //
+      18, 5, 5, 15, 13,  //
+      4,  2, 2, 12, 3,   //
+      4,  2, 2, 12, 2,   //
+      3,  1, 2, 12, 1,   //
+      2,  2, 2, 11, 2,   //
+      5,  3, 4, 12, 4,   //
+      6,  4, 3, 12, 3,   //
+      7,  2, 4, 14, 4    //
   });
   FSPData fspData(vec, 10, false);
   std::cerr << fspData << '\n';
 }
 
-auto main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) -> int {
+auto main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) -> int {
   testing::InitGoogleTest(&argc, argv);
   // testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
