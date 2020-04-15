@@ -4,7 +4,6 @@ library(future)
 
 plan(multisession)
 
-
 # paths
 ROOT <- here()
 EXPR <- file.path(ROOT, 'runs', 'aos-ig')
@@ -50,14 +49,14 @@ solveCmd <- function(mh, seed, params, output, core, ...) {
 experiments <- crossing(
   problems,
   configs,
-  seed = c(123, 456, 789, 159, 753)
+  seed = c(123)
 ) %>%
   mutate(
     output = pmap_chr(., function(...) {
       expr <- list(...)
       name <- expr[['name']]
       problem_model <- as.character(expr[colnames(problems)])
-      file.path(EXPR, name, paste0(paste(problem_model, collapse = '-'), '.out'))
+      file.path(EXPR, name, paste0(paste(problem_model, collapse = '-'), '-', expr[['seed']], '.out'))
     })
   )
 
@@ -66,18 +65,20 @@ experiments %>%
 
 walk(file.path(EXPR, configs$name), dir.create, showWarnings = F)
 
-ncores <- 3
-core_groups <- experiments %>%
-  group_split(seq_len(nrow(experiments)) %% ncores)
-  
-futures <- map(core_groups, function(group_expr) {
-  future({
-    group_expr %>%
-      filter(!file.exists(output)) %>%
-      mutate(status = pmap(., solveCmd))
+ncores <- 4
+
+experiments <- experiments %>%
+  mutate(core = seq_len(nrow(experiments)) %% ncores) 
+
+futures <- experiments %>%
+  group_split(core) %>%
+  map(function(group_expr) {
+    future({
+      group_expr %>%
+        filter(!file.exists(output)) %>%
+        mutate(status = pmap(., solveCmd))
+    })
   })
-})
 
 values(futures)
-
 
