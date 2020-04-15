@@ -1,9 +1,13 @@
 library(here)
 library(tidyverse)
+library(future)
+
+plan(multisession)
+
 
 # paths
 ROOT <- here()
-EXPR <- file.path(ROOT, 'runs', 'vanilla-ig')
+EXPR <- file.path(ROOT, 'runs', 'aos-ig')
 DATA <- file.path(ROOT, 'data')
 EXECUTABLE <- file.path(ROOT, 'build', 'main', 'fsp_solver')
 
@@ -21,13 +25,17 @@ parseParams <- function(params) {
   values
 }
 
-solveCmd <- function(mh, seed, params, output, ...) {
+solveCmd <- function(mh, seed, params, output, core, ...) {
   problem_data <- list(...)
   problem_model <- as.character(problem_data[colnames(problems)])
   names(problem_model) <- colnames(problems)
   params <- parseParams(params)
-  exe_bin <- EXECUTABLE
+  exe_bin <- 
   args <- c(
+    "taskset",
+    "-c",
+    core,
+    EXECUTABLE,
     paste0('--data_folder=', DATA),
     paste0('--mh=', mh),
     paste0('--problem_names=', paste0(names(problem_model), collapse = ',')),
@@ -58,6 +66,18 @@ experiments %>%
 
 walk(file.path(EXPR, configs$name), dir.create, showWarnings = F)
 
-experiments %>%
-  filter(!file.exists(output)) %>%
-  mutate(status = pmap(., solveCmd))
+ncores <- 3
+core_groups <- experiments %>%
+  group_split(seq_len(nrow(experiments)) %% ncores)
+  
+futures <- map(core_groups, function(group_expr) {
+  future({
+    group_expr %>%
+      filter(!file.exists(output)) %>%
+      mutate(status = pmap(., solveCmd))
+  })
+})
+
+values(futures)
+
+
