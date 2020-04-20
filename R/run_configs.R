@@ -6,7 +6,7 @@ plan(multisession)
 
 # paths
 ROOT <- here()
-EXPR <- file.path(ROOT, 'runs', 'aos-ig')
+EXPR <- file.path(ROOT, 'runs', 'rewards')
 DATA <- file.path(ROOT, 'data')
 EXECUTABLE <- file.path(ROOT, 'build', 'main', 'fsp_solver')
 
@@ -29,9 +29,8 @@ solveCmd <- function(mh, seed, params, output, core, ...) {
   problem_model <- as.character(problem_data[colnames(problems)])
   names(problem_model) <- colnames(problems)
   params <- parseParams(params)
-  exe_bin <- 
+  exe_bin <- "taskset"
   args <- c(
-    "taskset",
     "-c",
     core,
     EXECUTABLE,
@@ -40,7 +39,8 @@ solveCmd <- function(mh, seed, params, output, core, ...) {
     paste0('--problem_names=', paste0(names(problem_model), collapse = ',')),
     paste0('--problem_values=', paste0(problem_model, collapse = ',')),
     paste0('--params_names=', paste0(names(params), collapse = ',')),
-    paste0('--params_values=', paste0(params, collapse = ','))
+    paste0('--params_values=', paste0(params, collapse = ',')),
+    '--printFitnessReward'
   )
   system2(exe_bin, args, stdout = output)
 }

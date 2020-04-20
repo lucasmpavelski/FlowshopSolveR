@@ -72,9 +72,8 @@ int lowerBound1(const FSPData& fspData) {
     int max = 0;
     for (int k = 0; k <= i; k++) {
       int min_j = std::numeric_limits<int>::max();
-      for (unsigned j = 0; j < unscheduled.size(); j++) {
-        int atSum =
-            fspData.partialSumOnAdjacentMachines(unscheduled[j], k, i - 1);
+      for (int j : unscheduled) {
+        int atSum = fspData.partialSumOnAdjacentMachines(j, k, i - 1);
         if (atSum < min_j)
           min_j = atSum;
       }

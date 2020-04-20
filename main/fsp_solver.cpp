@@ -12,7 +12,7 @@
 #include "flowshop-solver/heuristics/all.hpp"
 #include "flowshop-solver/specsdata.hpp"
 
-std::vector<std::string> split(const std::string &val) {
+auto split(const std::string& val) -> std::vector<std::string> {
   std::vector<std::string> res;
   std::stringstream ss(val);
   std::string token;
@@ -22,7 +22,7 @@ std::vector<std::string> split(const std::string &val) {
   return res;
 }
 
-std::vector<double> splitDouble(const std::string &val) {
+auto splitDouble(const std::string& val) -> std::vector<double> {
   std::vector<double> res;
   std::stringstream ss(val);
   std::string token;
@@ -37,7 +37,7 @@ std::vector<double> splitDouble(const std::string &val) {
   return res;
 }
 
-int main(int argc, char *argv[]) {
+auto main(int argc, char* argv[]) -> int {
   eoParser parser(argc, argv);
 
   std::string data_folder;
@@ -85,12 +85,16 @@ int main(int argc, char *argv[]) {
           .value();
   if (printConfig) {
     std::cout << "{" << '\n' << "seed: " << seed << '\n' << "problem: {\n";
-    for (auto kv : problem)
+    for (const auto& kv : problem)
       std::cout << kv.first << ": " << kv.second << '\n';
     std::cout << "mh: " << mh << '\n';
-    for (auto kv : params)
+    for (const auto& kv : params)
       std::cout << kv.first << ": " << kv.second << '\n';
   }
-  solveWith(mh, problem, params);
+
+  RunOptions options(parser);
+
+  solveWith(mh, problem, params, options);
+
   return 0;
 }

@@ -5,6 +5,7 @@
 
 #include "Problem.hpp"
 #include "continuators/myMovedSolutionStat.hpp"
+#include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/moHiResTimeContinuator.hpp"
 #include "flowshop-solver/problems/FSPEvalFunc.hpp"
 #include "flowshop-solver/problems/NIFSPEvalFunc.hpp"
@@ -29,47 +30,6 @@ class myBestSoFarStat : public moBestSoFarStat<EOT> {
   void lastCall(EOT& sol) final { operator()(sol); }
 };
 
-template <class EOT, class TimeT = std::chrono::milliseconds>
-class TimeStat : public moStat<EOT, int> {
-  std::chrono::system_clock::time_point start;
-
- public:
-  using moStat<EOT, int>::value;
-
-  TimeStat() : moStat<EOT, int>(0, "timer in miliseconds") {
-    start = std::chrono::system_clock::now();
-  }
-
-  void operator()(EOT&) final {
-    auto now = std::chrono::system_clock::now();
-    value() = std::chrono::duration_cast<TimeT>(now - start).count();
-  };
-};
-
-template <class EOT>
-class myTimeFitnessPrinter : public moStatBase<EOT> {
-  TimeStat<EOT>& timer;
-  EOT best;
-  moSolComparator<EOT> compare;
-
- public:
-  myTimeFitnessPrinter(TimeStat<EOT>& timer) : moStatBase<EOT>{}, timer{timer} {
-    best.fitness(std::numeric_limits<double>::max());
-    std::puts("runtime,fitness");
-  }
-
-  ~myTimeFitnessPrinter() override {
-    std::cout << timer.value() << ',' << best.fitness() << '\n';
-  }
-
-  void operator()(EOT& sol) final {
-    if (compare(best, sol)) {
-      std::cout << timer.value() << ',' << sol.fitness() << '\n';
-      best.fitness(sol.fitness());
-    }
-  }
-};
-
 struct FSPProblem : public Problem<FSPNeighbor> {
   using EOT = FSP;
   using Ngh = FSPNeighbor;
@@ -88,11 +48,6 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   const std::string budget;
   const unsigned lower_bound;
 
-  TimeStat<EOT> timer;
-  prefixedPrinter print;
-  prefixedPrinter printg;
-  myTimeFitnessPrinter<EOT> timeFintessPrinter;
-
   FSPProblem(const FSPData& dt,
              const std::string& type,
              const std::string& obj,
@@ -106,10 +61,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
         eval_neighbor_counter(*eval_neighbor),
         stopping_criterium(std::move(_stopping_criterium)),
         budget(std::move(_budget)),
-        lower_bound(lower_bound),
-        print("local_best:", " "),
-        printg("global best:", " "),
-        timeFintessPrinter{timer} {
+        lower_bound(lower_bound) {
     reset();
   }
 
@@ -166,8 +118,6 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     dummy.fitness(std::numeric_limits<double>::infinity());
     bestFoundGlobal.init(dummy);
 
-    checkpointGlobal_ptr->add(timer);
-    checkpointGlobal_ptr->add(timeFintessPrinter);
     // printg.add(timer);
     // printg.add(bestFoundGlobal);
     // checkpointGlobal_ptr->add(printg);

@@ -27,6 +27,7 @@
 #include "flowshop-solver/heuristics/ig_lsps.hpp"
 #include "flowshop-solver/specsdata.hpp"
 
+#include "flowshop-solver/RunOptions.hpp"
 #include "flowshop-solver/eoFactory.hpp"
 
 template <class OpT>
@@ -58,7 +59,8 @@ class OperatorSelectionFactory {
 template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
 auto solveWithIG(Problem<Ngh>& prob,
                  const MHParamsValues& params,
-                 eoFactory<Ngh>& factory) -> Result {
+                 eoFactory<Ngh>& factory,
+                 const RunOptions& runOptions) -> Result {
   const int N = prob.size(0);
   const int max_nh_size = pow(N - 1, 2);
 
@@ -271,20 +273,22 @@ auto solveWithIG(Problem<Ngh>& prob,
                                            destruction_size, *compSS);
   moMonOpPerturb<Ngh> perturb1(igLSPS, fullEval);
 
-  FitnessReward<EOT> fitness_reward;
-  checkpoint.add(fitness_reward);
+  myTimeStat<EOT> timer;
+  FitnessReward<EOT> fitnessReward{timer};
+  checkpoint.add(fitnessReward);
 
-  FitnessHistory<EOT> fitness_history;
+  FitnessHistory<EOT> fitnessHistory;
+
   if (params.categorical("IG.AOS.Strategy") == 2) {
-    checkpoint.add(fitness_history);
+    checkpoint.add(fitnessHistory);
   }
 
   std::vector<int> destruction_sizes = {2, 4, 8};
   OperatorSelectionFactory<int> osf;
 
-  AdaptiveWalkLengthFLA<EOT> awSize{fitness_history, 1.0 / N};
-  AutocorrelationFLA<EOT> autocorr{fitness_history};
-  FitnessDistanceCorrelationFLA<EOT> fdc{fitness_history};
+  AdaptiveWalkLengthFLA<EOT> awSize{fitnessHistory, 1.0 / N};
+  AutocorrelationFLA<EOT> autocorr{fitnessHistory};
+  FitnessDistanceCorrelationFLA<EOT> fdc{fitnessHistory};
   ProblemContext context;
   context.add(awSize);
   context.add(neutralityFLA);
@@ -294,7 +298,7 @@ auto solveWithIG(Problem<Ngh>& prob,
 
   InsertFirstBest<Ngh> insertDC{evalN};
   AdaptiveDestructionConstruction<Ngh> adaptiveDC(insertDC, *operator_selection,
-                                                  fitness_reward);
+                                                  fitnessReward);
   moMonOpPerturb<Ngh> perturb2(adaptiveDC, fullEval);
 
   moPerturbation<Ngh>* perturb;
@@ -314,5 +318,5 @@ auto solveWithIG(Problem<Ngh>& prob,
   ****/
   moILS<Ngh, Ngh> ils(*algo, fullEval, checkpointGlobal, *perturb, *accept);
 
-  return runExperiment(*init, ils, prob);
+  return runExperiment(*init, ils, prob, runOptions);
 }

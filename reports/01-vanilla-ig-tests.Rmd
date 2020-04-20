@@ -9,8 +9,15 @@ Compare different IG configurations, with destruction size $d \in \{2, 4, 8, 12\
 # loading data
 source(here::here("R/read_runs.R"), verbose = F)
 
-runs <- read_runs("vanilla-ig")
+runs <- read_runs("aos-ig") %>%
+  filter(name != "IG1(d=2)") %>%
+  filter(name != "IG1MAB")
 bounds <- read_csv(here::here("data", 'taillard_instances.csv'))
+
+runs$name <- factor(runs$name, levels = c(
+  "IG (d=2)", "IG (d=4)", "IG (d=8)", "IG (d=12)", "IG LinUCB", 
+"IG LSPS", "IG MAB", "IG PM", "IG RND", "IG TS"
+))
 
 bounds <- bounds %>%
   mutate(
@@ -27,11 +34,23 @@ results <- runs %>%
                               ~.x %>% filter(runtime <= .y / 6)
                                   %>% pull(fitness)
                                   %>% last),
-    rpd60 = 100 * (best_fitness60 - lower_bound) / lower_bound,
-    rpd10 = 100 * (best_fitness10 - lower_bound) / lower_bound
+    rpd60 = 100 * (best_fitness60 - upper_bound) / upper_bound,
+    rpd10 = 100 * (best_fitness10 - upper_bound) / upper_bound
   )
 
 ```
+
+
+```{r}
+# View(results %>% select(instance, name, rpd60))
+results %>%
+  group_by(objective, budget, name) %>%
+  ggplot(aes(x = name)) +
+  geom_boxplot(aes(y = rpd60))
+
+# results %>% filter(instance == 'taillard_rand_50_20_09.dat', name == 'IG (d=4)') %>% pull(runs) %>% last
+```
+
 
 ```{r}
 # View(results %>% select(instance, name, rpd60))
@@ -45,9 +64,69 @@ results %>%
   ggplot(aes(x = name)) +
   geom_errorbar(aes(y = mean_rpd, ymin = mean_rpd - ci, ymax = mean_rpd + ci))
 
-
 # results %>% filter(instance == 'taillard_rand_50_20_09.dat', name == 'IG (d=4)') %>% pull(runs) %>% last
+```
+
+```{r}
+folder <- here::here("runs", "rewards")
+experiments <- read_csv(
+  file.path(folder, "experiments.csv"),
+  col_types =
+    cols(
+      problem = col_character(),
+      type = col_character(),
+      objective = col_character(),
+      budget = col_character(),
+      stopping_criterium = col_character(),
+      instance = col_character(),
+      name = col_character(),
+      mh = col_character(),
+      params = col_character(),
+      seed = col_double(),
+      output = col_character()
+    )
+  ) %>%
+  mutate(runs = map(output, read_csv, 
+                    col_types = cols(
+                      runtime = col_double(),
+                      initialFitness = col_double(),
+                      finalFitness = col_double())))
+
+
+rewards <- experiments %>%
+  unnest(runs)
+
+rewards <- rewards %>%
+  mutate(reward = finalFitness - initialFitness)
+
+
+ggplot(rewards) +
+  facet_wrap(~instance, scales = "free") +
+  geom_histogram(aes(x = reward, fill = name)) +
+  theme(axis.text = element_blank(), 
+        axis.ticks = element_blank(),
+        legend.position = "bottom")
+```
+
+```{r}
+rewards %>%
+  sample_n(10000) %>%
+  ggplot() +
+    facet_wrap(~instance, scales = "free") +
+    geom_point(aes(x = runtime, y = reward, color = name)) +
+    theme(axis.text = element_blank(), 
+          axis.ticks = element_blank(),
+          legend.position = "bottom")
 ```
 
 
 
+```{r}
+rewards %>%
+  ggplot() +
+    facet_wrap(~instance, scales = "free") +
+    geom_smooth(aes(x = runtime, y = reward, color = name), method = "lm") +
+    theme(axis.text = element_blank(), 
+          axis.ticks = element_blank(),
+          legend.position = "bottom")
+```

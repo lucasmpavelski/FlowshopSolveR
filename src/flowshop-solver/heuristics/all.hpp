@@ -12,13 +12,15 @@
 #include "flowshop-solver/heuristics/sa.hpp"
 #include "flowshop-solver/heuristics/ts.hpp"
 
+#include "flowshop-solver/RunOptions.hpp"
 #include "flowshop-solver/eoFSPFactory.hpp"
 
 template <class ParamType = double>
 auto solveWith(
     std::string mh,
     const std::unordered_map<std::string, std::string>& problem_specs,
-    const std::unordered_map<std::string, ParamType>& params_values) -> Result {
+    const std::unordered_map<std::string, ParamType>& params_values,
+    const RunOptions runOptions = RunOptions()) -> Result {
   FSPProblem prob = FSPProblemFactory::get(problem_specs);
   MHParamsSpecs specs = MHParamsSpecsFactory::get(mh);
   MHParamsValues params(&specs);
@@ -41,7 +43,7 @@ auto solveWith(
   else if (mh == "TS")
     return solveWithTS(prob, params);
   else if (mh == "IG")
-    return solveWithIG(prob, params, factory);
+    return solveWithIG(prob, params, factory, runOptions);
   else if (mh == "ILS")
     return solveWithILS(prob, params);
   else if (mh == "ACO")

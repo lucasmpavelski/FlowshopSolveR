@@ -18,10 +18,6 @@ class acceptCritTemperature : public moAcceptanceCriterion<Neighbor>,
  public:
   using EOT = typename Neighbor::EOT;
 
-  /*
-    default constructor:
-    compare the fitness value: accept if the fitness is higher
-  */
   acceptCritTemperature(double _threshold) : threshold(_threshold) {}
 
   /**
@@ -36,7 +32,8 @@ class acceptCritTemperature : public moAcceptanceCriterion<Neighbor>,
       return true;
     } else {
       double prob = std::exp((_sol1.fitness() - _sol2.fitness()) / threshold);
-      return rng.uniform() <= prob;
+      bool accept = rng.uniform() <= prob;
+      return accept;
     }
   }
 };

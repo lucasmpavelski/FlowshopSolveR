@@ -36,5 +36,9 @@ auto main(int, char* []) -> int {
   params["IG.LSPS.Local.Search"] = "3";
   params["IG.LSPS.Single.Step"] = "0";
   params["IG.AOS.Strategy"] = "linucb";
-  std::cout << solveWith("IG", prob, params);
+
+  RunOptions ro;
+  ro.printFitnessReward = true;
+
+  std::cout << solveWith("IG", prob, params, ro);
 }
