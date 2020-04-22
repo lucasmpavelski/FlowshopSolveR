@@ -405,6 +405,7 @@ TEST(TaillardAcceleration, DestructionConstruction) {
 
   eoInitPermutation<FSP> randomInit(no_jobs);
   randomInit(sol);
+  fullEval(sol);
   FSP sol2 = sol;
 
   FastFSPNeighborEval ne(fspData, fullEval);
@@ -472,6 +473,24 @@ TEST(TaillardAcceleration, NEH) {
   });
   FSPData fspData(vec, 10, false);
   std::cerr << fspData << '\n';
+}
+
+#include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
+
+TEST(Heuristic, FSPOrderHeuristics) {
+  std::vector<std::string> names = {"sum_pij",    "abs_dif",     "ss_sra",
+                                    "ss_srs",     "ss_srn_rcn",  "ss_sra_rcn",
+                                    "ss_srs_rcn", "ss_sra_2rcn", "ra_c1",
+                                    "ra_c2",      "ra_c3",       "ra_c3"};
+  FSPData dt(20, 5);
+  FSPOrderHeuristicFactory factory(dt);
+  FSP sol;
+  for (const auto& name : names) {
+    auto order = factory.build(name, false);
+    (*order)(sol);
+    auto orderw = factory.build(name, true);
+    (*orderw)(sol);
+  }
 }
 
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) -> int {
