@@ -482,14 +482,19 @@ TEST(Heuristic, FSPOrderHeuristics) {
                                     "ss_srs",     "ss_srn_rcn",  "ss_sra_rcn",
                                     "ss_srs_rcn", "ss_sra_2rcn", "ra_c1",
                                     "ra_c2",      "ra_c3",       "ra_c3"};
+  std::vector<std::string> orders = {"incr",    "decr",    "valley",
+                                     "hill",    "hi_hilo", "hi_lohi",
+                                     "lo_hilo", "lo_lohi"};
   FSPData dt(20, 5);
   FSPOrderHeuristicFactory factory(dt);
   FSP sol;
   for (const auto& name : names) {
-    auto order = factory.build(name, false);
-    (*order)(sol);
-    auto orderw = factory.build(name, true);
-    (*orderw)(sol);
+    for (const auto& order : orders) {
+      auto init = factory.build(name, false, order);
+      (*init)(sol);
+      auto initw = factory.build(name, true, order);
+      (*initw)(sol);
+    }
   }
 }
 

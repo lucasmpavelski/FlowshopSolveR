@@ -15,22 +15,72 @@ class FSPOrderHeuristic : eoInit<FSP> {
 
  private:
   const bool weighted;
-  std::vector<double> orderMetric;
+  std::vector<int> order;
+  std::vector<double> indicator;
 
  public:
-  FSPOrderHeuristic(const FSPData& fspData, bool weighted)
-      : fspData{fspData}, weighted{weighted} {}
+  FSPOrderHeuristic(const FSPData& fspData,
+                    bool weighted,
+                    const std::string& orderType)
+      : fspData{fspData}, weighted{weighted}, order{getOrder(orderType)} {}
+
+  auto getOrder(const std::string& orderType) -> std::vector<int> {
+    const int n = fspData.noJobs();
+    std::vector<int> order(n);
+    std::iota(begin(order), end(order), 0);
+    if (orderType == "incr") {
+      return order;
+    }
+    if (orderType == "decr") {
+      std::reverse(begin(order), end(order));
+    }
+    if (orderType == "hill") {
+      std::transform(begin(order), end(order), begin(order),
+                     [&n](int i) { return -(i - n / 2) * (i - n / 2); });
+    }
+    if (orderType == "valley") {
+      std::transform(begin(order), end(order), begin(order),
+                     [&n](int i) { return (i - n / 2) * (i - n / 2); });
+    }
+    if (orderType == "hi_hilo") {
+      std::transform(begin(order), end(order), begin(order), [&n](int i) {
+        int iv = n - i;
+        return iv * pow(-1, iv + n % 2);
+      });
+    }
+    if (orderType == "hi_lohi") {
+      std::transform(begin(order), end(order), begin(order), [&n](int i) {
+        int iv = n - i;
+        return -iv * pow(-1, iv + n % 2);
+      });
+    }
+    if (orderType == "lo_hilo") {
+      std::transform(begin(order), end(order), begin(order),
+                     [&n](int i) { return i * std::pow(-1, n - i + n % 2); });
+    }
+    if (orderType == "lo_lohi") {
+      std::transform(begin(order), end(order), begin(order),
+                     [&n](int i) { return -i * std::pow(-1, n - i + n % 2); });
+    }
+    return order;
+  }
 
   void operator()(FSP& sol) override {
-    if (orderMetric.empty())
-      orderMetric = sortingOrder();
+    if (indicator.empty()) {
+      indicator = sortingOrder();
+    }
+
     if (sol.empty()) {
       sol.resize(fspData.noJobs());
       std::iota(begin(sol), end(sol), 0);
     }
+
     std::sort(begin(sol), end(sol), [this](int i, int j) {
-      return this->orderMetric[i] < this->orderMetric[j];
+      return this->indicator[i] < this->indicator[j];
     });
+
+    std::sort(begin(sol), end(sol),
+              [this](int i, int j) { return this->order[i] < this->order[j]; });
   }
 
   auto w(int i) const -> int {
@@ -233,30 +283,30 @@ class FSPOrderHeuristicFactory {
  public:
   FSPOrderHeuristicFactory(const FSPData& data) : data{data} {}
 
-  auto build(const std::string& name, bool weighted)
+  auto build(const std::string& name, bool weighted, const std::string order)
       -> std::unique_ptr<FSPOrderHeuristic> {
     if (name == "sum_pij")
-      return std::make_unique<SUM_PIJ>(data, weighted);
+      return std::make_unique<SUM_PIJ>(data, weighted, order);
     if (name == "abs_dif")
-      return std::make_unique<ABS_DIF>(data, weighted);
+      return std::make_unique<ABS_DIF>(data, weighted, order);
     if (name == "ss_sra")
-      return std::make_unique<SS_SRA>(data, weighted);
+      return std::make_unique<SS_SRA>(data, weighted, order);
     if (name == "ss_srs")
-      return std::make_unique<SS_SRS>(data, weighted);
+      return std::make_unique<SS_SRS>(data, weighted, order);
     if (name == "ss_srn_rcn")
-      return std::make_unique<SS_SRN_RCN>(data, weighted);
+      return std::make_unique<SS_SRN_RCN>(data, weighted, order);
     if (name == "ss_sra_rcn")
-      return std::make_unique<SS_SRA_RCN>(data, weighted);
+      return std::make_unique<SS_SRA_RCN>(data, weighted, order);
     if (name == "ss_srs_rcn")
-      return std::make_unique<SS_SRS_RCN>(data, weighted);
+      return std::make_unique<SS_SRS_RCN>(data, weighted, order);
     if (name == "ss_sra_2rcn")
-      return std::make_unique<SS_SRA_2RCN>(data, weighted);
+      return std::make_unique<SS_SRA_2RCN>(data, weighted, order);
     if (name == "ra_c1")
-      return std::make_unique<RA_C1>(data, weighted);
+      return std::make_unique<RA_C1>(data, weighted, order);
     if (name == "ra_c2")
-      return std::make_unique<RA_C2>(data, weighted);
+      return std::make_unique<RA_C2>(data, weighted, order);
     if (name == "ra_c3")
-      return std::make_unique<RA_C3>(data, weighted);
+      return std::make_unique<RA_C3>(data, weighted, order);
     return {nullptr};
   }
 };
