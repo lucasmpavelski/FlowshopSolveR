@@ -1,5 +1,9 @@
-IG.Comp.Strat                        "" c (0,1)
-IG.Init.Strat                        "" c (0,1,2)
+IG.Init "" c (random,neh)
+IG.Init.NEH.Priority "" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3) | IG.Init == neh
+IG.Init.NEH.PriorityOrder "" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | IG.Init == neh
+IG.Init.NEH.PriorityWeighted "" i (0,1) | IG.Init == neh
+IG.Init.NEH.Insertion "" c (first_best,last_best,random_best)
+IG.Comp.Strat "" c (0,1)
 IG.Neighborhood.Size                 "" r (0.0,9.999)
 IG.Neighborhood.Strat                "" c (0,1)
 IG.Local.Search                   "" c (0,1,2,3)

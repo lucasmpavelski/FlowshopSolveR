@@ -583,7 +583,7 @@ float solveWithFactories(
   if (problem_name == "FSP") {
     auto problem = FSPProblemFactory::get(prob_data);
     problem.reset();
-    result = evaluate(values, problem, totalProcTimes(problem.getData()));
+  //  result = evaluate(values, problem, totalProcTimes(problem.getData()));
   } else {
     throw std::runtime_error("Unknown problem: " + problem_name);
   }

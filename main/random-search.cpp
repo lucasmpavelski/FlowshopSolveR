@@ -110,15 +110,15 @@ int main(int argc, char* argv[]) {
   cout << "no_evals: " << no_evals << '\n';
 
   auto start = std::chrono::system_clock::now();
-  for (int i = 0; i < no_evals / no_samples; i++) {
-    params.randomizeValues(RNG::engine);
-    result = evaluateMean(params, prob, totalProcTimes(data), no_samples);
-    params.printValues(log) << result << '\n';
-    if (result < best_result) {
-      best_result = result;
-      best = params;
-    }
-  }
+  // for (int i = 0; i < no_evals / no_samples; i++) {
+  //   params.randomizeValues(RNG::engine);
+  //   result = evaluateMean(params, prob, totalProcTimes(data), no_samples);
+  //   params.printValues(log) << result << '\n';
+  //   if (result < best_result) {
+  //     best_result = result;
+  //     best = params;
+  //   }
+  // }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<float> elapsed_seconds = end - start;
 

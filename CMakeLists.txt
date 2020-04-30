@@ -29,7 +29,7 @@ add_definitions(-DDATA_FOLDER="${CMAKE_SOURCE_DIR}/data")
 add_definitions(-DDEPRECATED_MESSAGES="")
 
 #set(CMAKE_VERBOSE_MAKEFILE TRUE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -pthread -lpthread -g -fPIC -v -Wall -Wextra -Wno-logical-op-parentheses -Wno-deprecated-register -Wno-pragma-once-outside-header")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -lpthread -g -fPIC -v -Wall -Wextra -Wno-logical-op-parentheses -Wno-deprecated-register -Wno-pragma-once-outside-header")
 
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ ")
 

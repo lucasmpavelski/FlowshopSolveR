@@ -1,34 +1,43 @@
 #pragma once
 
+#include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/global.hpp"
 
-template <class Neighbor>
-class InsertionStrategy {
+template <class Ngh, class EOT = typename Ngh::EOT>
+class InsertionStrategy : public eoBF<EOT&, int, bool> {
  public:
-  using Ngh = Neighbor;
-  using EOT = typename Neighbor::EOT;
+  moEval<Ngh>& neighborEval;
+
+  InsertionStrategy(moEval<Ngh>& neighborEval) : neighborEval{neighborEval} {}
 
   auto insertJob(EOT& sol, int jobToInsert) -> bool {
     sol.emplace_back(jobToInsert);
-    return insert(sol, sol.size() - 1);
+    Ngh neighbor;
+    const int positionToInsert = sol.size() - 1;
+    neighbor.set(positionToInsert, positionToInsert, sol.size());
+    neighborEval(sol, neighbor);
+    sol.fitness(neighbor.fitness());
+    return insert(sol, positionToInsert);
   }
 
   virtual auto insert(EOT& sol, int positionToInsert) -> bool = 0;
+
+  auto operator()(EOT& sol, int positionToInsert) -> bool override {
+    return insert(sol, positionToInsert);
+  }
 };
 
-template <class Ngh>
+template <class Ngh, class EOT = typename Ngh::EOT>
 class InsertBest : public InsertionStrategy<Ngh> {
-  moEval<Ngh>& neighborEval;
   moNeighborComparator<Ngh>& neighborComparator;
 
  public:
-  InsertBest(moEval<Ngh>& neighborEval,
-             moNeighborComparator<Ngh>& neighborComparator)
-      : neighborEval{neighborEval}, neighborComparator{neighborComparator} {}
+  InsertBest(moEval<Ngh>& neighborEval, moNeighborComparator<Ngh>& neighborComparator)
+      : InsertionStrategy<Ngh>{neighborEval}, neighborComparator{neighborComparator} {}
 
-  using EOT = typename InsertionStrategy<Ngh>::EOT;
+  using InsertionStrategy<Ngh>::neighborEval;
 
   auto insert(EOT& sol, int positionToInsert) -> bool override {
     Ngh neighbor, bestNeighbor;
@@ -54,7 +63,7 @@ class InsertBest : public InsertionStrategy<Ngh> {
   }
 };
 
-template <class Ngh>
+template <class Ngh, class EOT = typename Ngh::EOT>
 class InsertFirstBest : public InsertBest<Ngh> {
   moNeighborComparator<Ngh> neighborComparator;
 
@@ -96,15 +105,16 @@ class myRandomNeighborComparator : public moNeighborComparator<Ngh> {
         return true;
       }
       return false;
+    } else {
+      return false;
     }
   }
 
   void reset() { r = 0.0; }
 };
 
-template <class Ngh>
+template <class Ngh, class EOT = typename Ngh::EOT>
 class InsertRandomBest : public InsertBest<Ngh> {
-  using EOT = typename InsertBest<Ngh>::EOT;
   myRandomNeighborComparator<Ngh> comparator;
 
  public:
@@ -116,3 +126,15 @@ class InsertRandomBest : public InsertBest<Ngh> {
     return ret;
   }
 };
+
+template <class Ngh>
+auto buildInsertionStrategy(const std::string& name, moEval<Ngh>& eval)
+    -> InsertionStrategy<Ngh>* {
+  if (name == "first_best")
+    return new InsertFirstBest<Ngh>{eval};
+  if (name == "last_best")
+    return new InsertLastBest<Ngh>{eval};
+  if (name == "random_best")
+    return new InsertRandomBest<Ngh>{eval};
+  return nullptr;
+}

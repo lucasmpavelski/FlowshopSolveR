@@ -38,14 +38,14 @@ class ParamSpec {
     o << "(" << lowerBound() << "," << upperBound() << ")";
   }
 
-  float lowerBound() const { return lower_bound; }
-  float upperBound() const { return upper_bound; }
+  [[nodiscard]] auto lowerBound() const -> float { return lower_bound; }
+  [[nodiscard]] auto upperBound() const -> float { return upper_bound; }
 
-  std::ostream& strValue(std::ostream& o, float num) const {
+  auto strValue(std::ostream& o, float num) const -> std::ostream& {
     return o << toStrValue(num);
   }
 
-  virtual std::string toStrValue(float num) const {
+  [[nodiscard]] virtual auto toStrValue(float num) const -> std::string {
     switch (type) {
       case Type::REAL:
         return std::to_string(num);
@@ -56,28 +56,22 @@ class ParamSpec {
     return "";
   }
 
-  virtual float fromStrValue(const std::string& s) const {
-    switch (type) {
-      case Type::REAL:
-        return std::stof(s.c_str());
-      case Type::INT:
-      case Type::CAT:
-        return std::stoi(s.c_str());
-    }
-    return 0.0;
+  [[nodiscard]] virtual auto fromStrValue(const std::string& s) const -> float {
+    return std::stof(s.c_str());
   }
 
-  friend std::ostream& operator<<(std::ostream& o, const ParamSpec& ps) {
+  friend auto operator<<(std::ostream& o, const ParamSpec& ps)
+      -> std::ostream& {
     ps.print(o);
     return o;
   }
 
-  friend bool operator==(const ParamSpec& a, const ParamSpec& b) {
+  friend auto operator==(const ParamSpec& a, const ParamSpec& b) -> bool {
     return a.name == b.name && a.type == b.type &&
            a.lower_bound == b.lower_bound && a.upper_bound == b.upper_bound;
   }
 
-  friend bool operator!=(const ParamSpec& a, const ParamSpec& b) {
+  friend auto operator!=(const ParamSpec& a, const ParamSpec& b) -> bool {
     return !(a == b);
   }
 };
@@ -96,7 +90,10 @@ class CatParamSpec : public ParamSpec {
   std::vector<std::string> cats;
 
   CatParamSpec(std::string name, const std::vector<std::string>& cats)
-      : ParamSpec(std::move(name), ParamSpec::Type::CAT, 0, cats.size() - 1e-6),
+      : ParamSpec(std::move(name),
+                  ParamSpec::Type::CAT,
+                  0.0f,
+                  cats.size() - 1e-6f),
         cats(cats) {}
 
   void printRange(std::ostream& o) const override {
@@ -106,9 +103,12 @@ class CatParamSpec : public ParamSpec {
     o << cats[cats.size() - 1] << ")";
   }
 
-  std::string toStrValue(float num) const override { return cats[int(num)]; }
+  [[nodiscard]] auto toStrValue(float num) const -> std::string override {
+    return cats[int(num)];
+  }
 
-  float fromStrValue(const std::string& s) const override {
+  [[nodiscard]] auto fromStrValue(const std::string& s) const
+      -> float override {
     auto r = std::find(cats.begin(), cats.end(), s);
     if (r != cats.end())
       return std::distance(cats.begin(), r);

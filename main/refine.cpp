@@ -23,7 +23,11 @@ auto main(int, char* []) -> int {
 
   prob["stopping_criterium"] = "FIXEDTIME";
   std::unordered_map<std::string, std::string> params;
-  params["IG.Init.Strat"] = "0";
+  params["IG.Init"] = "neh";
+  params["IG.Init.NEH.Priority"] = "sum_pij";
+  params["IG.Init.NEH.PriorityOrder"] = "incr";
+  params["IG.Init.NEH.PriorityWeighted"] = "0";
+  params["IG.Init.NEH.Insertion"] = "first_best";
   params["IG.Comp.Strat"] = "0";
   params["IG.Neighborhood.Size"] = "9.9999";
   params["IG.Neighborhood.Strat"] = "0";
@@ -35,10 +39,10 @@ auto main(int, char* []) -> int {
   params["IG.LS.Single.Step"] = "0";
   params["IG.LSPS.Local.Search"] = "3";
   params["IG.LSPS.Single.Step"] = "0";
-  params["IG.AOS.Strategy"] = "linucb";
+  params["IG.AOS.Strategy"] = "probability_matching";
 
   RunOptions ro;
-  ro.printFitnessReward = true;
+  ro.printBestFitness = true;
 
   std::cout << solveWith("IG", prob, params, ro);
 }

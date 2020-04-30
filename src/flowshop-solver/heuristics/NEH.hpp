@@ -9,13 +9,12 @@
 
 template <class Ngh, class EOT = typename Ngh::EOT>
 class NEH : public eoInit<EOT> {
-  moEval<Ngh>& eval;
   eoInit<EOT>& init;
-  InsertionStrategy<EOT>& insert;
+  InsertionStrategy<Ngh>& insert;
 
  public:
-  NEH(moEval<Ngh>& eval, eoInit<EOT>& init, InsertionStrategy<EOT>& insert)
-      : eval(eval), init(init), insert(insert) {}
+  NEH(eoInit<EOT>& init, InsertionStrategy<Ngh>& insert)
+      : init(init), insert(insert) {}
 
   virtual void operator()(EOT& sol) {
     EOT tmp = sol;

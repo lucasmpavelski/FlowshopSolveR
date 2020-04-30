@@ -25,9 +25,9 @@ auto solveWith(
   MHParamsSpecs specs = MHParamsSpecsFactory::get(mh);
   MHParamsValues params(&specs);
   params.readValues(params_values);
-
+  
   eoFSPFactory factory{params, prob};
-
+  
   if (mh == "all") {
     mh = params.categoricalName("MH");
   }

@@ -33,7 +33,8 @@ std::vector<FSPProblem::EOT> adaptiveWalk(
   auto init_strat = getWithDef(sampling_params, "Init.Strat"s, "RANDOM"s);
   auto sampling_strat = getWithDef(sampling_params, "Sampling.Strat"s, "FI"s);
 
-  auto order = totalProcTimes(problem.getData());
+  EOT order;
+  SUM_PIJ(problem.getData(), false, "incr")(order);
   auto& eval = problem.eval();
   auto& neighborEval = problem.neighborEval();
 
@@ -105,7 +106,8 @@ double adaptiveWalkLength(
   auto init_strat = getWithDef(sampling_params, "Init.Strat"s, "RANDOM"s);
   auto sampling_strat = getWithDef(sampling_params, "Sampling.Strat"s, "FI"s);
 
-  auto order = totalProcTimes(problem.getData());
+  EOT order;
+  SUM_PIJ(problem.getData(), false, "incr")(order);
   auto& eval = problem.eval();
   auto& neighborEval = problem.neighborEval();
 
@@ -155,8 +157,9 @@ std::vector<double> randomWalk(
   auto sampling_strat =
       getWithDef(sampling_params, "Sampling.Strat"s, "RANDOM"s);
   auto no_steps = std::stoi(getWithDef(sampling_params, "No.Steps"s, "1000"s));
-
-  auto order = totalProcTimes(problem.getData());
+ 
+  EOT order;
+  SUM_PIJ(problem.getData(), false, "incr")(order);
   auto& eval = problem.eval();
   auto& neighborEval = problem.neighborEval();
 
@@ -495,8 +498,9 @@ graph<FSPProblem::EOT> sampleLON(
   sampling_params["IG.LS.Single.Step"] = "0";
   sampling_params["IG.LSPS.Local.Search"] = "1";
   sampling_params["IG.LSPS.Single.Step"] = "1";
-
-  auto order = totalProcTimes(problem.getData());
+ 
+  EOT order;
+  SUM_PIJ(problem.getData(), false, "incr")(order);
   auto& eval = problem.eval();
   auto& neighborEval = problem.neighborEval();
 

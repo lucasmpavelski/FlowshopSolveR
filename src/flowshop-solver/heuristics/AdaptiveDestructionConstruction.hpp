@@ -4,6 +4,7 @@
 #include "flowshop-solver/heuristics/DestructionConstruction.hpp"
 #include "flowshop-solver/heuristics/FitnessReward.hpp"
 #include "heuristics/InsertionStrategy.hpp"
+#include "flowshop-solver/continuators/myTimeStat.hpp"
 
 template <class Ngh>
 class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
@@ -12,15 +13,22 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
   FitnessReward<EOT>& fitnessReward;
   OperatorSelection<int>& operatorSelection;
   bool firstIteration = true;
+  bool printChoices;
+  
+  myTimeStat<EOT> time;
 
  public:
   AdaptiveDestructionConstruction(InsertionStrategy<Ngh>& insert,
                                   OperatorSelection<int>& operatorSelection,
-                                  FitnessReward<EOT>& fitnessReward)
+                                  FitnessReward<EOT>& fitnessReward,
+                                  bool printChoices = false)
       : DestructionConstruction<Ngh>{insert, 2},
         fitnessReward{fitnessReward},
         operatorSelection{operatorSelection},
-        firstIteration{true} {}
+        firstIteration{true},
+        printChoices{printChoices} {
+          std::cout << "runtime,d\n";
+        }
 
   using DestructionConstruction<Ngh>::destructionSize;
 
@@ -31,8 +39,13 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
                                  fitnessReward.previous());
       operatorSelection.update();
     }
+   
     firstIteration = false;
     int d = operatorSelection.selectOperator();
+    if (printChoices) {
+      time(sol);
+      std::cout << time.value() << ',' << d << '\n'; 
+    }
     destructionSize(d);
     return DestructionConstruction<Ngh>::operator()(sol);
   }

@@ -22,21 +22,6 @@ auto split(const std::string& val) -> std::vector<std::string> {
   return res;
 }
 
-auto splitDouble(const std::string& val) -> std::vector<double> {
-  std::vector<double> res;
-  std::stringstream ss(val);
-  std::string token;
-  while (std::getline(ss, token, ',')) {
-    try {
-      res.push_back(std::stod(token));
-    } catch (std::exception e) {
-      std::cerr << "Erro converting " << token << " to double.";
-      std::exit(1);
-    }
-  }
-  return res;
-}
-
 auto main(int argc, char* argv[]) -> int {
   eoParser parser(argc, argv);
 
@@ -46,7 +31,7 @@ auto main(int argc, char* argv[]) -> int {
   std::vector<std::string> problem_values;
   long seed = 123;
   std::vector<std::string> params_names;
-  std::vector<double> params_values;
+  std::vector<std::string> params_values;
 
   data_folder =
       parser.createParam(data_folder, "data_folder", "specs and instances path")
@@ -62,7 +47,7 @@ auto main(int argc, char* argv[]) -> int {
   params_names =
       split(parser.createParam(data_folder, "params_names", "parameters names")
                 .value());
-  params_values = splitDouble(
+  params_values = split(
       parser.createParam(data_folder, "params_values", "parameters values")
           .value());
 
@@ -70,7 +55,7 @@ auto main(int argc, char* argv[]) -> int {
   FSPProblemFactory::init(data_folder);
   RNG::seed(seed);
 
-  std::unordered_map<std::string, double> params;
+  std::unordered_map<std::string, std::string> params;
   for (unsigned i = 0; i < params_names.size(); i++) {
     params[params_names[i]] = params_values[i];
   }

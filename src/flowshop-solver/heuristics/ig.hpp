@@ -98,31 +98,7 @@ auto solveWithIG(Problem<Ngh>& prob,
       break;
   }
 
-  // initialization
-  eoInitPermutation<EOT> init0(N);
-  NEHInit<EOT> init1(fullEval, N, *compSS);
-  int cycle = 3;
-  NEHInitRandom<EOT> init2(fullEval, N, cycle, *compSS);
-  // FastNEH fastNeh(prob.getData());
-  // FastNEHRandom init2(prob.getData());
-  eoInit<EOT>* init = nullptr;
-
-  switch (params.categorical("IG.Init.Strat")) {
-    case 0:
-      init = &init0;
-      break;
-    case 1:
-      init = &init1;
-      break;
-    case 2:
-      init = &init2;
-      break;
-    default:
-      throw std::runtime_error(
-          "Unknonwn IG.Init.Strat value " +
-          std::to_string(params.categorical("IG.Init.Strat")));
-      break;
-  }
+  eoInit<EOT>* init = factory.buildInit();
 
   // neighborhood size
   const int min_nh_size = (N >= 20) ? 11 : 2;
@@ -298,7 +274,7 @@ auto solveWithIG(Problem<Ngh>& prob,
 
   InsertFirstBest<Ngh> insertDC{evalN};
   AdaptiveDestructionConstruction<Ngh> adaptiveDC(insertDC, *operator_selection,
-                                                  fitnessReward);
+                                                  fitnessReward, runOptions.printDestructionChoices);
   moMonOpPerturb<Ngh> perturb2(adaptiveDC, fullEval);
 
   moPerturbation<Ngh>* perturb;

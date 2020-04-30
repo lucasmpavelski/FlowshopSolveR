@@ -29,8 +29,8 @@ class FastNEH : public eoInit<FSP> {
     }
   }
 
-  virtual std::pair<int, FSP::Fitness> findInsertionPosition(FSP& sol,
-                                                             int jobToInsert) {
+  virtual auto findInsertionPosition(FSP& sol,
+                                                             int jobToInsert) -> std::pair<int, FSP::Fitness> {
     sol.push_back(jobToInsert);
     compiledSchedule.compile(fspData, sol);
     double minFit = std::numeric_limits<double>::infinity();
@@ -46,7 +46,11 @@ class FastNEH : public eoInit<FSP> {
     return {idxToInsert, minFit};
   }
 
-  virtual ivec getInitialOrder() { return totalProcTimes(fspData); }
+  virtual ivec getInitialOrder() {
+    FSP order;
+    SUM_PIJ(fspData, false, "incr")(order);
+    return std::move(order);
+  }
 };
 
 class FastNEHRandom : public FastNEH {
@@ -56,7 +60,8 @@ class FastNEHRandom : public FastNEH {
   using FastNEH::fspData;
   int cycle = 3;
   virtual ivec getInitialOrder() {
-    ivec order = totalProcTimes(fspData);
+    FSP order;
+    SUM_PIJ(fspData, false, "incr")(order);
     int n = fspData.noJobs();
     std::vector<int> a(cycle);
     std::generate(std::begin(a), std::end(a), [n]() { return rng.random(n); });
@@ -64,6 +69,6 @@ class FastNEHRandom : public FastNEH {
     for (int i = 0; i < cycle - 1; i++)
       order[a[i]] = order[a[i + 1]];
     order[a[cycle - 1]] = first;
-    return order;
+    return std::move(order);
   }
 };

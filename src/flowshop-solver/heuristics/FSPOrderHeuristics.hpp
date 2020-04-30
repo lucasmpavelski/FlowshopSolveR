@@ -9,7 +9,7 @@
 #include "flowshop-solver/problems/FSP.hpp"
 #include "flowshop-solver/problems/FSPData.hpp"
 
-class FSPOrderHeuristic : eoInit<FSP> {
+class FSPOrderHeuristic : public eoInit<FSP> {
  protected:
   const FSPData& fspData;
 
@@ -83,7 +83,7 @@ class FSPOrderHeuristic : eoInit<FSP> {
               [this](int i, int j) { return this->order[i] < this->order[j]; });
   }
 
-  auto w(int i) const -> int {
+  [[nodiscard]] auto w(int i) const -> int {
     return 1 + weighted & (fspData.noMachines() - i);
   }
 
@@ -118,13 +118,51 @@ struct ABS_DIF : public FSPOrderHeuristic {
   }
 };
 
+struct DEV_PIJ : public FSPOrderHeuristic {
+  using FSPOrderHeuristic::FSPOrderHeuristic;
+  auto sortingOrder() -> std::vector<double> override {
+    std::vector<double> pt(fspData.noJobs(), 0);
+    for (int j = 0; j < fspData.noJobs(); j++) {
+      double avg = 0;
+      for (int i = 0; i < fspData.noMachines(); i++)
+        avg += fspData.pt(j, i);
+      avg = avg / fspData.noMachines();
+      int dev = 0;
+      for (int i = 0; i < fspData.noMachines(); i++)
+        dev += std::pow(avg - fspData.pt(j, i), 2);
+      pt[j] = std::sqrt(dev);
+    }
+    return pt;
+  }
+};
+
+struct AVGDEV_PIJ : public FSPOrderHeuristic {
+  using FSPOrderHeuristic::FSPOrderHeuristic;
+  auto sortingOrder() -> std::vector<double> override {
+    std::vector<double> pt(fspData.noJobs(), 0);
+    for (int j = 0; j < fspData.noJobs(); j++) {
+      int avg = 0;
+      for (int i = 0; i < fspData.noMachines(); i++)
+        avg += fspData.pt(j, i);
+      avg = avg / fspData.noMachines();
+      int dev = 0;
+      for (int i = 0; i < fspData.noMachines(); i++) {
+        dev += std::pow(avg - fspData.pt(j, i), 2);
+      }
+      double std = std::sqrt((1.0 / (fspData.noMachines() - 1)) * dev);
+      pt[j] = avg + std;
+    }
+    return pt;
+  }
+};
+
 struct StinsonSmithFOH : public FSPOrderHeuristic {
   using FSPOrderHeuristic::FSPOrderHeuristic;
-  auto r(int j, int jl, int m) const -> int {
+  [[nodiscard]] auto r(int j, int jl, int m) const -> int {
     return fspData.pt(j, m) - fspData.pt(jl, m - 1);
   }
 
-  auto rs(int j, int jl, int m) const -> int {
+  [[nodiscard]] auto rs(int j, int jl, int m) const -> int {
     const auto carryOver = std::min(r(j, jl, m - 1), 0);
     return r(j, jl, m) + carryOver;
   }
@@ -277,36 +315,44 @@ struct RA_C3 : public RagendranFOH {
   }
 };
 
-class FSPOrderHeuristicFactory {
-  const FSPData& data;
 
- public:
-  FSPOrderHeuristicFactory(const FSPData& data) : data{data} {}
-
-  auto build(const std::string& name, bool weighted, const std::string order)
-      -> std::unique_ptr<FSPOrderHeuristic> {
+  /**
+   * FSP priority rule orders
+   * - sum_pij from the original NEH
+   * - dev_pig and avgdev_pij from An improved NEH-based heuristic for the permutation
+   * flowshop problem by Xingye Dong, Houkuan Huang and Ping Chen
+   * - remaining orders from Different initial sequences for the heuristic of
+   * Nawaz, Enscore and Ham to minimize makespan, idletime or flowtime in the
+   * static permutation flowshop sequencing problem by
+   * Jose M. Framinan, Rainer Leisten and Chandrasekharan Rajendran
+   */
+  inline auto buildPriority(const FSPData& data, const std::string& name, bool weighted, const std::string& order)
+      -> FSPOrderHeuristic* {
     if (name == "sum_pij")
-      return std::make_unique<SUM_PIJ>(data, weighted, order);
+      return new SUM_PIJ(data, weighted, order);
+    if (name == "dev_pij")
+      return new DEV_PIJ(data, weighted, order);
+    if (name == "avgdev_pij")
+      return new AVGDEV_PIJ(data, weighted, order);
     if (name == "abs_dif")
-      return std::make_unique<ABS_DIF>(data, weighted, order);
+      return new ABS_DIF(data, weighted, order);
     if (name == "ss_sra")
-      return std::make_unique<SS_SRA>(data, weighted, order);
+      return new SS_SRA(data, weighted, order);
     if (name == "ss_srs")
-      return std::make_unique<SS_SRS>(data, weighted, order);
+      return new SS_SRS(data, weighted, order);
     if (name == "ss_srn_rcn")
-      return std::make_unique<SS_SRN_RCN>(data, weighted, order);
+      return new SS_SRN_RCN(data, weighted, order);
     if (name == "ss_sra_rcn")
-      return std::make_unique<SS_SRA_RCN>(data, weighted, order);
+      return new SS_SRA_RCN(data, weighted, order);
     if (name == "ss_srs_rcn")
-      return std::make_unique<SS_SRS_RCN>(data, weighted, order);
+      return new SS_SRS_RCN(data, weighted, order);
     if (name == "ss_sra_2rcn")
-      return std::make_unique<SS_SRA_2RCN>(data, weighted, order);
+      return new SS_SRA_2RCN(data, weighted, order);
     if (name == "ra_c1")
-      return std::make_unique<RA_C1>(data, weighted, order);
+      return new RA_C1(data, weighted, order);
     if (name == "ra_c2")
-      return std::make_unique<RA_C2>(data, weighted, order);
+      return new RA_C2(data, weighted, order);
     if (name == "ra_c3")
-      return std::make_unique<RA_C3>(data, weighted, order);
-    return {nullptr};
-  }
+      return new RA_C3(data, weighted, order);
+    return nullptr;
 };

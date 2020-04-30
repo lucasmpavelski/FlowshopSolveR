@@ -11,6 +11,7 @@
 #include "flowshop-solver/problems/NIFSPEvalFunc.hpp"
 #include "flowshop-solver/problems/NWFSPEvalFunc.hpp"
 #include "flowshop-solver/problems/fastfspeval.hpp"
+#include "problems/FSPData.hpp"
 
 using FSPMax = eoInt<eoMaximizingFitness>;
 using FSPMin = eoInt<eoMinimizingFitness>;
@@ -33,6 +34,7 @@ class myBestSoFarStat : public moBestSoFarStat<EOT> {
 struct FSPProblem : public Problem<FSPNeighbor> {
   using EOT = FSP;
   using Ngh = FSPNeighbor;
+  FSPData _data;
   std::unique_ptr<FSPEvalFunc<EOT>> eval_func;
   eoEvalFuncCounter<EOT> eval_counter;
   std::unique_ptr<moEval<Ngh>> eval_neighbor;
@@ -48,16 +50,17 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   const std::string budget;
   const unsigned lower_bound;
 
-  FSPProblem(const FSPData& dt,
+  FSPProblem(FSPData dt,
              const std::string& type,
              const std::string& obj,
              std::string _budget,
              std::string _stopping_criterium,
              unsigned lower_bound = 0)
       : Problem<FSPNeighbor>(),
-        eval_func(getEvalFunc(type, obj, dt)),
+        _data{std::move(dt)},
+        eval_func(getEvalFunc(type, obj)),
         eval_counter(*eval_func),
-        eval_neighbor(getNeighborEvalFunc(type, obj, dt)),
+        eval_neighbor(getNeighborEvalFunc(type, obj)),
         eval_neighbor_counter(*eval_neighbor),
         stopping_criterium(std::move(_stopping_criterium)),
         budget(std::move(_budget)),
@@ -75,11 +78,12 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     return o;
   }
 
-  auto eval() -> eoEvalFuncCounter<EOT>& override { return eval_counter; }
+  auto eval() -> eoEvalFunc<EOT>& override { return eval_counter; }
   auto neighborEval() -> moEval<Ngh>& override { return eval_neighbor_counter; }
   auto continuator() -> moContinuator<Ngh>& override {
     return *continuator_ptr;
   }
+  auto data() const -> const FSPData& { return _data; }
 
   auto checkpoint() -> moCheckpoint<Ngh>& final { return *checkpoint_ptr; };
 
@@ -223,21 +227,20 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   }
 
   auto getEvalFunc(const std::string& type,
-                   const std::string& obj,
-                   const FSPData& dt) -> std::unique_ptr<FSPEvalFunc<EOT>> {
+                   const std::string& obj) -> std::unique_ptr<FSPEvalFunc<EOT>> {
     std::unique_ptr<FSPEvalFunc<EOT>> ret(nullptr);
     if (type == "PERM" && obj == "MAKESPAN") {
-      ret = std::make_unique<PermFSPEvalFunc<EOT>>(dt, Objective::MAKESPAN);
+      ret = std::make_unique<PermFSPEvalFunc<EOT>>(_data, Objective::MAKESPAN);
     } else if (type == "PERM" && obj == "FLOWTIME") {
-      ret = std::make_unique<PermFSPEvalFunc<EOT>>(dt, Objective::FLOWTIME);
+      ret = std::make_unique<PermFSPEvalFunc<EOT>>(_data, Objective::FLOWTIME);
     } else if (type == "NOWAIT" && obj == "MAKESPAN") {
-      ret = std::make_unique<NWFSPEvalFunc<EOT>>(dt, Objective::MAKESPAN);
+      ret = std::make_unique<NWFSPEvalFunc<EOT>>(_data, Objective::MAKESPAN);
     } else if (type == "NOWAIT" && obj == "FLOWTIME") {
-      ret = std::make_unique<NWFSPEvalFunc<EOT>>(dt, Objective::FLOWTIME);
+      ret = std::make_unique<NWFSPEvalFunc<EOT>>(_data, Objective::FLOWTIME);
     } else if (type == "NOIDLE" && obj == "MAKESPAN") {
-      ret = std::make_unique<NIFSPEvalFunc<EOT>>(dt, Objective::MAKESPAN);
+      ret = std::make_unique<NIFSPEvalFunc<EOT>>(_data, Objective::MAKESPAN);
     } else if (type == "NOIDLE" && obj == "FLOWTIME") {
-      ret = std::make_unique<NIFSPEvalFunc<EOT>>(dt, Objective::FLOWTIME);
+      ret = std::make_unique<NIFSPEvalFunc<EOT>>(_data, Objective::FLOWTIME);
     } else {
       throw std::runtime_error("No FSP problem for type " + type +
                                " and objective " + obj);
@@ -246,10 +249,9 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   }
 
   auto getNeighborEvalFunc(const std::string& type,
-                           const std::string& obj,
-                           const FSPData& dt) -> std::unique_ptr<moEval<Ngh>> {
+                           const std::string& obj) -> std::unique_ptr<moEval<Ngh>> {
     if (type == "PERM" && obj == "MAKESPAN") {
-      return std::make_unique<FastFSPNeighborEval>(dt, *eval_func);
+      return std::make_unique<FastFSPNeighborEval>(_data, *eval_func);
     } else {
       return std::make_unique<moFullEvalByCopy<Ngh>>(*eval_func);
     }

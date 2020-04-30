@@ -83,7 +83,7 @@ class FSPProblemFactory {
     const std::string objective = prob_data.at("objective");
     const std::string stopping_criterium = prob_data.at("stopping_criterium");
     unsigned lower_bound = getLowerBound(prob_data.at("instance"), objective);
-    return FSPProblem(data, type, objective, prob_data.at("budget"),
+    return FSPProblem(std::move(data), type, objective, prob_data.at("budget"),
                       stopping_criterium, lower_bound);
   }
 

@@ -35,13 +35,15 @@ class myTimeFitnessPrinter : public moStatBase<EOT> {
     best.fitness(std::numeric_limits<double>::max());
   }
 
-  void init(EOT&) override {
+  void init(EOT& sol) override {
     std::puts("runtime,fitness");
-    std::cout << timer.value() << ',' << best.fitness() << '\n';
+    if (!sol.invalid())
+      (*this)(sol);
   }
 
   void operator()(EOT& sol) final {
     if (compare(best, sol)) {
+      timer(sol);
       std::cout << timer.value() << ',' << sol.fitness() << '\n';
       best.fitness(sol.fitness());
     }

@@ -99,8 +99,13 @@ rewards <- experiments %>%
 rewards <- rewards %>%
   mutate(reward = finalFitness - initialFitness)
 
+```
 
-ggplot(rewards) +
+```{r}
+
+rewards %>%
+  filter(name %in% c("IG (d=2)", "IG (d=4)", "IG (d=8)")) %>%
+  ggplot() +
   facet_wrap(~instance, scales = "free") +
   geom_histogram(aes(x = reward, fill = name)) +
   theme(axis.text = element_blank(), 
@@ -108,8 +113,23 @@ ggplot(rewards) +
         legend.position = "bottom")
 ```
 
+
+```{r, results='asis'}
+rewards %>%
+  filter(instance ==  unique(rewards$instance)[4]) %>%
+  mutate(gi = name %in% c("IG (d=2)", "IG (d=4)", "IG (d=8)")) %>%
+  ggplot() +
+  facet_wrap(~gi) +
+  geom_histogram(aes(x = reward, fill = name)) +
+  theme(axis.text = element_blank(), 
+        axis.ticks = element_blank(),
+        legend.position = "bottom")
+```
+
+
 ```{r}
 rewards %>%
+  filter(name %in% c("IG (d=2)", "IG (d=4)", "IG (d=8)")) %>%
   sample_n(10000) %>%
   ggplot() +
     facet_wrap(~instance, scales = "free") +
@@ -123,9 +143,12 @@ rewards %>%
 
 ```{r}
 rewards %>%
+  filter(instance == "taillard_rand_500_20_01.dat") %>%
+  mutate(g1 = name %in% c("IG (d=2)", "IG (d=4)", "IG (d=8)", "IG MAB")) %>%
+  filter(g1) %>%
   ggplot() +
     facet_wrap(~instance, scales = "free") +
-    geom_smooth(aes(x = runtime, y = reward, color = name), method = "lm") +
+    geom_smooth(aes(x = runtime, y = reward, color = name, linetype = g1), method = "lm") +
     theme(axis.text = element_blank(), 
           axis.ticks = element_blank(),
           legend.position = "bottom")
