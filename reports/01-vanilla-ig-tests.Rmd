@@ -104,7 +104,7 @@ rewards <- rewards %>%
 ```{r}
 
 rewards %>%
-  filter(name %in% c("IG (d=2)", "IG (d=4)", "IG (d=8)")) %>%
+  filter(name %in% c("IGn (d=2)", "IGn (d=4)", "IGn (d=8)")) %>%
   ggplot() +
   facet_wrap(~instance, scales = "free") +
   geom_histogram(aes(x = reward, fill = name)) +
@@ -117,7 +117,7 @@ rewards %>%
 ```{r, results='asis'}
 rewards %>%
   filter(instance ==  unique(rewards$instance)[4]) %>%
-  mutate(gi = name %in% c("IG (d=2)", "IG (d=4)", "IG (d=8)")) %>%
+  mutate(gi = name %in% c("IGn (d=2)", "IGn (d=4)", "IGn (d=8)")) %>%
   ggplot() +
   facet_wrap(~gi) +
   geom_histogram(aes(x = reward, fill = name)) +
@@ -143,8 +143,8 @@ rewards %>%
 
 ```{r}
 rewards %>%
-  filter(instance == "taillard_rand_500_20_01.dat") %>%
-  mutate(g1 = name %in% c("IG (d=2)", "IG (d=4)", "IG (d=8)", "IG MAB")) %>%
+  filter(instance == "taillard_rand_50_20_01.dat") %>%
+  mutate(g1 = name %in% c("IGn (d=2)", "IGn (d=4)", "IGn (d=8)", "IG MAB")) %>%
   filter(g1) %>%
   ggplot() +
     facet_wrap(~instance, scales = "free") +

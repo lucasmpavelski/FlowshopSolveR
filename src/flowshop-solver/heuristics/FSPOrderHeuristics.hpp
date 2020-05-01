@@ -76,11 +76,11 @@ class FSPOrderHeuristic : public eoInit<FSP> {
     }
 
     std::sort(begin(sol), end(sol), [this](int i, int j) {
-      return this->indicator[i] < this->indicator[j];
+      return this->indicator[order[i]] < this->indicator[order[j]];
     });
 
-    std::sort(begin(sol), end(sol),
-              [this](int i, int j) { return this->order[i] < this->order[j]; });
+    // std::sort(begin(sol), end(sol),
+    //         [this](int i, int j) { return this->order[i] < this->order[j]; });
   }
 
   [[nodiscard]] auto w(int i) const -> int {

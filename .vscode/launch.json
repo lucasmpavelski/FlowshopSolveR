@@ -15,7 +15,24 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/main/refine",
             "args": [],
-        } //,
+        },
+        {
+            "name": "fsp_solver_example",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/main/fsp_solver",
+            "args": [
+                "--data_folder=${workspaceFolder}/data",
+                "--mh=IG",
+                "--problem_names=problem,type,objective,budget,stopping_criterium,instance",
+                "--problem_values=FSP,PERM,MAKESPAN,med,FIXEDTIME,taillard_rand_100_10_01.dat",
+                "--params_names=IG.Init,IG.Init.NEH.Priority,IG.Init.NEH.PriorityOrder,IG.Init.NEH.PriorityWeighted,IG.Init.NEH.Insertion,IG.Comp.Strat,IG.Neighborhood.Size,IG.Neighborhood.Strat,IG.Local.Search,IG.Accept,IG.Accept.Temperature,IG.Algo,IG.Destruction.Size,IG.LS.Single.Step,IG.LSPS.Local.Search,IG.LSPS.Single.Step,IG.AOS.Strategy",
+                "--params_values=neh,sum_pij,incr,0,first_best,0,9.9999,0,3,temperature,0.5,0,8,0,0,0,probability_matching",
+                "--printFitnessReward"
+            ],
+        }
+        
+        //,
         // {
         //     "name": "(gdb) Launch",
         //     "type": "cppdbg",

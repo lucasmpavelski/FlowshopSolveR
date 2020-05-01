@@ -486,13 +486,12 @@ TEST(Heuristic, FSPOrderHeuristics) {
                                      "hill",    "hi_hilo", "hi_lohi",
                                      "lo_hilo", "lo_lohi"};
   FSPData dt(20, 5);
-  FSPOrderHeuristicFactory factory(dt);
   FSP sol;
   for (const auto& name : names) {
     for (const auto& order : orders) {
-      auto init = factory.build(name, false, order);
+      auto init = buildPriority(dt, name, false, order);
       (*init)(sol);
-      auto initw = factory.build(name, true, order);
+      auto initw = buildPriority(dt, name, true, order);
       (*initw)(sol);
     }
   }

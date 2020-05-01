@@ -27,7 +27,8 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
         operatorSelection{operatorSelection},
         firstIteration{true},
         printChoices{printChoices} {
-          std::cout << "runtime,d\n";
+          if (printChoices)
+            std::cout << "runtime,d\n";
         }
 
   using DestructionConstruction<Ngh>::destructionSize;
