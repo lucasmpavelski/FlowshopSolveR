@@ -14,7 +14,7 @@ class ThompsonSampling : public OperatorSelection<OpT> {
   int opIdx = 0;
 
  public:
-  ThompsonSampling(const std::vector<OpT>& strategies, int noSamples = 1000)
+  ThompsonSampling(const std::vector<OpT>& strategies, int noSamples = 1)
       : OperatorSelection<OpT>{strategies},
         alphas(strategies.size()),
         betas(strategies.size()),
@@ -25,8 +25,8 @@ class ThompsonSampling : public OperatorSelection<OpT> {
 
   void update() final{};
 
-  void feedback(const double cf, const double pf) final {
-    if (cf > pf) {
+  void feedback(const double pf, const double cf) final {
+    if (cf < pf) {
       alphas[opIdx]++;
     } else {
       betas[opIdx]++;
@@ -46,7 +46,7 @@ class ThompsonSampling : public OperatorSelection<OpT> {
     opIdx = 0;
     double maxSample = 0.0;
     for (int i = 0; i < noOperators(); i++) {
-      beta_distribution<double> dist(alphas[i], betas[i]);
+      beta_distribution<double> dist(alphas[i] + 1, betas[i] + 1);
       double meanSample = 0;
       for (int j = 0; j < noSamples; j++) {
         meanSample += dist(RNG::engine) / noSamples;
@@ -57,5 +57,10 @@ class ThompsonSampling : public OperatorSelection<OpT> {
       }
     }
     return getOperator(opIdx);
+  }
+
+  void reset(double) override {
+    alphas.assign(noOperators(), 0);
+    betas.assign(noOperators(), 0);
   }
 };

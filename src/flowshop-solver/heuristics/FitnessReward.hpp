@@ -1,52 +1,86 @@
 #pragma once
 
+#include <continuator/moStat.h>
+#include <continuator/moStatBase.h>
+#include <eoExceptions.h>
 #include <paradiseo/mo/mo>
+#include <stdexcept>
+#include <utility>
 
 #include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 
 template <class EOT>
-class FitnessReward : public moStatBase<EOT> {
-  bool firstIteration = true;
-  double initialFitness = -1;
-  double finalFitness = -1;
-  myTimeStat<EOT>& timer;
-  bool print = false;
+struct FitnessPair : public moStat<EOT, std::pair<double, double>> {
+  FitnessPair()
+      : moStat<EOT, std::pair<double, double>>{
+            std::make_pair(-1.0, -1.0),
+            "Pair of the initial and final fitness"} {}
 
- public:
-  FitnessReward(myTimeStat<EOT>& timer, bool print = false)
-      : timer{timer}, print{print} {
-    if (print) {
-      std::puts("runtime,initialFitness,finalFitness\n");
-    }
-  }
+  using moStat<EOT, std::pair<double, double>>::value;
 
   void init(EOT& sol) final {
-    // discart first iteration (no destruction to be rewarded)
-    if (sol.invalid() || firstIteration) {
-      firstIteration = false;
+    if (sol.invalid()) {
       return;
     }
-    initialFitness = sol.fitness();
+    value().first = sol.fitness();
   }
 
   void operator()(EOT&) final {}
 
   void lastCall(EOT& sol) final {
-    timer(sol);
     if (sol.invalid())
       return;
-    finalFitness = sol.fitness();
-    if (print) {
-      std::cout << timer.value() << ',' << initialFitness << ',' << finalFitness
-                << '\n';
-    }
+    value().second = sol.fitness();
+  }
+};
+
+
+template <class EOT>
+struct FitnessPairTime : public moStat<EOT, std::pair<double, double>> {
+  FitnessPairTime()
+      : moStat<EOT, std::pair<double, double>>{
+            std::make_pair(-1.0, -1.0),
+            "Pair of the initial and final fitness"} {}
+
+  using moStat<EOT, std::pair<double, double>>::value;
+
+
+  void operator()(EOT& sol) final {
+    value().second = value().first;
+    value().first = sol.fitness();
+  }
+};
+
+template <class EOT>
+class FitnessRewards {
+  FitnessPair<EOT> local;
+  FitnessPairTime<EOT> global;
+
+  auto throwIfInvalid(double val) const {
+    if (val == -1)
+      throw eoInvalidFitnessError{};
+    return val;
   }
 
-  auto isAvailable() const -> bool {
-    return !firstIteration && initialFitness != -1 && finalFitness != -1;
+ public:
+  auto localStat() -> moStatBase<EOT>& { return local; }
+
+  auto globalStat() -> moStatBase<EOT>& { return global; }
+
+  [[nodiscard]] auto initialLocal() const -> double {
+    return throwIfInvalid(local.value().first);
   }
 
-  auto current() const -> double { return finalFitness; }
-  auto previous() const -> double { return initialFitness; }
+  [[nodiscard]] auto lastLocal() const -> double {
+    return throwIfInvalid(local.value().second);
+  }
+
+  [[nodiscard]] auto initialGlobal() const -> double {
+    return throwIfInvalid(global.value().second);
+  }
+
+  [[nodiscard]] auto lastGlobal() const -> double {
+    return throwIfInvalid(global.value().first);
+  }
 };

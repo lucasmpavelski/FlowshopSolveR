@@ -12,7 +12,7 @@ EXECUTABLE <- file.path(ROOT, 'build', 'main', 'fsp_solver')
 
 
 # datasets
-problems <- read_csv(file.path(EXPR, 'problems.csv'))
+problems <- read_csv(file.path(EXPR, 'problems.csv'), comment = "#")
 configs <- read_csv(file.path(EXPR, 'configs.csv'), comment = "#")
 
 # auxiliar functions
@@ -42,7 +42,10 @@ solveCmd <- function(mh, seed, params, output, core, ...) {
     paste0('--params_values=', paste0(params, collapse = ',')),
     '--printBestFitness'
   )
-  system2(exe_bin, args, stdout = output)
+  print(paste0(c('START', exe_bin, args), collapse = ' '))
+  data <- system2(exe_bin, args, stdout = TRUE)
+  print(paste0(c('DONE', exe_bin, args), collapse = ' '))
+  write_lines(data, output)
 }
 
 
@@ -65,7 +68,7 @@ experiments %>%
 
 walk(file.path(EXPR, configs$name), dir.create, showWarnings = F)
 
-ncores <- 3
+ncores <- 4
 
 experiments <- experiments %>%
   mutate(core = seq_len(nrow(experiments)) %% ncores) 

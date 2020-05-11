@@ -36,7 +36,6 @@ class myTimeFitnessPrinter : public moStatBase<EOT> {
   }
 
   void init(EOT& sol) override {
-    std::puts("runtime,fitness");
     if (!sol.invalid())
       (*this)(sol);
   }
@@ -58,17 +57,19 @@ auto runExperiment(eoInit<EOT>& init,
   myTimeStat<EOT> timer;
   myTimeFitnessPrinter<EOT> timeFitness{timer};
   if (options.printBestFitness) {
+    std::puts("runtime,fitness");
     prob.checkpointGlobal().add(timeFitness);
   }
-  FitnessReward<EOT> printReward{timer, true};
-  if (options.printFitnessReward) {
-    prob.checkpoint().add(printReward);
-  }
+  // LocalFitnessReward<EOT> printReward{timer, options.printFitnessReward};
+  // if (options.printFitnessReward) {
+  //  prob.checkpoint().add(printReward);
+  //}
 
   EOT sol;
-  prob.checkpoint().init(sol);
   double time = Measure<>::execution([&]() {
     init(sol);
+    prob.checkpoint().init(sol);
+    prob.checkpointGlobal().init(sol);
     algo(sol);
   });
   Result res;

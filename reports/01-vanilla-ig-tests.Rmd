@@ -9,15 +9,15 @@ Compare different IG configurations, with destruction size $d \in \{2, 4, 8, 12\
 # loading data
 source(here::here("R/read_runs.R"), verbose = F)
 
-runs <- read_runs("aos-ig") %>%
+runs <- read_runs("rs-ig-destruction-sizes") %>%
   filter(name != "IG1(d=2)") %>%
   filter(name != "IG1MAB")
 bounds <- read_csv(here::here("data", 'taillard_instances.csv'))
 
-runs$name <- factor(runs$name, levels = c(
-  "IG (d=2)", "IG (d=4)", "IG (d=8)", "IG (d=12)", "IG LinUCB", 
-"IG LSPS", "IG MAB", "IG PM", "IG RND", "IG TS"
-))
+# runs$name <- factor(runs$name, levels = c(
+#   "IG (d=2)", "IG (d=4)", "IG (d=8)", "IG (d=12)", "IG LinUCB", 
+# "IG LSPS", "IG MAB", "IG PM", "IG RND", "IG TS"
+# ))
 
 bounds <- bounds %>%
   mutate(
@@ -62,10 +62,118 @@ results %>%
     n = n()
   ) %>%
   ggplot(aes(x = name)) +
-  geom_errorbar(aes(y = mean_rpd, ymin = mean_rpd - ci, ymax = mean_rpd + ci))
+  geom_errorbar(aes(y = mean_rpd, ymin = mean_rpd - ci, ymax = mean_rpd + ci)) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 # results %>% filter(instance == 'taillard_rand_50_20_09.dat', name == 'IG (d=4)') %>% pull(runs) %>% last
 ```
+
+
+## Reward types
+
+
+IteratedGreedy:
+  sol = Init()
+  sol' = sol
+  sol'' = sol
+  while (!StoppingCriterion()) :
+    sol' = sol
+    sol' = Destruction(sol')
+    sol' = Construction(sol')
+    sol'' = LocalSearch(sol')
+    if (AcceptanceCriterion(sol'', sol))
+      sol = sol''
+
+
+
+IteratedGreedy:
+  sol_0 = Init()
+  sol_0' = sol_0
+  sol_0'' = sol_0
+  while (!StoppingCriterion()) :
+    d = OperatorSelection(Reward())
+    sol_t' = Construction(Destruction(sol_t, d))
+    sol_t'' = LocalSearch(sol_t')
+    sol_t+1 = Accept(sol_t'', sol_t)
+    Feedback(sol_t, sol_t', sol_t'', sol_t+1)
+
+Reward0: Fintess(sol_t) -  Fitness(sol_t+1)
+Reward1: Fitness(sol_t) -  Fitness(sol_t'')
+Reward2: Fitness(sol_t') - Fitness(sol_t+1)
+Reward3: Fitness(sol_t') - Fitness(sol_t'')
+
+
+```{r}
+reward_types_runs <- read_runs("compare-reward-types") %>%
+  filter(map_lgl(runs, ~nrow(.x) > 0)) %>%
+ inner_join(bounds, by = c("objective", "instance")) %>%
+ mutate(
+   max_runtime = no_jobs * no_machines * 60,
+   best_fitness60 = map_dbl(runs, ~.x %>% pull(fitness) %>% last),
+   best_fitness10 = map2_dbl(runs, max_runtime,
+                             ~.x %>% filter(runtime <= .y / 6)
+                                 %>% pull(fitness)
+                                 %>% last),
+   rpd60 = 100 * (best_fitness60 - upper_bound) / upper_bound,
+   rpd10 = 100 * (best_fitness10 - upper_bound) / upper_bound
+ )
+
+reward_types_runs %>%
+  group_by(objective, budget, name) %>%
+  summarise(
+    mean_rpd = mean(rpd60),
+    ci = sd(rpd60) * sqrt(1 / (2 * n())),
+    n = n()
+  ) %>%
+  ggplot(aes(x = name)) +
+  geom_errorbar(aes(y = mean_rpd, ymin = mean_rpd - ci, ymax = mean_rpd + ci)) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+
+```{r}
+folder <- here::here("runs", "reward-distributions")
+experiments <- read_csv(
+  file.path(folder, "experiments.csv"),
+  col_types =
+    cols(
+      problem = col_character(),
+      type = col_character(),
+      objective = col_character(),
+      budget = col_character(),
+      stopping_criterium = col_character(),
+      instance = col_character(),
+      name = col_character(),
+      mh = col_character(),
+      params = col_character(),
+      seed = col_double(),
+      output = col_character()
+    )
+  ) %>%
+  mutate(runs = map(output, read_csv, 
+                    col_types = cols(
+                      runtime = col_double(),
+                      ig = col_double(),
+                      lg = col_double(),
+                      il = col_double(),
+                      ll = col_double())))
+
+
+rw_dists <- experiments %>%
+  unnest(runs)
+
+rw_dists <- rw_dists %>%
+  mutate(
+    r0 = lg - ig,
+    r1 = lg - il,
+    r2 = lg - ig,
+    r3 = lg - il
+  )
+
+```
+
+
 
 ```{r}
 folder <- here::here("runs", "rewards")
@@ -97,7 +205,9 @@ rewards <- experiments %>%
   unnest(runs)
 
 rewards <- rewards %>%
-  mutate(reward = finalFitness - initialFitness)
+  mutate(
+    reward = finalFitness - initialFitness
+  )
 
 ```
 
@@ -116,10 +226,9 @@ rewards %>%
 
 ```{r, results='asis'}
 rewards %>%
-  filter(instance ==  unique(rewards$instance)[4]) %>%
-  mutate(gi = name %in% c("IGn (d=2)", "IGn (d=4)", "IGn (d=8)")) %>%
+  filter(name %in% c("IGn (d=2)", "IGn (d=4)", "IGn (d=8)")) %>%
   ggplot() +
-  facet_wrap(~gi) +
+  facet_wrap(~instance, scales = "free") +
   geom_histogram(aes(x = reward, fill = name)) +
   theme(axis.text = element_blank(), 
         axis.ticks = element_blank(),
@@ -143,7 +252,6 @@ rewards %>%
 
 ```{r}
 rewards %>%
-  filter(instance == "taillard_rand_50_20_01.dat") %>%
   mutate(g1 = name %in% c("IGn (d=2)", "IGn (d=4)", "IGn (d=8)", "IG MAB")) %>%
   filter(g1) %>%
   ggplot() +

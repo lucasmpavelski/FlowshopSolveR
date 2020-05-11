@@ -1,7 +1,7 @@
 library(tidyverse)
 library(here)
 
-read_runs <- function(runs_folder) {
+read_runs <- function(runs_folder, skip = 0) {
   folder <- here::here("runs", runs_folder)
   experiments <- read_csv(
     file.path(folder, "experiments.csv"),
@@ -20,7 +20,9 @@ read_runs <- function(runs_folder) {
         output = col_character()
       )
     ) %>%
-    mutate(runs = map(output, read_csv, 
+    filter(file.exists(output)) %>%
+    mutate(runs = map(output, read_csv,
+                      skip = skip,
                       col_types = cols(
                         runtime = col_double(),
                         fitness = col_double())))

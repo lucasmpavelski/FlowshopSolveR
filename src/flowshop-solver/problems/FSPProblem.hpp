@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
@@ -24,11 +25,16 @@ using FSP = FSPMin;
 
 template <class EOT>
 class myBestSoFarStat : public moBestSoFarStat<EOT> {
+bool reinit;
+
  public:
-  myBestSoFarStat(bool _reInitSol = true) : moBestSoFarStat<EOT>(_reInitSol) {}
+  myBestSoFarStat(bool _reInitSol = true) : moBestSoFarStat<EOT>(_reInitSol), reinit{_reInitSol} {}
 
   using moBestSoFarStat<EOT>::operator();
-  void lastCall(EOT& sol) final { operator()(sol); }
+  
+  void lastCall(EOT& sol) final { 
+    operator()(sol);
+  }
 };
 
 struct FSPProblem : public Problem<FSPNeighbor> {

@@ -60,7 +60,7 @@ struct SlidingWindow {
       return curr != rhs.curr || done != rhs.done;
     }
 
-    auto operator-> () -> Itr { return curr; }
+    auto operator->() -> Itr { return curr; }
     auto operator*() -> reference { return *curr; }
   };
 
@@ -79,16 +79,16 @@ struct SlidingWindow {
     return iterator<it_type, T>(data.begin(), data.end(), curr_begin, true);
   }
 
-  auto begin() const -> iterator<it_type, const T> {
+  [[nodiscard]] auto begin() const -> iterator<it_type, const T> {
     return iterator<it_type, const T>(data.begin(), data.end(), curr_begin,
                                       false);
   }
-  auto end() const -> iterator<it_type, const T> {
+  [[nodiscard]] auto end() const -> iterator<it_type, const T> {
     return iterator<it_type, const T>(data.begin(), data.end(), curr_begin,
                                       true);
   }
 
-  auto size() const -> std::size_t { return data.size(); }
+  [[nodiscard]] auto size() const -> std::size_t { return data.size(); }
 
   auto operator[](const size_type& index) -> T& { return data[index]; }
   auto operator[](const size_type& index) const -> const T& {
@@ -139,7 +139,7 @@ class FRRMAB : public OperatorSelection<OpT> {
   using OperatorSelection<OpT>::noOperators;
 
   FRRMAB(const std::vector<OpT>& strategies,
-         const int window_size = 5,
+         const int window_size = 50,
          // const double scale = 5.0, const double decay = 1.0 //1st conf
          // const double scale = 1.0, const double decay = 0.5 //2nd conf
          const double scale = 5.0,
@@ -161,14 +161,80 @@ class FRRMAB : public OperatorSelection<OpT> {
     reset(0.0);
   };
 
-  void reset(double d) final;
-
-  void update() final { std::fill(fir.begin(), fir.end(), 0.0); };
-  auto selectOperator() -> OpT& final;
-  void feedback(const double cf, const double pf) final {
-    if (cf < pf)
-      fir[last_op] += (pf - cf) / pf;
+  void reset(double) final {
+    last_op = -1;
+    fir_records.clear(Indexed<double>(-1, 0.0));
+    using std::fill;
+    fir = 0;
+    fill(frr.begin(), frr.end(), 0.0);
+    fill(reward.begin(), reward.end(), 0.0);
+    fill(num.begin(), num.end(), 0);
+    fill(not_selected.begin(), not_selected.end(), true);
+    unused_operators_exist = true;
   };
+
+  void update() final {
+    std::fill(reward.begin(), reward.end(), 0.0);
+    std::fill(num.begin(), num.end(), 0);
+
+    fir_records.append(Indexed<double>(fir, last_op));
+    for (const auto& el : fir_records) {
+      if (el.idx >= 0) {
+        reward[el.idx] += el.val;
+        num[el.idx]++;
+      }
+    }
+    
+    std::iota(ranks.begin(), ranks.end(), 0);
+    std::sort(ranks.begin(), ranks.end(), [this](const int& a, const int& b) {
+      return this->reward[a] > this->reward[b];
+    });
+    for (auto& r : ranks) r++;
+
+    last_op = -1;
+    double sum = 0.0;
+    for (int i = 0; i < noOperators(); ++i) {
+      frr[i] = intpow(decay, ranks[i]) * reward[i];
+      sum += frr[i];
+    }
+    if (sum > 0.0) {
+      for (int i = 0; i < noOperators(); ++i)
+        frr[i] = frr[i] / sum;
+    }
+
+    fir = 0;
+  }
+
+  auto selectOperator() -> OpT& final {
+    int idx = -1;
+
+    if (unused_operators_exist) {
+      idx = RNG::intUniform(0, noOperators() - 1);
+      not_selected[idx] = false;
+      unused_operators_exist =
+          std::any_of(not_selected.begin(), not_selected.end(),
+                      [](const bool b) { return b; });
+    } else {
+      double max_opt = -std::numeric_limits<double>::infinity();
+      const double log_sum = 2.0 * log(sum(num.data(), num.size()));
+      for (int i = 0; i < noOperators(); ++i) {
+        if (num[i] > 0) {
+          const double opt = frr[i] + scale * sqrt(log_sum / num[i]);
+          if (opt > max_opt) {
+            max_opt = opt;
+            idx = i;
+          }
+        }
+      }
+      assert(idx != -1);
+    }
+    last_op = idx;
+    return this->getOperator(idx);
+  }
+
+  void feedback(const double pf, const double cf) final {
+    fir += (pf - cf) / pf;
+  }
 
   auto printOn(std::ostream& os) -> std::ostream& final {
     os << "  strategy: FRRMAB\n"
@@ -179,8 +245,6 @@ class FRRMAB : public OperatorSelection<OpT> {
   }
 
  private:
-  void assignCredits();
-
   auto intpow(double base, int exp) -> double {
     double result = 1.0;
     while (exp != 0) {
@@ -203,7 +267,7 @@ class FRRMAB : public OperatorSelection<OpT> {
   using int_vec = std::vector<int>;
   using bool_vec = std::vector<bool>;
 
-  real_vec fir;
+  double fir;
   real_vec frr;
   real_vec reward;
   int_vec num;
@@ -212,80 +276,6 @@ class FRRMAB : public OperatorSelection<OpT> {
   bool_vec not_selected;
   bool unused_operators_exist;
 };
-
-template <typename OpT>
-void FRRMAB<OpT>::reset(double) {
-  last_op = -1;
-  fir_records.clear(Indexed<double>(-1, 0.0));
-  using std::fill;
-  fill(fir.begin(), fir.end(), 0.0);
-  fill(frr.begin(), frr.end(), 0.0);
-  fill(reward.begin(), reward.end(), 0.0);
-  fill(num.begin(), num.end(), 0);
-  fill(not_selected.begin(), not_selected.end(), true);
-  unused_operators_exist = true;
-};
-
-template <typename OpT>
-auto FRRMAB<OpT>::selectOperator() -> OpT& {
-  if (last_op != -1)
-    assignCredits();
-
-  int idx = -1;
-
-  if (unused_operators_exist) {
-    idx = RNG::intUniform(0, noOperators() - 1);
-    not_selected[idx] = false;
-    unused_operators_exist =
-        std::any_of(not_selected.begin(), not_selected.end(),
-                    [](const bool b) { return b; });
-  } else {
-    double max_opt = -std::numeric_limits<double>::infinity();
-    const double log_sum = 2.0 * log(sum(num.data(), num.size()));
-    for (int i = 0; i < noOperators(); ++i) {
-      if (num[i] > 0) {
-        const double opt = frr[i] + scale * sqrt(log_sum / num[i]);
-        if (opt > max_opt) {
-          max_opt = opt;
-          idx = i;
-        }
-      }
-    }
-    assert(idx != -1);
-  }
-  last_op = idx;
-  return this->getOperator(idx);
-}
-
-template <typename OpT>
-void FRRMAB<OpT>::assignCredits() {
-  std::fill(reward.begin(), reward.end(), 0.0);
-  std::fill(num.begin(), num.end(), 0);
-
-  fir_records.append(Indexed<double>(last_op, fir[last_op]));
-  for (const auto& el : fir_records) {
-    if (el.idx >= 0) {
-      reward[el.idx] += el.val;
-      num[el.idx]++;
-    }
-  }
-
-  std::iota(ranks.begin(), ranks.end(), 0);
-  std::sort(ranks.begin(), ranks.end(), [this](const int& a, const int& b) {
-    return this->reward[a] > this->reward[b];
-  });
-
-  last_op = -1;
-  double sum = 0.0;
-  for (int i = 0; i < noOperators(); ++i) {
-    frr[i] = intpow(decay, ranks[i]) * reward[i];
-    sum += frr[i];
-  }
-  if (sum > 0.0) {
-    for (int i = 0; i < noOperators(); ++i)
-      frr[i] = frr[i] / sum;
-  }
-}
 
 template <typename OpT>
 auto operator<<(std::ostream& os, FRRMAB<OpT> const& fm) -> std::ostream& {

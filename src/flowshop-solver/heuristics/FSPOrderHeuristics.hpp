@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <algorithm>
@@ -76,11 +77,12 @@ class FSPOrderHeuristic : public eoInit<FSP> {
     }
 
     std::sort(begin(sol), end(sol), [this](int i, int j) {
-      return this->indicator[order[i]] < this->indicator[order[j]];
+      return this->indicator[i] < this->indicator[j];
     });
 
-    // std::sort(begin(sol), end(sol),
-    //         [this](int i, int j) { return this->order[i] < this->order[j]; });
+    FSP tmp = sol;
+    for (unsigned i = 0; i < sol.size(); i++)
+      sol[i] = tmp[order[i]];
   }
 
   [[nodiscard]] auto w(int i) const -> int {

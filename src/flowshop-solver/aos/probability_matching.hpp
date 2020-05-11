@@ -112,7 +112,7 @@ auto ProbabilityMatching<OpT>::selectOperator() -> OpT& {
 }
 
 template <typename OpT>
-void ProbabilityMatching<OpT>::feedback(const double cf, const double pf) {
+void ProbabilityMatching<OpT>::feedback(const double pf, const double cf) {
   if (cf < pf) {
     const double n = (pf - cf) / pf;
     //((best_fitness + 10e-12) / (cf + 10e-12)) * (pf - cf);

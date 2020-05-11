@@ -2,6 +2,7 @@
 
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
+#include <string>
 
 #include "flowshop-solver/MHParamsValues.hpp"
 #include "flowshop-solver/aos/frrmab.hpp"
@@ -29,6 +30,7 @@
 
 #include "flowshop-solver/RunOptions.hpp"
 #include "flowshop-solver/eoFactory.hpp"
+#include "heuristics/FitnessReward.hpp"
 
 template <class OpT>
 class OperatorSelectionFactory {
@@ -111,17 +113,12 @@ auto solveWithIG(Problem<Ngh>& prob,
   moOrderNeighborhood<Ngh> neighborhood0(nh_size);
   moRndWithoutReplNeighborhood<Ngh> neighborhood1(nh_size);
   moNeighborhood<Ngh>* neighborhood = nullptr;
-  switch (params.categorical("IG.Neighborhood.Strat")) {
-    case 0:
-      neighborhood = &neighborhood0;
-      break;
-    case 1:
-      neighborhood = &neighborhood1;
-      break;
-    default:
-      assert(false);
-      break;
-  }
+  const std::string neighborhoodStrat =
+      params.categoricalName("IG.Neighborhood.Strat");
+  if (neighborhoodStrat == "ordered")
+    neighborhood = &neighborhood0;
+  else if (neighborhoodStrat == "random")
+    neighborhood = &neighborhood1;
 
   // algos xxHC
   moFirstImprHC<Ngh> algo0(*neighborhood, fullEval, evalN, checkpoint, *compNN,
@@ -145,7 +142,7 @@ auto solveWithIG(Problem<Ngh>& prob,
   }
 
   BestInsertionExplorer<EOT> igexplorer(evalN, neighborhoodCheckpoint, *compNN,
-                                        *compSN);
+                                        *compSN, fromString(neighborhoodStrat));
   moLocalSearch<Ngh> algo3(igexplorer, checkpoint, fullEval);
   // IGexplorerWithRepl<Ngh> igWithReplexplorer(fullEval, N, *compSS); //
   // iterative greedy improvement with replacement moLocalSearch<Ngh>
@@ -249,11 +246,10 @@ auto solveWithIG(Problem<Ngh>& prob,
                                            destruction_size, *compSS);
   moMonOpPerturb<Ngh> perturb1(igLSPS, fullEval);
 
-  myTimeStat<EOT> timer;
-  FitnessReward<EOT> fitnessReward{timer};
-  checkpoint.add(fitnessReward);
-
   FitnessHistory<EOT> fitnessHistory;
+  FitnessRewards<EOT> rewards;
+  checkpoint.add(rewards.localStat());
+  checkpointGlobal.add(rewards.globalStat());
 
   if (params.categorical("IG.AOS.Strategy") == 2) {
     checkpoint.add(fitnessHistory);
@@ -273,8 +269,12 @@ auto solveWithIG(Problem<Ngh>& prob,
   auto operator_selection{osf.create(destruction_sizes, params, context)};
 
   InsertFirstBest<Ngh> insertDC{evalN};
-  AdaptiveDestructionConstruction<Ngh> adaptiveDC(insertDC, *operator_selection,
-                                                  fitnessReward, runOptions.printDestructionChoices);
+  AdaptiveDestructionConstruction<Ngh> adaptiveDC(
+      insertDC, *operator_selection, rewards,
+      params.categorical("IG.AOS.RewardType"),
+      runOptions.printFitnessReward,
+      runOptions.printDestructionChoices
+    );
   moMonOpPerturb<Ngh> perturb2(adaptiveDC, fullEval);
 
   moPerturbation<Ngh>* perturb;

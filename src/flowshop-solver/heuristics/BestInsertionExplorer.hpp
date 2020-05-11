@@ -8,6 +8,18 @@
 #include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 #include "flowshop-solver/problems/FSP.hpp"
 
+enum class NeighborhoodType { random, ordered };
+
+template <class CharT>
+auto fromString(const std::basic_string<CharT> str) -> NeighborhoodType {
+  if (str == "random")
+    return NeighborhoodType::random;
+  else if (str == "ordered")
+    return NeighborhoodType::ordered;
+  assert(false);
+  return NeighborhoodType::ordered;
+}
+
 template <class EOT>
 class BestInsertionExplorer
     : public moNeighborhoodExplorer<myShiftNeighbor<EOT>> {
@@ -17,30 +29,36 @@ class BestInsertionExplorer
   moNeighborComparator<Ngh>& neighborComparator;
   moSolNeighborComparator<Ngh>& solNeighborComparator;
 
-  // true if the solution has changed
   moEval<Ngh>& neighborEval;
+  const NeighborhoodType neighborhoodType;
+
   bool improve;
   bool LO;
   std::vector<int> RandJOB;
   unsigned k;
 
  public:
-  BestInsertionExplorer(moEval<Ngh>& neighborEval,
-                        NeigborhoodCheckpoint<Ngh>& neighborhoodCheckpoint,
-                        moNeighborComparator<Ngh>& neighborComparator,
-                        moSolNeighborComparator<Ngh>& solNeighborComparator)
+  BestInsertionExplorer(
+      moEval<Ngh>& neighborEval,
+      NeigborhoodCheckpoint<Ngh>& neighborhoodCheckpoint,
+      moNeighborComparator<Ngh>& neighborComparator,
+      moSolNeighborComparator<Ngh>& solNeighborComparator,
+      NeighborhoodType neighborhoodType = NeighborhoodType::random)
       : moNeighborhoodExplorer<Ngh>{},
         neighborhoodCheckpoint{neighborhoodCheckpoint},
         neighborComparator{neighborComparator},
         solNeighborComparator{solNeighborComparator},
-        neighborEval{neighborEval} {}
+        neighborEval{neighborEval},
+        neighborhoodType{neighborhoodType} {}
 
   void initParam(EOT& _solution) final {
     improve = false;
     LO = false;
     RandJOB = _solution;
-    std::shuffle(RandJOB.begin(), RandJOB.end(),
-                 ParadiseoRNGFunctor<unsigned int>());
+    if (neighborhoodType == NeighborhoodType::random) {
+      std::shuffle(RandJOB.begin(), RandJOB.end(),
+                   ParadiseoRNGFunctor<unsigned int>());
+    }
     k = 0;
   }
 
@@ -50,8 +68,10 @@ class BestInsertionExplorer
     } else {
       k = 0;
       if (improve) {
-        std::shuffle(RandJOB.begin(), RandJOB.end(),
-                     ParadiseoRNGFunctor<unsigned int>());
+        if (neighborhoodType == NeighborhoodType::random) {
+          std::shuffle(RandJOB.begin(), RandJOB.end(),
+                       ParadiseoRNGFunctor<unsigned int>());
+        }
         improve = false;
       } else {
         LO = true;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <perturb/moPerturbation.h>
 #include <algorithm>
 
 #include <paradiseo/eo/eo>
@@ -8,7 +9,7 @@
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 
 template <class Ngh, typename EOT = typename Ngh::EOT>
-class DestructionConstruction : public eoMonOp<EOT> {
+class DestructionConstruction : public moPerturbation<Ngh> {
   InsertionStrategy<Ngh>& _insertionStrategy;
   unsigned _destructionSize;
 
@@ -45,4 +46,9 @@ class DestructionConstruction : public eoMonOp<EOT> {
   auto operator()(EOT& sol) -> bool override {
     return construction(sol, destruction(sol));
   }
+
+  void init(EOT&) override{};
+  void add(EOT&, Ngh&) override{};
+  void update(EOT&, Ngh&) override{};
+  void clearMemory() override{};
 };

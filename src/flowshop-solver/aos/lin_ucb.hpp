@@ -56,8 +56,8 @@ class LinUCB : public OperatorSelection<OpT> {
 
   void update() final{};
 
-  void feedback(const double cf, const double pf) final {
-    double reward = pf - cf;
+  void feedback(const double pf, const double cf) final {
+    double reward = (pf - cf) / pf;
     std::vector<double> features = context.compute();
     x = Eigen::Map<VectorXd>(features.data(), features.size());
 
