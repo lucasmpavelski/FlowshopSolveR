@@ -11,8 +11,8 @@
 #include "flowshop-solver/aos/thompson_sampling.hpp"
 #include "flowshop-solver/aos/probability_matching.hpp"
 
-std::vector<double> timeAverage(std::vector<double> vals, int size) {
-  int bs = vals.size() / size;
+auto timeAverage(std::vector<double> vals, int size) -> std::vector<double> {
+  unsigned bs = vals.size() / size;
   std::vector<double> avgs(size, 0.0);
   for (unsigned i = 0; i < vals.size(); i++) 
     avgs[i / bs] += vals[i] / bs;

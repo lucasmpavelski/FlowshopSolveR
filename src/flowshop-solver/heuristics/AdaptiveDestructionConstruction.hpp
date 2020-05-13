@@ -2,11 +2,10 @@
 
 #include <stdexcept>
 #include "flowshop-solver/aos/adaptive_operator_selection.hpp"
+#include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/heuristics/DestructionConstruction.hpp"
 #include "flowshop-solver/heuristics/FitnessReward.hpp"
 #include "heuristics/InsertionStrategy.hpp"
-#include "flowshop-solver/continuators/myTimeStat.hpp"
-
 
 template <class Ngh>
 class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
@@ -18,9 +17,8 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
   int iteration = 0;
   bool printChoices;
   bool printRewards;
-  
-  myTimeStat<EOT> time;
 
+  myTimeStat<EOT> time;
 
  public:
   AdaptiveDestructionConstruction(InsertionStrategy<Ngh>& insert,
@@ -35,11 +33,11 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
         rewardType{rewardType},
         printChoices{printChoices},
         printRewards{printRewards} {
-          if (printChoices)
-            std::cout << "runtime,d\n";
-          if (printRewards)
-            std::cout << "runtime,ig,lg,il,ll\n";
-        }
+    if (printChoices)
+      std::cout << "runtime,d\n";
+    if (printRewards)
+      std::cout << "runtime,ig,lg,il,ll\n";
+  }
 
   using DestructionConstruction<Ngh>::destructionSize;
 
@@ -47,26 +45,27 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
     if (iteration >= 1) {
       if (printRewards) {
         time(sol);
-        std::cout << time.value() << ','
-          << rewards.initialGlobal() << ','
-          << rewards.lastGlobal() << ','
-          << rewards.initialLocal() << ','
-          << rewards.lastLocal() << '\n'; 
-
+        std::cout << time.value() << ',' << rewards.initialGlobal() << ','
+                  << rewards.lastGlobal() << ',' << rewards.initialLocal()
+                  << ',' << rewards.lastLocal() << '\n';
       }
       switch (rewardType) {
         case 0:
-          operatorSelection.feedback(rewards.initialGlobal(), rewards.lastGlobal());
-        break;
+          operatorSelection.feedback(rewards.initialGlobal(),
+                                     rewards.lastGlobal());
+          break;
         case 1:
-          operatorSelection.feedback(rewards.initialGlobal(), rewards.lastLocal());
-        break;
+          operatorSelection.feedback(rewards.initialGlobal(),
+                                     rewards.lastLocal());
+          break;
         case 2:
-          operatorSelection.feedback(rewards.initialLocal(), rewards.lastGlobal());
-        break;
+          operatorSelection.feedback(rewards.initialLocal(),
+                                     rewards.lastGlobal());
+          break;
         case 3:
-          operatorSelection.feedback(rewards.initialLocal(), rewards.lastLocal());
-        break;
+          operatorSelection.feedback(rewards.initialLocal(),
+                                     rewards.lastLocal());
+          break;
         default:
           throw std::runtime_error{"invalid rewardType"};
       }
@@ -76,19 +75,14 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
     int d = operatorSelection.selectOperator();
     if (printChoices) {
       time(sol);
-      std::cout << time.value() << ',' << d << '\n'; 
+      std::cout << time.value() << ',' << d << '\n';
     }
     destructionSize(d);
     return DestructionConstruction<Ngh>::operator()(sol);
   }
 
-  void init(EOT&) {
-    std::cerr << "init perturb " << '\n';
-  };
+  void init(EOT&) override{};
   void add(EOT&, Ngh&) override{};
-  void update(EOT&, Ngh&) {
-
-    std::cerr << "update perturb " << '\n';
-  };
+  void update(EOT&, Ngh&) override{};
   void clearMemory() override{};
 };

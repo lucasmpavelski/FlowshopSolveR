@@ -1,7 +1,9 @@
 #pragma once
 
+#include <continuator/moStatBase.h>
 #include <unordered_map>
 
+#include "continuators/myTimeStat.hpp"
 #include "flowshop-solver/heuristics.hpp"
 #include "flowshop-solver/heuristics/aco.hpp"
 #include "flowshop-solver/heuristics/hc.hpp"
@@ -14,6 +16,26 @@
 
 #include "flowshop-solver/RunOptions.hpp"
 #include "flowshop-solver/eoFSPFactory.hpp"
+#include "heuristics/FitnessReward.hpp"
+
+template <class EOT>
+class RewardPrinter : public moStatBase<EOT> {
+  FitnessRewards<EOT>& rewards;
+  myTimeStat<EOT> timer;
+
+ public:
+  RewardPrinter(FitnessRewards<EOT>& rewards) : rewards{rewards} {
+    std::cout << "runtime,initial_local,last_local,initial_global,last_global\n";
+  }
+
+  void operator()(EOT&) override {}
+
+  void lastCall(EOT& sol) override {
+    timer(sol);
+    std::cout << rewards.initialLocal() << ',' << rewards.lastLocal() << ','
+              << rewards.initialGlobal() << ',' << rewards.lastGlobal() << '\n';
+  }
+};
 
 template <class ParamType = double>
 auto solveWith(
@@ -25,11 +47,19 @@ auto solveWith(
   MHParamsSpecs specs = MHParamsSpecsFactory::get(mh);
   MHParamsValues params(&specs);
   params.readValues(params_values);
-  
+
   eoFSPFactory factory{params, prob};
-  
+
   if (mh == "all") {
     mh = params.categoricalName("MH");
+  }
+
+  FitnessRewards<FSP> rewards;
+  RewardPrinter<FSP> rewardPrinter{rewards};
+  if (runOptions.printFitnessReward) {
+    prob.checkpoint().add(rewards.localStat());
+    prob.checkpointGlobal().add(rewards.globalStat());
+    prob.checkpointGlobal().add(rewardPrinter);
   }
 
   if (mh == "HC")

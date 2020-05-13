@@ -23,7 +23,7 @@
                 "--problem_values=FSP,PERM,MAKESPAN,med,FIXEDTIME,taillard_rand_100_10_01.dat",
                 "--params_names=IG.Init,IG.Init.NEH.Priority,IG.Init.NEH.PriorityOrder,IG.Init.NEH.PriorityWeighted,IG.Init.NEH.Insertion,IG.Comp.Strat,IG.Neighborhood.Size,IG.Neighborhood.Strat,IG.Local.Search,IG.Accept,IG.Accept.Temperature,IG.Algo,IG.Destruction.Size,IG.LS.Single.Step,IG.LSPS.Local.Search,IG.LSPS.Single.Step,IG.AOS.Strategy,IG.AOS.RewardType",
                 "--params_values=neh,sum_pij,incr,0,first_best,0,9.9999,random,3,temperature,0.5,adaptive,4,0,0,0,frrmab,1",
-                "--printBestFitness"
+                "--printFitnessReward"
             ],
         },
         {
