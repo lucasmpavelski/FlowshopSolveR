@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include "flowshop-solver/aos/adaptive_operator_selection.hpp"
 #include "flowshop-solver/continuators/myTimeStat.hpp"
-#include "flowshop-solver/heuristics/DestructionConstruction.hpp"
+#include "flowshop-solver/heuristics/perturb/DestructionConstruction.hpp"
 #include "flowshop-solver/heuristics/FitnessReward.hpp"
 #include "heuristics/InsertionStrategy.hpp"
 
@@ -41,6 +41,31 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
 
   using DestructionConstruction<Ngh>::destructionSize;
 
+  [[nodiscard]] auto reward() -> double  {
+    double pf, cf;
+    switch (rewardType) {
+      case 0:
+        pf = rewards.initialGlobal();
+        cf = rewards.lastGlobal();
+        break;
+      case 1:
+        pf = rewards.initialGlobal();
+        cf = rewards.lastLocal();
+        break;
+      case 2:
+        pf = rewards.initialLocal();
+        cf = rewards.lastGlobal();
+        break;
+      case 3:
+        pf = rewards.initialLocal();
+        cf = rewards.lastLocal();
+        break;
+      default:
+        throw std::runtime_error{"invalid rewardType"};
+    }
+    return (pf - cf) / pf;
+  }
+
   auto operator()(EOT& sol) -> bool override {
     if (iteration >= 1) {
       if (printRewards) {
@@ -49,26 +74,7 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
                   << rewards.lastGlobal() << ',' << rewards.initialLocal()
                   << ',' << rewards.lastLocal() << '\n';
       }
-      switch (rewardType) {
-        case 0:
-          operatorSelection.feedback(rewards.initialGlobal(),
-                                     rewards.lastGlobal());
-          break;
-        case 1:
-          operatorSelection.feedback(rewards.initialGlobal(),
-                                     rewards.lastLocal());
-          break;
-        case 2:
-          operatorSelection.feedback(rewards.initialLocal(),
-                                     rewards.lastGlobal());
-          break;
-        case 3:
-          operatorSelection.feedback(rewards.initialLocal(),
-                                     rewards.lastLocal());
-          break;
-        default:
-          throw std::runtime_error{"invalid rewardType"};
-      }
+      operatorSelection.feedback(reward());
       operatorSelection.update();
     }
     iteration++;

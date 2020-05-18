@@ -26,6 +26,16 @@ read_runs <- function(runs_folder, skip = 0) {
                       col_types = cols(
                         runtime = col_double(),
                         fitness = col_double())))
+  instance_info <- str_match(experiments$instance, '^(.*?)\\_(.*?)\\_(\\d*?)\\_(\\d*?)\\_(\\d*?)\\.dat')
+  experiments %>%
+    mutate(
+      dist = instance_info[,2],
+      corr = instance_info[,3],
+      no_jobs = as.integer(instance_info[,4]),
+      no_machines = as.integer(instance_info[,5]),
+      inst_n = as.integer(instance_info[,6])
+    ) %>%
+    unnest(cols = c(runs))
 }
 
 # FSP,PERM,MAKESPAN,med,taillard_rand_100_5_01.dat,FIXEDTIME_1,0,9.9999,0,3,2,0.5,2,4,0,0,0,3

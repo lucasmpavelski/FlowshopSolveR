@@ -1,18 +1,24 @@
-IG.Init "" c (random,neh)
-IG.Init.NEH.Priority "" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3) | IG.Init == neh
-IG.Init.NEH.PriorityOrder "" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | IG.Init == neh
+IG.Init                      "" c (random,neh)
+IG.Init.NEH.Priority         "" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3) | IG.Init == neh
+IG.Init.NEH.PriorityOrder    "" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | IG.Init == neh
 IG.Init.NEH.PriorityWeighted "" i (0,1) | IG.Init == neh
-IG.Init.NEH.Insertion "" c (first_best,last_best,random_best) | IG.Init == neh
-IG.Comp.Strat "" c (0,1)
-IG.Neighborhood.Size                 "" r (0.0,9.999)
-IG.Neighborhood.Strat                "" c (ordered,random)
-IG.Local.Search                   "" c (0,1,2,3)
-IG.Accept                         "" c (always,better,temperature)
-IG.Accept.Temperature             "" r (0.0,5.0)    | IG.Accept == temperature
-IG.Algo                           "" c (rs,lsps,adaptive)
-IG.Destruction.Size               "" i (2,8)
-IG.LS.Single.Step                    "" c (0, 1)
-IG.LSPS.Local.Search              "" c (0,1,2,3) | IG.Algo == lsps
-IG.LSPS.Single.Step                  "" c (0,1)    | IG.Algo == lsps
-IG.AOS.Strategy "" c (probability_matching,frrmab,linucb,thompson_sampling,random) | IG.Algo == adaptive
-IG.AOS.RewardType "" c (0,1,2,3)  | IG.Algo == adaptive
+IG.Init.NEH.Insertion        "" c (first_best,last_best,random_best) | IG.Init == neh
+IG.Comp.Strat                "" c (strict,equal)
+IG.Neighborhood.Size         "" r (0.0,9.999)
+IG.Neighborhood.Strat        "" c (ordered,random)
+
+IG.Local.Search              "" c (first_improvement,best_improvement,random_best_improvement,best_insertion)
+IG.LS.Single.Step            "" c (0, 1)
+
+IG.Accept                    "" c (always,better,temperature)
+IG.Accept.Temperature        "" r (0.0,5.0)    | IG.Accept == temperature
+
+IG.Perturb                   "" c (rs,lsps,adaptive)
+IG.Perturb.DestructionSize   "" i (2,8)
+IG.Perturb.Insertion         "" c (first_best,last_best,random_best)
+
+IG.LSPS.Local.Search         "" c (first_improvement,best_improvement,random_best_improvement,best_insertion) | IG.Perturb == lsps
+IG.LSPS.Single.Step          "" c (0,1)    | IG.Perturb == lsps
+
+IG.AOS.Strategy              "" c (probability_matching,frrmab,linucb,thompson_sampling,random) | IG.Perturb == adaptive
+IG.AOS.RewardType            "" c (0,1,2,3)  | IG.Perturb == adaptive

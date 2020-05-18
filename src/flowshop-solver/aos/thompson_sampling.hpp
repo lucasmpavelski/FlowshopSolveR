@@ -25,8 +25,8 @@ class ThompsonSampling : public OperatorSelection<OpT> {
 
   void update() final{};
 
-  void feedback(const double pf, const double cf) final {
-    if (cf < pf) {
+  void feedback(double fb) final {
+    if (fb > 0) { 
       alphas[opIdx]++;
     } else {
       betas[opIdx]++;

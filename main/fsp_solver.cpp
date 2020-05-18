@@ -6,11 +6,11 @@
 
 #include <paradiseo/eo/eo>
 
-#include "flowshop-solver/fla_methods.hpp"
 #include "flowshop-solver/fspproblemfactory.hpp"
 #include "flowshop-solver/heuristics.hpp"
 #include "flowshop-solver/heuristics/all.hpp"
 #include "flowshop-solver/specsdata.hpp"
+#include "flowshop-solver/MHParamsSpecs.hpp"
 
 auto split(const std::string& val) -> std::vector<std::string> {
   std::vector<std::string> res;
@@ -30,38 +30,28 @@ auto main(int argc, char* argv[]) -> int {
   std::vector<std::string> problem_names;
   std::vector<std::string> problem_values;
   long seed = 123;
-  std::vector<std::string> params_names;
-  std::vector<std::string> params_values;
 
   data_folder =
       parser.createParam(data_folder, "data_folder", "specs and instances path")
           .value();
   mh = parser.createParam(mh, "mh", "metaheuristic").value();
   seed = parser.createParam(seed, "seed", "rng seed").value();
-  problem_names =
-      split(parser.createParam(data_folder, "problem_names", "problem names")
-                .value());
-  problem_values =
-      split(parser.createParam(data_folder, "problem_values", "problem values")
-                .value());
-  params_names =
-      split(parser.createParam(data_folder, "params_names", "parameters names")
-                .value());
-  params_values = split(
-      parser.createParam(data_folder, "params_values", "parameters values")
-          .value());
 
   MHParamsSpecsFactory::init(data_folder + "/specs", true);
   FSPProblemFactory::init(data_folder);
   RNG::seed(seed);
 
+  MHParamsSpecs specs = MHParamsSpecsFactory::get(mh);
   std::unordered_map<std::string, std::string> params;
-  for (unsigned i = 0; i < params_names.size(); i++) {
-    params[params_names[i]] = params_values[i];
+  for (const auto& param : specs) {
+    params[param->name] = parser.createParam(data_folder, param->name, param->name)
+                .value();
   }
+
   std::unordered_map<std::string, std::string> problem;
-  for (unsigned i = 0; i < problem_names.size(); i++) {
-    problem[problem_names[i]] = problem_values[i];
+  for (const auto& pname : FSPProblemFactory::names()) {
+    problem[pname] = parser.createParam(data_folder, pname, pname)
+                .value();
   }
 
   bool printConfig =
@@ -73,8 +63,6 @@ auto main(int argc, char* argv[]) -> int {
     for (const auto& kv : problem)
       std::cout << kv.first << ": " << kv.second << '\n';
     std::cout << "mh: " << mh << '\n';
-    for (const auto& kv : params)
-      std::cout << kv.first << ": " << kv.second << '\n';
   }
 
   RunOptions options(parser);

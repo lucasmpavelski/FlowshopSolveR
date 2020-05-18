@@ -51,6 +51,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   myBestSoFarStat<EOT> bestFound;
   myBestSoFarStat<EOT> bestFoundGlobal;
   myMovedSolutionStat<EOT> movedStat;
+  NeigborhoodCheckpoint<Ngh> _neighborhoodCheckpoint;
 
   const std::string stopping_criterium;
   const std::string budget;
@@ -89,7 +90,8 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   auto continuator() -> moContinuator<Ngh>& override {
     return *continuator_ptr;
   }
-  auto data() const -> const FSPData& { return _data; }
+  
+  [[nodiscard]] auto data() const -> const FSPData& { return _data; }
 
   auto checkpoint() -> moCheckpoint<Ngh>& final { return *checkpoint_ptr; };
 
@@ -97,17 +99,9 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     return *checkpointGlobal_ptr;
   };
 
-  [[nodiscard]] auto size(int i = 0) const -> int override {
-    switch (i) {
-      case 0:
-        return eval_func->noJobs();
-      case 1:
-        return eval_func->noMachines();
-      case 2:
-        return eval_func->noJobs() * eval_func->noMachines();
-      default:
-        return 0;
-    }
+
+  auto neighborhoodCheckpoint() -> NeigborhoodCheckpoint<Ngh>& final {
+    return _neighborhoodCheckpoint;
   }
 
   void reset() override {
@@ -148,6 +142,23 @@ struct FSPProblem : public Problem<FSPNeighbor> {
 
   [[nodiscard]] auto upperBound() const -> double override {
     return getData().maxCT();
+  }
+
+  [[nodiscard]] auto size(int i = 0) const -> int override {
+    switch (i) {
+      case 0:
+        return eval_func->noJobs();
+      case 1:
+        return eval_func->noMachines();
+      case 2:
+        return eval_func->noJobs() * eval_func->noMachines();
+      default:
+        return 0;
+    }
+  }
+
+  [[nodiscard]] auto maxNeighborhoodSize() const -> int override {
+    return std::pow(eval_func->noJobs() - 1, 2);
   }
 
   template <class Ngh, class EOT = typename Ngh::EOT>

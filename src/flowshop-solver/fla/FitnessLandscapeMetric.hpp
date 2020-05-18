@@ -1,6 +1,8 @@
 #pragma once
 
-class FitnessLandscapeMetric {
+#include <paradiseo/eo/eo>
+
+class FitnessLandscapeMetric : public eoFunctorBase {
  public:
-  virtual double compute() = 0;
+  virtual auto compute() -> double = 0;
 };

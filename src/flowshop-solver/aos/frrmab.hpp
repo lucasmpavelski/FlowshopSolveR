@@ -232,8 +232,8 @@ class FRRMAB : public OperatorSelection<OpT> {
     return this->getOperator(idx);
   }
 
-  void feedback(const double pf, const double cf) final {
-    fir += (pf - cf) / pf;
+  void feedback(double feedback) final {
+    fir += feedback;
   }
 
   auto printOn(std::ostream& os) -> std::ostream& final {

@@ -5,13 +5,11 @@
 
 #include <gtest/gtest.h>
 
-#include "problems/FSPData.hpp"
-#include "problems/FSPEvalFunc.hpp"
-#include "problems/NIFSPEvalFunc.hpp"
-#include "problems/NWFSPEvalFunc.hpp"
-
-#include "problems/fastfspeval.hpp"
-
+#include "flowshop-solver/problems/FSPData.hpp"
+#include "flowshop-solver/problems/FSPEvalFunc.hpp"
+#include "flowshop-solver/problems/NIFSPEvalFunc.hpp"
+#include "flowshop-solver/problems/NWFSPEvalFunc.hpp"
+#include "flowshop-solver/problems/fastfspeval.hpp"
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 
 #ifdef NDEBUG
@@ -302,8 +300,8 @@ TEST(FSPTaillardAcelleration, NeighborhoodEval) {
 }
 
 #include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
-#include "flowshop-solver/heuristics/DestructionConstruction.hpp"
-#include "flowshop-solver/heuristics/OpPerturbDestConst.hpp"
+#include "flowshop-solver/heuristics/perturb/DestructionConstruction.hpp"
+#include "flowshop-solver/heuristics/perturb/perturb.hpp"
 #include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 
 TEST(TaillardAcceleration, BestInsertionNeighborhood) {

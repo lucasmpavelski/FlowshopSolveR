@@ -23,8 +23,8 @@
 #include "MHParamsValues.hpp"
 #include "MHSolve.hpp"
 
-int main(int argc, char* argv[]) {
-  using std::cout;
+auto main(int argc, char* argv[]) -> int {
+ /* using std::cout;
   using std::string;
 
   cout << "SEED: " << RNG::seed() << "\n";
@@ -127,5 +127,5 @@ int main(int argc, char* argv[]) {
 
   cout << "elapsed_seconds: " << elapsed_seconds.count() << '\n';
 
-  return 0;
+  return 0;*/
 }

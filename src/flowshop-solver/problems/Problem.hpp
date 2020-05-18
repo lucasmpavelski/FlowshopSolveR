@@ -1,10 +1,9 @@
 #pragma once
 
-#include <paradiseo/eo/eoEvalFuncCounter.h>
-#include <paradiseo/mo/continuator/moBestSoFarStat.h>
-#include <paradiseo/mo/continuator/moCheckpoint.h>
-#include <paradiseo/mo/continuator/moContinuator.h>
-#include <paradiseo/mo/eval/moEval.h>
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
+
+#include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 
 /**
  * Optimization problem interface
@@ -19,10 +18,13 @@ struct Problem {
   virtual auto continuator() -> moContinuator<Ngh>& = 0;
   virtual auto checkpoint() -> moCheckpoint<Ngh>& = 0;
   virtual auto checkpointGlobal() -> moCheckpoint<Ngh>& = 0;
+  virtual auto neighborhoodCheckpoint() -> NeigborhoodCheckpoint<Ngh>& = 0;
   virtual auto bestLocalSoFar() -> moBestSoFarStat<EOT>& = 0;
   virtual auto bestSoFar() -> moBestSoFarStat<EOT>& = 0;
-  virtual auto size(int i = 0) const -> int = 0;
   virtual void reset() = 0;
-  virtual auto upperBound() const -> double = 0;
-  virtual auto noEvals() const -> int = 0;
+  
+  [[nodiscard]] virtual auto size(int i = 0) const -> int = 0;
+  [[nodiscard]] virtual auto upperBound() const -> double = 0;
+  [[nodiscard]] virtual auto noEvals() const -> int = 0;
+  [[nodiscard]] virtual auto maxNeighborhoodSize() const -> int = 0;
 };

@@ -13,11 +13,14 @@
 #include "flowshop-solver/heuristics/IGexplorer.hpp"
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 #include "flowshop-solver/heuristics/NEHInit.hpp"
-#include "flowshop-solver/heuristics/OpPerturbDestConst.hpp"
-#include "flowshop-solver/heuristics/ilsKickOp.hpp"
-#include "fspproblemfactory.hpp"
+#include "flowshop-solver/heuristics/perturb/perturb.hpp"
+#include "flowshop-solver/fspproblemfactory.hpp"
+#include "flowshop-solver/specsdata.hpp"
+#include "flowshop-solver/heuristics/acceptCritTemperature.hpp"
+#include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 
 #include "flowshop-solver/heuristics/ig.hpp"
+
 
 std::vector<FSPProblem::EOT> adaptiveWalk(
     std::unordered_map<std::string, std::string> prob_params,
@@ -756,9 +759,8 @@ graph<FSPProblem::EOT> sampleLON(
   }
   auto& neEval = problem.neighborEval();
   InsertFirstBest<Ngh> insert(neEval);
-  IGLocalSearchPartialSolution<Ngh> igLSPS(insert, *igLSPSLocalSearh,
-                                           destruction_size, *compSS);
-  moMonOpPerturb<Ngh> igPerturb1(igLSPS, fullEval);
+  IGLocalSearchPartialSolution<Ngh> igPerturb1(insert, *igLSPSLocalSearh,
+                                           destruction_size);
 
   moPerturbation<Ngh>* perturb;
   switch (params.categorical("IG.Algo")) {

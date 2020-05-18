@@ -1,56 +1,9 @@
 set(FSP_SOURCES
-  aos/probability_matching.hpp
-  aos/adaptive_operator_selection.hpp
-  aos/frrmab.hpp
-  aos/lin_ucb.hpp
-  aos/beta_distribution.hpp
-  aos/thompson_sampling.hpp
-  continuators/myMovedSolutionStat.hpp
-  heuristics/acceptCritTemperature.hpp
-  heuristics/dummyAspiration.hpp
-  heuristics/fastnehheuristic.hpp
-  heuristics/FSPOrderHeuristics.hpp
-  heuristics/IGexplorer.hpp
-  heuristics/IGexplorerWithRepl.hpp
-  heuristics/moFirstBestTSexplorer.hpp
-  heuristics/moFirstBestTS.hpp
-  heuristics/moFirstTSexplorer.hpp
-  heuristics/moFirstTS.hpp
-  heuristics/NEHInit.hpp
-  heuristics/OpPerturbDestConst.hpp
-  heuristics/plateauExplorerPerturb.hpp
-  heuristics/randomNeutralWalkExplorer.hpp
-  heuristics/sa.hpp
-  heuristics/hc.hpp
-  heuristics/ts.hpp
-  heuristics/ihc.hpp
-  heuristics/isa.hpp
-  heuristics/ils.hpp
-  heuristics/aco.hpp
-  heuristics/op_cooling_schedule.hpp
-  problems/fastfspeval.cpp
-  problems/fastfspeval.hpp
   problems/FSPData.cpp
-  problems/FSPData.hpp
-  problems/FSPEvalFunc.hpp
-  problems/FSP.hpp
-  problems/FSPProblem.hpp
-  problems/NIFSPEvalFunc.hpp
-  problems/NWFSPEvalFunc.hpp
-  problems/Problem.hpp
-  moHiResTimeContinuator.hpp
-  fla_methods.hpp
+  problems/fastfspeval.cpp
   fspproblemfactory.cpp
-  fspproblemfactory.hpp
   specsdata.cpp
-  specsdata.hpp
   global.cpp
-  global.hpp
-  MHParamsSpecs.hpp
-  MHParamsValues.hpp
-  MHSolve.hpp
-  ParamSpec.hpp
-  heuristics.hpp
 )
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_library(flowshop_solver_lib STATIC ${FSP_SOURCES})

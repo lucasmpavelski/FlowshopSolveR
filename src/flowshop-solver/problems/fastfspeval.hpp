@@ -132,7 +132,8 @@ class FastFSPNeighborEval : public moEval<FSPNeighbor> {
         compiledSchedules(
             fspData.noJobs(),
             CompiledSchedule(fspData.noJobs(), fspData.noMachines())),
-        compiledSolutions(fspData.noJobs()) {}
+        compiledSolutions(fspData.noJobs()) {
+        }
 
   void operator()(FSP& sol, FSPNeighbor& ngh) final {
     auto firstSecond = ngh.firstSecond(sol);

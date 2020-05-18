@@ -1,0 +1,83 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup, message=FALSE, warning=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo=FALSE)
+library(tidyverse)
+library(here)
+source(here("R/read_runs.R"))
+```
+
+```{r load, message=FALSE, warning=FALSE, echo=FALSE, cache=TRUE}
+runs <- list(
+  rs_ig_destruction_sizes = read_runs("rs-ig-destruction-sizes")
+)
+```
+
+
+# Introduction
+
+**Objective:** use Automatic Operator Selection (AOS) to augment metaheuristics for flowshop and compare it to the meta-learning approach.
+
+- The IG destruction size seems to control exploration/exploitation, which is the goal of most AOS strategies;
+- Assumption: there are differences between different IG destruction sizes.
+
+# Assumption #1: is there any difference between different values of destruction sizes?
+
+```{r}
+ig_compare_d_dt <- runs$rs_ig_destruction_sizes %>%
+  filter(type == 'PERM', objective == 'MAKESPAN', name %in% "IG (d=2)", "IG (d=4)", "IG (d=8)")
+```
+
+Setup: `r n_distinct(ig_compare_d_dt$instance)` instances, `r n_distinct(ig_compare_d_dt$seed)` replications on permutation flowshop with makespan objective.
+
+```{r}
+compareRpdsCI <- function(runs_dt) {
+  plt_dt <- runs_dt %>%
+    group_by(problem, type, objective, budget, stopping_criterium, instance, name) %>%
+    filter(fitness == min(fitness))
+  plt_dt <- plt_dt %>%
+    group_by(problem, type, objective, budget, stopping_criterium, instance) %>%
+    mutate(best_known = min(fitness))
+  plt_dt <- plt_dt %>%
+    group_by(problem, type, objective, budget, stopping_criterium, instance, name) %>%
+    mutate(rpd = 100 * (fitness - best_known) / best_known)
+  plt_dt <- plt_dt %>%
+    group_by(problem, type, objective, budget, stopping_criterium, name) %>%
+    mutate(
+      mrpd = mean(rpd),
+      ci = sd(rpd) * sqrt(1 / (2 * n()))
+    )
+  plt_dt %>%
+    ggplot(aes(x = name)) +
+    geom_errorbar(aes(y = mrpd, ymin = mrpd - ci, ymax = mrpd + ci)) + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    theme_bw()
+}
+
+ig_compare_d_dt %>%
+  compareRpdsCI()
+```
+
+- There are significand differecentes between destruction sizes choices;
+- It corroborates with the literature;
+- $d = 2$ is too much exploitation and $d = 8$ is too much exploration (further investigation involving mean local optima distances / solution destruction distances)
+
+# Assumption #2: how does it compare to a random approach?
+
+```{r}
+runs$rs_ig_destruction_sizes %>%
+  filter(type == 'PERM', objective == 'MAKESPAN', name %in% c("IG (d=2)", "IG (d=4)", "IG (d=8)", "IG RND")) %>%
+  compareRpdsCI()
+```
+
+- Random is worse then the average
+- Random might imply too much exploration ($d = 8$ has a bigger impact)
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

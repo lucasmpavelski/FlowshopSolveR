@@ -25,7 +25,10 @@ class RewardPrinter : public moStatBase<EOT> {
 
  public:
   RewardPrinter(FitnessRewards<EOT>& rewards) : rewards{rewards} {
-    std::cout << "runtime,initial_local,last_local,initial_global,last_global\n";
+  }
+
+  auto header() -> std::string {
+    return "runtime,initial_local,last_local,initial_global,last_global\n";
   }
 
   void operator()(EOT&) override {}
@@ -37,11 +40,10 @@ class RewardPrinter : public moStatBase<EOT> {
   }
 };
 
-template <class ParamType = double>
-auto solveWith(
+inline auto solveWith(
     std::string mh,
     const std::unordered_map<std::string, std::string>& problem_specs,
-    const std::unordered_map<std::string, ParamType>& params_values,
+    const std::unordered_map<std::string, std::string>& params_values,
     const RunOptions runOptions = RunOptions()) -> Result {
   FSPProblem prob = FSPProblemFactory::get(problem_specs);
   MHParamsSpecs specs = MHParamsSpecsFactory::get(mh);
@@ -57,6 +59,7 @@ auto solveWith(
   FitnessRewards<FSP> rewards;
   RewardPrinter<FSP> rewardPrinter{rewards};
   if (runOptions.printFitnessReward) {
+    std::cout << rewardPrinter.header();
     prob.checkpoint().add(rewards.localStat());
     prob.checkpointGlobal().add(rewards.globalStat());
     prob.checkpointGlobal().add(rewardPrinter);
@@ -73,7 +76,7 @@ auto solveWith(
   else if (mh == "TS")
     return solveWithTS(prob, params);
   else if (mh == "IG")
-    return solveWithIG(prob, params, factory, runOptions);
+    return solveWithIG(prob, factory, runOptions);
   else if (mh == "ILS")
     return solveWithILS(prob, params);
   else if (mh == "ACO")

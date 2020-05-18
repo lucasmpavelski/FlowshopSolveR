@@ -9,15 +9,14 @@
 #include "IGexplorerWithRepl.hpp"
 #include "MHParamsValues.hpp"
 #include "NEHInit.hpp"
-#include "OpPerturbDestConst.hpp"
 #include "acceptCritTemperature.hpp"
 #include "falseContinuator.hpp"
 #include "flowshop-solver/heuristics.hpp"
 #include "flowshop-solver/specsdata.hpp"
 #include "fspproblemfactory.hpp"
-#include "ilsKickOp.hpp"
 #include "op_cooling_schedule.hpp"
-#include "randomNeutralWalkExplorer.hpp"
+
+#include "flowshop-solver/heuristics/perturb/perturb.hpp"
 
 template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
 auto solveWithILS(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {

@@ -22,7 +22,7 @@ class ProblemContext {
 
   void add(FitnessLandscapeMetric& metric) { metrics.emplace_back(&metric); }
 
-  auto size() const -> int { return metrics.size(); }
+  [[nodiscard]] auto size() const -> int { return metrics.size(); }
 };
 
 using Eigen::MatrixXd;
@@ -56,8 +56,7 @@ class LinUCB : public OperatorSelection<OpT> {
 
   void update() final{};
 
-  void feedback(const double pf, const double cf) final {
-    double reward = (pf - cf) / pf;
+  void feedback(double reward) final {
     std::vector<double> features = context.compute();
     x = Eigen::Map<VectorXd>(features.data(), features.size());
 

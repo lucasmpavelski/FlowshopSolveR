@@ -4,9 +4,15 @@ library(future)
 
 plan(multisession)
 
+EXPERIMENTS <- c(
+  'rs-ig-destruction-sizes',
+  'compare-reward-types',
+  'reward-distributions'
+  )
+
 # paths
 ROOT <- here()
-EXPR <- file.path(ROOT, 'runs', 'rs-ig-destruction-sizes')
+EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[1])
 DATA <- file.path(ROOT, 'data')
 EXECUTABLE <- file.path(ROOT, 'build', 'main', 'fsp_solver')
 
@@ -17,7 +23,7 @@ configs <- read_csv(file.path(EXPR, 'configs.csv'), comment = "#")
 
 # auxiliar functions
 parseParams <- function(params) { 
-  params <- str_split(params, ' ', simplify = T) %>%
+  params <- str_split(params, '\\s', simplify = T) %>%
     str_split('=', simplify = T)
   values <- params[,2]
   names(values) <- params[,1]
@@ -36,23 +42,26 @@ solveCmd <- function(mh, seed, params, output, core, ...) {
     EXECUTABLE,
     paste0('--data_folder=', DATA),
     paste0('--mh=', mh),
-    paste0('--problem_names=', paste0(names(problem_model), collapse = ',')),
-    paste0('--problem_values=', paste0(problem_model, collapse = ',')),
-    paste0('--params_names=', paste0(names(params), collapse = ',')),
-    paste0('--params_values=', paste0(params, collapse = ',')),
+    paste0("--", names(problem_model), "=", problem_model),
+    paste0("--", names(params), "=", params),
     '--printBestFitness'
   )
   print(paste0(c('START', exe_bin, args), collapse = ' '))
   data <- system2(exe_bin, args, stdout = TRUE)
   print(paste0(c('DONE', exe_bin, args), collapse = ' '))
-  write_lines(data, output)
+  #write_lines(data, output)
 }
 
+set.seed(31415)
+seeds <- c(
+  123, # for easy debugging
+  as.integer(runif(4) * 1e6)
+)
 
 experiments <- crossing(
   problems,
   configs,
-  seed = c(123)
+  seed = seeds
 ) %>%
   mutate(
     output = pmap_chr(., function(...) {
@@ -68,7 +77,7 @@ experiments %>%
 
 walk(file.path(EXPR, configs$name), dir.create, showWarnings = F)
 
-ncores <- 4
+ncores <- 7
 
 experiments <- experiments %>%
   mutate(core = seq_len(nrow(experiments)) %% ncores) 
@@ -76,11 +85,11 @@ experiments <- experiments %>%
 futures <- experiments %>%
   group_split(core) %>%
   map(function(group_expr) {
-    future({
+   # future({
       group_expr %>%
-        filter(!file.exists(output)) %>%
+   #     filter(!file.exists(output)) %>%
         mutate(status = pmap(., solveCmd))
-    })
+  #  })
   })
 
 values(futures)

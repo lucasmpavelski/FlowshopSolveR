@@ -46,7 +46,7 @@ TEST(AOSStaticDistributions, AOSTests)
       int sel = aos.selectOperator();
       float val = dists[sel](rng);
       choices.push_back(sel);
-      aos.feedback(10, 10 + val);
+      aos.feedback(val);
       aos.update();
     }
     auto ta = timeAverage(choices, 10);
@@ -71,7 +71,7 @@ TEST(AOSStaticDistributions, AOSTests)
       int sel = aos.selectOperator();
       float val = dists[sel](rng);
       choices.push_back(sel);
-      aos.feedback(10, 10 + val);
+      aos.feedback(val);
       aos.update();
     }
     auto ta = timeAverage(choices, 10);

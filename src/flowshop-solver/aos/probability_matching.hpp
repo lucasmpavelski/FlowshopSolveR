@@ -53,7 +53,7 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
 
   void reset(const double) final;
   auto selectOperator() -> OpT& final;
-  void feedback(const double, const double) final;
+  void feedback(const double) final;
   void update() final;
 
   auto printOn(std::ostream& os) -> std::ostream& final {
@@ -112,15 +112,11 @@ auto ProbabilityMatching<OpT>::selectOperator() -> OpT& {
 }
 
 template <typename OpT>
-void ProbabilityMatching<OpT>::feedback(const double pf, const double cf) {
-  if (cf < pf) {
-    const double n = (pf - cf) / pf;
-    //((best_fitness + 10e-12) / (cf + 10e-12)) * (pf - cf);
-    S[chosen_strat] += n;
-    nr_S[chosen_strat]++;
-    if (n > maior_S[chosen_strat])
-      maior_S[chosen_strat] = n;
-  }
+void ProbabilityMatching<OpT>::feedback(double feedback) {
+  S[chosen_strat] += feedback;
+  nr_S[chosen_strat]++;
+  if (feedback > maior_S[chosen_strat])
+    maior_S[chosen_strat] = feedback;
 };
 
 template <typename OpT>

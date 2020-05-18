@@ -32,6 +32,17 @@ class FSPProblemFactory {
      }*/
   }
 
+  static auto names() -> std::vector<std::string> {
+    return {
+      "problem",
+      "type",
+      "instance",
+      "objective",
+      "budget",
+      "stopping_criterium"
+    };
+  }
+
   static std::string instFolder() {
     return data_folder + "/instances/flowshop/";
   }

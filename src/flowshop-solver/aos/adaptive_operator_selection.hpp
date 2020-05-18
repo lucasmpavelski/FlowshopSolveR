@@ -6,7 +6,7 @@
 #include "flowshop-solver/global.hpp"
 
 template <typename OpT>
-class OperatorSelection {
+class OperatorSelection : public eoFunctorBase {
   std::vector<OpT> operators;
 
  public:
@@ -14,17 +14,17 @@ class OperatorSelection {
   OperatorSelection(std::vector<OpT> operators)
       : operators{std::move(operators)} {};
 
-  virtual ~OperatorSelection() = default;
+   ~OperatorSelection() override = default;
 
   // accessors
-  auto noOperators() const -> int { return operators.size(); };
-  auto doAdapt() const -> bool { return noOperators() > 1; };
+  [[nodiscard]] auto noOperators() const -> int { return operators.size(); };
+  [[nodiscard]] auto doAdapt() const -> bool { return noOperators() > 1; };
   auto getOperator(const int idx) -> OpT& { return operators.at(idx); };
 
   // main interface
   virtual void reset(double){};  // on init algorithm
   virtual auto selectOperator() -> OpT& { return operators[0]; };
-  virtual void feedback(const double, const double){};
+  virtual void feedback(double){};
   virtual void update(){};  // on finish generation
   virtual auto printOn(std::ostream& os) -> std::ostream& = 0;
 

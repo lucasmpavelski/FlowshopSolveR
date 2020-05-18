@@ -11,10 +11,10 @@
 #include <paradiseo/mo/mo>
 
 // problem
-#include "global.hpp"
-#include "problems/FSPEvalFunc.hpp"
-#include "problems/NIFSPEvalFunc.hpp"
-#include "problems/NWFSPEvalFunc.hpp"
+#include "flowshop-solver/global.hpp"
+#include "flowshop-solver/problems/FSPEvalFunc.hpp"
+#include "flowshop-solver/problems/NIFSPEvalFunc.hpp"
+#include "flowshop-solver/problems/NWFSPEvalFunc.hpp"
 
 // NEH
 #include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
@@ -29,16 +29,13 @@
 #include "flowshop-solver/heuristics/IGexplorer.hpp"
 #include "flowshop-solver/heuristics/IGexplorerWithRepl.hpp"
 // IG components
-#include "flowshop-solver/heuristics/OpPerturbDestConst.hpp"
+#include "flowshop-solver/heuristics/perturb/perturb.hpp"
 #include "flowshop-solver/heuristics/acceptCritTemperature.hpp"
-// for the kick : here swap(=exchange) because neighborhood with insert
-// NILS perturb
-#include "flowshop-solver/heuristics/randomNeutralWalkExplorer.hpp"
 
-#include "MHParamsValues.hpp"
-#include "fspproblemfactory.hpp"
-#include "problems/FSPProblem.hpp"
-#include "specsdata.hpp"
+#include "flowshop-solver/MHParamsValues.hpp"
+#include "flowshop-solver/fspproblemfactory.hpp"
+#include "flowshop-solver/problems/FSPProblem.hpp"
+#include "flowshop-solver/specsdata.hpp"
 
 template <class Ngh, class EOT = typename Ngh::EOT>
 void solveILS(const int N,

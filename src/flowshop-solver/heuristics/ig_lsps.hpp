@@ -8,21 +8,18 @@
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 
 template <class Ngh, class EOT = typename Ngh::EOT>
-class IGLocalSearchPartialSolution : public eoMonOp<typename Ngh::EOT> {
+class IGLocalSearchPartialSolution : public moPerturbation<Ngh> {
   InsertionStrategy<Ngh>& insert;
   moLocalSearch<Ngh>& localSearch;
   const unsigned destructionSize;
-  moSolComparator<EOT>& comparator;
 
  public:
   IGLocalSearchPartialSolution(InsertionStrategy<Ngh>& insert,
                                moLocalSearch<Ngh>& localSearch,
-                               unsigned destructionSize,
-                               moSolComparator<EOT>& comparator)
+                               unsigned destructionSize)
       : insert(insert),
         localSearch(localSearch),
-        destructionSize(destructionSize),
-        comparator(comparator) {}
+        destructionSize(destructionSize) {}
 
   auto operator()(EOT& sol) -> bool override {
     EOT before = sol;
@@ -48,4 +45,9 @@ class IGLocalSearchPartialSolution : public eoMonOp<typename Ngh::EOT> {
     for (auto job : removedJobs)
       insert.insertJob(sol, job);
   }
+
+  void init(EOT&) override{};
+  void add(EOT&, Ngh&) override{};
+  void update(EOT&, Ngh&) override{};
+  void clearMemory() override{};
 };
