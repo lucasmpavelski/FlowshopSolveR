@@ -67,7 +67,7 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
   }
 
   auto operator()(EOT& sol) -> bool override {
-    if (iteration >= 1) {
+    if (iteration >= 2) {
       if (printRewards) {
         time(sol);
         std::cout << time.value() << ',' << rewards.initialGlobal() << ','

@@ -4,7 +4,7 @@
 #include "flowshop-solver/fla/FitnessLandscapeMetric.hpp"
 
 template <class EOT>
-class FitnessHistoryFLA : public FitnessLandscapeMetric {
+class FitnessHistoryFLA : public FitnessLandscapeMetric, public eoFunctorBase {
   const FitnessHistory<EOT>& fitnessHistory;
 
  public:

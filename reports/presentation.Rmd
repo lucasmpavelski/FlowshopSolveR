@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 ```{r setup, message=FALSE, warning=FALSE, echo=FALSE}
@@ -12,7 +14,10 @@ source(here("R/read_runs.R"))
 
 ```{r load, message=FALSE, warning=FALSE, echo=FALSE, cache=TRUE}
 runs <- list(
-  rs_ig_destruction_sizes = read_runs("rs-ig-destruction-sizes")
+  rs_ig_destruction_sizes = read_runs("rs-ig-destruction-sizes"),
+  rs_reward_types = read_runs('best-perturb-fitness'),
+  aos_ig = read_runs('aos-ig'),
+  aos_tunning = read_runs('aos-tunning')
 )
 ```
 
@@ -28,7 +33,7 @@ runs <- list(
 
 ```{r}
 ig_compare_d_dt <- runs$rs_ig_destruction_sizes %>%
-  filter(type == 'PERM', objective == 'MAKESPAN', name %in% "IG (d=2)", "IG (d=4)", "IG (d=8)")
+  filter(type == 'PERM', objective == 'MAKESPAN', name %in% c("IG (d=2)", "IG (d=4)", "IG (d=8)"))
 ```
 
 Setup: `r n_distinct(ig_compare_d_dt$instance)` instances, `r n_distinct(ig_compare_d_dt$seed)` replications on permutation flowshop with makespan objective.
@@ -36,13 +41,13 @@ Setup: `r n_distinct(ig_compare_d_dt$instance)` instances, `r n_distinct(ig_comp
 ```{r}
 compareRpdsCI <- function(runs_dt) {
   plt_dt <- runs_dt %>%
-    group_by(problem, type, objective, budget, stopping_criterium, instance, name) %>%
+    group_by(problem, type, objective, instance, name) %>%
     filter(fitness == min(fitness))
   plt_dt <- plt_dt %>%
-    group_by(problem, type, objective, budget, stopping_criterium, instance) %>%
+    group_by(problem, type, objective, instance) %>%
     mutate(best_known = min(fitness))
   plt_dt <- plt_dt %>%
-    group_by(problem, type, objective, budget, stopping_criterium, instance, name) %>%
+    group_by(problem, type, objective, instance, name) %>%
     mutate(rpd = 100 * (fitness - best_known) / best_known)
   plt_dt <- plt_dt %>%
     group_by(problem, type, objective, budget, stopping_criterium, name) %>%
@@ -57,9 +62,13 @@ compareRpdsCI <- function(runs_dt) {
     theme_bw()
 }
 
+```
+
+```{r}
 ig_compare_d_dt %>%
   compareRpdsCI()
 ```
+
 
 - There are significand differecentes between destruction sizes choices;
 - It corroborates with the literature;
@@ -76,8 +85,172 @@ runs$rs_ig_destruction_sizes %>%
 - Random is worse then the average
 - Random might imply too much exploration ($d = 8$ has a bigger impact)
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+# Can a iteration-based reward be used to inform the best destruction size?
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+Possible adaptation rewards:
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```
+  IteratedGreedy:
+  sol_0 = Init()
+  sol_0' = sol_0
+  sol_0'' = sol_0
+  while (!StoppingCriterion()) :
+    d = OperatorSelection(Reward())
+    sol_t' = Construction(Destruction(sol_t, d))
+    sol_t'' = LocalSearch(sol_t')
+    sol_t+1 = Accept(sol_t'', sol_t)
+    Feedback(sol_t, sol_t', sol_t'', sol_t+1)´
+```
+
+```
+  GG = (sol_t+1 - sol_t ) / sol_t
+  GL = (sol_t'' - sol_t ) / sol_t
+  GG = (sol_t+1 - sol_t') / sol_t'
+  GG = (sol_t'' - sol_t') / sol_t'
+```
+
+To test the rewards, all destruction sizes are applied and the best perturbation (BP) for each reward is chosen:
+
+```{r}
+runs$rs_reward_types %>%
+  filter(type == 'PERM', objective == 'MAKESPAN') %>%
+  compareRpdsCI()
+```
+
+Comparing to the best fixed choice:
+
+```{r}
+best_ig <- runs$rs_ig_destruction_sizes %>%
+  filter(name %in% c("IG (d=4)"))
+best_reward <- runs$rs_reward_types %>%
+  filter(name != "BP GG")
+bind_rows(best_ig, best_reward) %>%
+  filter(type == 'PERM', objective == 'MAKESPAN') %>%
+  compareRpdsCI()
+```
+
+- LL reward is considerably better
+
+# Is there a pattern of destructions sizes over runtime?
+
+```{r}
+folder <- here::here("runs", "best-perturb-destruction-size")
+runtime_ds <- read_csv(
+  file.path(folder, "experiments.csv"),
+  col_types =
+    cols(
+      problem = col_character(),
+      type = col_character(),
+      objective = col_character(),
+      budget = col_character(),
+      stopping_criterium = col_character(),
+      instance = col_character(),
+      name = col_character(),
+      mh = col_character(),
+      params = col_character(),
+      seed = col_double(),
+      output = col_character()
+    )
+  ) %>%
+  mutate(runs = map(output, read_delim,
+                    delim = ' ',
+                    col_names = c('runtime', 'd'),
+                    col_types = cols(
+                      runtime = col_double(),
+                      d = col_double()))) %>%
+  unnest(cols = c(runs))
+
+
+instance_info <- str_match(runtime_ds$instance, '^(.*?)\\_(.*?)\\_(\\d*?)\\_(\\d*?)\\_(\\d*?)\\.dat')
+runtime_ds <- runtime_ds %>%
+  mutate(
+    dist = instance_info[,2],
+    corr = instance_info[,3],
+    no_jobs = as.integer(instance_info[,4]),
+    no_machines = as.integer(instance_info[,5]),
+    inst_n = as.integer(instance_info[,6])
+  )
+```
+
+```{r}
+runtime_ds %>%
+  sample_n(10000) %>%
+  ggplot() +
+  facet_grid(no_machines~no_jobs, scales = 'free') +
+  geom_point(aes(x = runtime, y = d, color = d))
+```
+
+
+```{r}
+runtime_ds %>%
+  ggplot() +
+  facet_grid(no_machines~no_jobs, scales = 'free') +
+  geom_smooth(aes(x = runtime, y = d, color = d), method = 'lm')
+```
+
+
+# Can the LL reward be used to inform the best destruction size?
+
+```{r}
+best_ig <- runs$rs_ig_destruction_sizes %>%
+  filter(name %in% c("IG (d=4)"))
+bind_rows(best_ig, runs$aos_ig) %>%
+  filter(type == 'PERM', objective == 'MAKESPAN') %>%
+  compareRpdsCI()
+```
+
+# TODO
+
+- Parameter tunning for AOS strategies
+- LinUCB on test instances
+- Measure the effect when the number of local search steps is 1 or 0
+
+
+```{r}
+runs$aos_tunning %>%
+  filter(str_starts(name, 'TS')) %>%
+  compareRpdsCI()
+```
+
+
+```{r}
+runs$aos_tunning %>%
+  filter(str_starts(name, 'FRRMAB')) %>%
+  compareRpdsCI() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+```{r}
+runs$aos_tunning %>%
+  filter(str_starts(name, 'PM')) %>%
+  compareRpdsCI() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+```{r}
+runs$aos_tunning %>%
+  filter(str_starts(name, 'LIN')) %>%
+  compareRpdsCI() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+```{r}
+tunned <- c(
+  'TS-reward1',
+  'FRRMAB-rew1-WindowSize100-Scale0.1-Decay0.9',
+  'PM-rew1-rewardTypeextabs -alpha0.2-pmin0.1',
+  'LINUCB-rew3-Alpha0.1'
+)
+best_ig <- runs$rs_ig_destruction_sizes %>%
+  filter(name %in% c("IG (d=4)", "IG RND"))
+best_aos <- runs$aos_tunning %>%
+  filter(name %in% tunned)
+bind_rows(best_ig, best_aos) %>%
+  filter(type == 'PERM', objective == 'MAKESPAN') %>%
+  compareRpdsCI() +
+  coord_flip()
+
+```
+

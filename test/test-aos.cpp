@@ -35,8 +35,8 @@ TEST(AOSStaticDistributions, AOSTests)
 
   for (const auto& kv : aoss) {
     std::vector<std::normal_distribution<float>> dists = {
-      std::normal_distribution<float>(10, 1),
-      std::normal_distribution<float>(-10, 1)
+      std::normal_distribution<float>(-10, 1),
+      std::normal_distribution<float>(10, 1)
     };
 
     std::cout << kv.first << '\n';

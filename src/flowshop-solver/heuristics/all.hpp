@@ -1,6 +1,6 @@
 #pragma once
 
-#include <continuator/moStatBase.h>
+#include <paradiseo/mo/mo>
 #include <unordered_map>
 
 #include "continuators/myTimeStat.hpp"
@@ -13,6 +13,7 @@
 #include "flowshop-solver/heuristics/isa.hpp"
 #include "flowshop-solver/heuristics/sa.hpp"
 #include "flowshop-solver/heuristics/ts.hpp"
+#include "flowshop-solver/heuristics/IGBP.hpp"
 
 #include "flowshop-solver/RunOptions.hpp"
 #include "flowshop-solver/eoFSPFactory.hpp"
@@ -81,6 +82,8 @@ inline auto solveWith(
     return solveWithILS(prob, params);
   else if (mh == "ACO")
     return solveWithACO(prob, params);
+  else if (mh == "IGBP")
+    return solveWithIGBP(prob, params, runOptions);
   else
     throw std::runtime_error("Unknown MH: " + mh);
   return {};

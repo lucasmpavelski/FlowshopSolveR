@@ -1,5 +1,7 @@
 #pragma once
 
+#include <paradiseo/eo/eo>
+
 #include <Eigen/Dense>
 #include <array>
 #include <cassert>
@@ -8,7 +10,7 @@
 #include "flowshop-solver/fla/FitnessLandscapeMetric.hpp"
 #include "flowshop-solver/global.hpp"
 
-class ProblemContext {
+class ProblemContext : public eoFunctorBase {
   std::vector<FitnessLandscapeMetric*> metrics;
 
  public:
@@ -30,19 +32,26 @@ using Eigen::VectorXd;
 
 template <class OpT>
 class LinUCB : public OperatorSelection<OpT> {
-  const double alpha;
-  ProblemContext& context;
+  const double          alpha;
+  ProblemContext&       context;
   std::vector<MatrixXd> A;
   std::vector<VectorXd> b;
   std::vector<VectorXd> theta;
-  VectorXd x;
-  VectorXd p;
-  int opIdx = -1;
+  VectorXd              x;
+  VectorXd              p;
+  int                   opIdx = -1;
+
+  protected:
+
+  auto selectOperatorIdx() -> int override {
+    p.maxCoeff(&opIdx);
+    return opIdx;
+  }
 
  public:
-  LinUCB(std::vector<OpT> operators,
-         ProblemContext& context,
-         const double alpha = 0.3)
+  LinUCB(std::vector<OpT>             operators,
+         ProblemContext&              context,
+         const double                 alpha = 0.3)
       : OperatorSelection<OpT>{operators},
         alpha{alpha},
         context{context},
@@ -57,27 +66,22 @@ class LinUCB : public OperatorSelection<OpT> {
   void update() final{};
 
   void feedback(double reward) final {
+    if (opIdx == -1)
+      return;
     std::vector<double> features = context.compute();
     x = Eigen::Map<VectorXd>(features.data(), features.size());
 
-    A[opIdx] = A[opIdx] + x * x.transpose();
-    b[opIdx] = b[opIdx] + reward * x;
+    A[opIdx]     = A[opIdx] + x * x.transpose();
+    b[opIdx]     = b[opIdx] + reward * x;
     theta[opIdx] = A[opIdx].colPivHouseholderQr().solve(b[opIdx]);
 
     double prod = x.transpose() * A[opIdx] * x;
-    p(opIdx) = theta[opIdx].transpose() * x + alpha * std::sqrt(prod);
+    p(opIdx)    = theta[opIdx].transpose() * x + alpha * std::sqrt(prod);
   }
 
   auto printOn(std::ostream& os) -> std::ostream& final {
     os << "  strategy: LinUCB MAB\n"
        << "  alpha: " << alpha << '\n';
     return os;
-  }
-
-  using OperatorSelection<OpT>::getOperator;
-
-  auto selectOperator() -> OpT& final {
-    p.maxCoeff(&opIdx);
-    return getOperator(opIdx);
-  }
+  } 
 };

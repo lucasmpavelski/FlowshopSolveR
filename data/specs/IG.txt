@@ -3,7 +3,9 @@ IG.Init.NEH.Priority         "" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_
 IG.Init.NEH.PriorityOrder    "" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | IG.Init == neh
 IG.Init.NEH.PriorityWeighted "" i (0,1) | IG.Init == neh
 IG.Init.NEH.Insertion        "" c (first_best,last_best,random_best) | IG.Init == neh
+
 IG.Comp.Strat                "" c (strict,equal)
+
 IG.Neighborhood.Size         "" r (0.0,9.999)
 IG.Neighborhood.Strat        "" c (ordered,random)
 
@@ -22,3 +24,16 @@ IG.LSPS.Single.Step          "" c (0,1)    | IG.Perturb == lsps
 
 IG.AOS.Strategy              "" c (probability_matching,frrmab,linucb,thompson_sampling,random) | IG.Perturb == adaptive
 IG.AOS.RewardType            "" c (0,1,2,3)  | IG.Perturb == adaptive
+
+IG.AOS.PM.RewardType         "" c (avgabs,avgnorm,extabs,extnorm) 
+IG.AOS.PM.Alpha              "" r (0.1, 0.9)
+IG.AOS.PM.PMin               "" r (0.05, 0.2)
+
+IG.AOS.FRRMAB.WindowSize     "" i (10, 500)
+IG.AOS.FRRMAB.Scale          "" r (0.01, 100)
+IG.AOS.FRRMAB.Decay          "" r (0.25, 1.0)
+
+IG.AOS.LINUCB.Alpha          "" r (0.0, 1.5)
+
+IG.AOS.WarmUp.Proportion     "" r (0.0,0.5)
+IG.AOS.WarmUp.Strategy       "" c (random, fixed)

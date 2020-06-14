@@ -2,20 +2,26 @@ library(here)
 library(tidyverse)
 library(future)
 
+plan(sequential)
 plan(multisession)
+
 
 EXPERIMENTS <- c(
   'rs-ig-destruction-sizes',
   'compare-reward-types',
-  'reward-distributions'
-  )
+  'reward-distributions',
+  'best-perturb-fitness',
+  'best-perturb-destruction-size',
+  'aos-tunning'
+)
+
 
 # paths
 ROOT <- here()
-EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[1])
+EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[6])
 DATA <- file.path(ROOT, 'data')
 EXECUTABLE <- file.path(ROOT, 'build', 'main', 'fsp_solver')
-
+OPTIONS <- read_lines(file.path(EXPR, 'params.txt'))
 
 # datasets
 problems <- read_csv(file.path(EXPR, 'problems.csv'), comment = "#")
@@ -42,20 +48,21 @@ solveCmd <- function(mh, seed, params, output, core, ...) {
     EXECUTABLE,
     paste0('--data_folder=', DATA),
     paste0('--mh=', mh),
+    paste0('--seed=', seed),
     paste0("--", names(problem_model), "=", problem_model),
     paste0("--", names(params), "=", params),
-    '--printBestFitness'
+    OPTIONS
   )
-  print(paste0(c('START', exe_bin, args), collapse = ' '))
+  #print(paste0(c('START', exe_bin, args), collapse = ' '))
   data <- system2(exe_bin, args, stdout = TRUE)
   print(paste0(c('DONE', exe_bin, args), collapse = ' '))
-  #write_lines(data, output)
+  write_lines(data, output)
 }
 
 set.seed(31415)
 seeds <- c(
-  123, # for easy debugging
-  as.integer(runif(4) * 1e6)
+  123# for easy debugging
+  # as.integer(runif(1) * 1e6)
 )
 
 experiments <- crossing(
@@ -85,12 +92,14 @@ experiments <- experiments %>%
 futures <- experiments %>%
   group_split(core) %>%
   map(function(group_expr) {
-   # future({
+   future({
       group_expr %>%
-   #     filter(!file.exists(output)) %>%
+        filter(!file.exists(output)) %>%
         mutate(status = pmap(., solveCmd))
-  #  })
+    })
   })
 
 values(futures)
 
+
+plan(sequential)

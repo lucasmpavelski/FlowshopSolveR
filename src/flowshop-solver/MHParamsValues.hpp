@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 
 #include <es/eoReal.h>
@@ -76,9 +77,8 @@ class MHParamsValues : public eoReal<eoMaximizingFitness> {
 
   void readValues(std::unordered_map<std::string, std::string> values) {
     for (const auto& ps : *specs) {
-      if (values.find(ps->name) == values.end())
-        throw std::runtime_error("Parameter " + ps->name + " needs a value!");
-      this->operator[](ps->name) = ps->fromStrValue(values.at(ps->name));
+      if (values.count(ps->name))
+        this->operator[](ps->name) = ps->fromStrValue(values[ps->name]);
     }
   }
 

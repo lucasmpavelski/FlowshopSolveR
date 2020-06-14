@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algo/moLocalSearch.h>
 #include <type_traits>
 
 #include <paradiseo/eo/eo>
@@ -69,8 +68,12 @@ class eoFactory : public eoFunctorStore {
     return _params.integer(_params.mhName() + name);
   }
 
-  [[nodiscard]] auto real(const std::string& name) const -> int {
+  [[nodiscard]] auto real(const std::string& name) const -> double {
     return _params.real(_params.mhName() + name);
+  }
+
+  void params(MHParamsValues& _params) {
+    this->_params = _params;
   }
 
   auto buildInit() -> eoInit<EOT>* {
@@ -159,7 +162,7 @@ class eoFactory : public eoFunctorStore {
     } else if (name == "best_insertion") {
       auto explorer =
           &pack<BestInsertionExplorer<EOT>>(nEval, nghCp, *compNN, *compSN);
-      ret = &pack<moLocalSearch<Ngh>>(*explorer, cont, eval);
+      ret = &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);
     } else {
       return nullptr;
     }

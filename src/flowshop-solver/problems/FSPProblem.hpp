@@ -16,7 +16,7 @@
 
 using FSPMax = eoInt<eoMaximizingFitness>;
 using FSPMin = eoInt<eoMinimizingFitness>;
-using FSP = FSPMin;
+using FSP    = FSPMin;
 
 // m1 000000122222233...................
 // m2       00001  222222233333333......
@@ -25,44 +25,42 @@ using FSP = FSPMin;
 
 template <class EOT>
 class myBestSoFarStat : public moBestSoFarStat<EOT> {
-bool reinit;
+  bool reinit{};
 
  public:
-  myBestSoFarStat(bool _reInitSol = true) : moBestSoFarStat<EOT>(_reInitSol), reinit{_reInitSol} {}
+  myBestSoFarStat(bool _reInitSol = true) : moBestSoFarStat<EOT>(_reInitSol) {}
 
   using moBestSoFarStat<EOT>::operator();
-  
-  void lastCall(EOT& sol) final { 
-    operator()(sol);
-  }
+
+  void lastCall(EOT& sol) final { operator()(sol); }
 };
 
 struct FSPProblem : public Problem<FSPNeighbor> {
   using EOT = FSP;
   using Ngh = FSPNeighbor;
-  FSPData _data;
-  std::unique_ptr<FSPEvalFunc<EOT>> eval_func;
-  eoEvalFuncCounter<EOT> eval_counter;
-  std::unique_ptr<moEval<Ngh>> eval_neighbor;
-  moEvalCounter<Ngh> eval_neighbor_counter;
+  FSPData                             _data;
+  std::unique_ptr<FSPEvalFunc<EOT>>   eval_func;
+  eoEvalFuncCounter<EOT>              eval_counter;
+  std::unique_ptr<moEval<Ngh>>        eval_neighbor;
+  moEvalCounter<Ngh>                  eval_neighbor_counter;
   std::unique_ptr<moContinuator<Ngh>> continuator_ptr;
-  std::unique_ptr<moCheckpoint<Ngh>> checkpoint_ptr;
-  std::unique_ptr<moCheckpoint<Ngh>> checkpointGlobal_ptr;
-  myBestSoFarStat<EOT> bestFound;
-  myBestSoFarStat<EOT> bestFoundGlobal;
-  myMovedSolutionStat<EOT> movedStat;
-  NeigborhoodCheckpoint<Ngh> _neighborhoodCheckpoint;
+  std::unique_ptr<moCheckpoint<Ngh>>  checkpoint_ptr;
+  std::unique_ptr<moCheckpoint<Ngh>>  checkpointGlobal_ptr;
+  myBestSoFarStat<EOT>                bestFound;
+  myBestSoFarStat<EOT>                bestFoundGlobal;
+  myMovedSolutionStat<EOT>            movedStat;
+  NeigborhoodCheckpoint<Ngh>          _neighborhoodCheckpoint;
 
   const std::string stopping_criterium;
   const std::string budget;
-  const unsigned lower_bound;
+  const unsigned    lower_bound;
 
-  FSPProblem(FSPData dt,
+  FSPProblem(FSPData            dt,
              const std::string& type,
              const std::string& obj,
-             std::string _budget,
-             std::string _stopping_criterium,
-             unsigned lower_bound = 0)
+             std::string        _budget,
+             std::string        _stopping_criterium,
+             unsigned           lower_bound = 0)
       : Problem<FSPNeighbor>(),
         _data{std::move(dt)},
         eval_func(getEvalFunc(type, obj)),
@@ -90,7 +88,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   auto continuator() -> moContinuator<Ngh>& override {
     return *continuator_ptr;
   }
-  
+
   [[nodiscard]] auto data() const -> const FSPData& { return _data; }
 
   auto checkpoint() -> moCheckpoint<Ngh>& final { return *checkpoint_ptr; };
@@ -98,7 +96,6 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   auto checkpointGlobal() -> moCheckpoint<Ngh>& final {
     return *checkpointGlobal_ptr;
   };
-
 
   auto neighborhoodCheckpoint() -> NeigborhoodCheckpoint<Ngh>& final {
     return _neighborhoodCheckpoint;
@@ -164,13 +161,13 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   template <class Ngh, class EOT = typename Ngh::EOT>
   struct moFitAndEvalsContinuator : public moCombinedContinuator<Ngh> {
     moEvalsContinuator<Ngh> evals_continuator;
-    moFitContinuator<Ngh> fit_continuator;
+    moFitContinuator<Ngh>   fit_continuator;
 
-    moFitAndEvalsContinuator(double maxFit,
+    moFitAndEvalsContinuator(double                  maxFit,
                              eoEvalFuncCounter<EOT>& _fullEval,
-                             moEvalCounter<Ngh>& _neighborEval,
-                             unsigned int _maxEvals,
-                             bool _restartCounter = true)
+                             moEvalCounter<Ngh>&     _neighborEval,
+                             unsigned int            _maxEvals,
+                             bool                    _restartCounter = true)
         : moCombinedContinuator<Ngh>(evals_continuator),
           evals_continuator(_fullEval,
                             _neighborEval,
@@ -187,8 +184,9 @@ struct FSPProblem : public Problem<FSPNeighbor> {
                                          getMaxEvals(), false);
     if (stopping_criterium == "TIME")
       return new moHighResTimeContinuator<Ngh>(getMaxTime(), false, true);
-    if (stopping_criterium == "FIXEDTIME")
-      return new moHighResTimeContinuator<Ngh>(getFixedTime(), false, true);
+    if (stopping_criterium.find("FIXEDTIME") == 0)
+      return new moHighResTimeContinuator<Ngh>(getFixedTime(),
+                                               false, true);
     if (stopping_criterium == "FITNESS") {
       return new moFitAndEvalsContinuator<Ngh>(getMaxFitness(), eval_counter,
                                                eval_neighbor_counter,
@@ -227,7 +225,14 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   }
 
   auto getFixedTime() -> unsigned {
-    return 60 * getData().noJobs() * getData().noMachines();
+    auto split      = stopping_criterium.find('_');
+    int  multiplier = 1;
+    if (split != std::string::npos) {
+      auto times_str = stopping_criterium.substr(
+          split + 1, split + 1 - stopping_criterium.size());
+      multiplier = std::stoi(times_str);
+    }
+    return 60 * getData().noJobs() * getData().noMachines() * multiplier;
   }
 
   auto getMaxFitness() -> double {
@@ -243,8 +248,8 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     return lower_bound * mult;
   }
 
-  auto getEvalFunc(const std::string& type,
-                   const std::string& obj) -> std::unique_ptr<FSPEvalFunc<EOT>> {
+  auto getEvalFunc(const std::string& type, const std::string& obj)
+      -> std::unique_ptr<FSPEvalFunc<EOT>> {
     std::unique_ptr<FSPEvalFunc<EOT>> ret(nullptr);
     if (type == "PERM" && obj == "MAKESPAN") {
       ret = std::make_unique<PermFSPEvalFunc<EOT>>(_data, Objective::MAKESPAN);
@@ -265,8 +270,8 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     return ret;
   }
 
-  auto getNeighborEvalFunc(const std::string& type,
-                           const std::string& obj) -> std::unique_ptr<moEval<Ngh>> {
+  auto getNeighborEvalFunc(const std::string& type, const std::string& obj)
+      -> std::unique_ptr<moEval<Ngh>> {
     if (type == "PERM" && obj == "MAKESPAN") {
       return std::make_unique<FastFSPNeighborEval>(_data, *eval_func);
     } else {

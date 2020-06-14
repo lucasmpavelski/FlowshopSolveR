@@ -44,8 +44,9 @@ auto main(int argc, char* argv[]) -> int {
   MHParamsSpecs specs = MHParamsSpecsFactory::get(mh);
   std::unordered_map<std::string, std::string> params;
   for (const auto& param : specs) {
-    params[param->name] = parser.createParam(data_folder, param->name, param->name)
-                .value();
+    auto argParam = parser.createParam(std::string(), param->name, param->name);
+    if (parser.isItThere(argParam))
+      params[param->name] = argParam.value();
   }
 
   std::unordered_map<std::string, std::string> problem;

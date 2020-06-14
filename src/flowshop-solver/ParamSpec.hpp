@@ -57,7 +57,12 @@ class ParamSpec {
   }
 
   [[nodiscard]] virtual auto fromStrValue(const std::string& s) const -> float {
-    return std::stof(s.c_str());
+    try {
+      return std::stof(s.c_str());
+    } catch (std::invalid_argument e) {
+      std::cerr << "Value " << s << " cannot be converted to values for paramater " << name;
+      throw std::move(e);
+    }
   }
 
   friend auto operator<<(std::ostream& o, const ParamSpec& ps)

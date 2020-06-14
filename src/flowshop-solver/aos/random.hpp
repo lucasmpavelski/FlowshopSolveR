@@ -10,6 +10,9 @@ template <class OpT>
 class Random : public OperatorSelection<OpT> {
   std::uniform_int_distribution<int> dist;
 
+ protected:
+  auto selectOperatorIdx() -> int override { return dist(RNG::engine); }
+
  public:
   Random(const std::vector<OpT>& strategies)
       : OperatorSelection<OpT>{strategies}, dist(0, strategies.size() - 1) {}
@@ -22,8 +25,4 @@ class Random : public OperatorSelection<OpT> {
     os << "  strategy: Random\n";
     return os;
   }
-
-  using OperatorSelection<OpT>::getOperator;
-
-  auto selectOperator() -> OpT& final { return getOperator(dist(RNG::engine)); }
 };

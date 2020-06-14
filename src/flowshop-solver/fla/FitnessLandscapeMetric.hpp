@@ -2,7 +2,7 @@
 
 #include <paradiseo/eo/eo>
 
-class FitnessLandscapeMetric : public eoFunctorBase {
+class FitnessLandscapeMetric {
  public:
   virtual auto compute() -> double = 0;
 };

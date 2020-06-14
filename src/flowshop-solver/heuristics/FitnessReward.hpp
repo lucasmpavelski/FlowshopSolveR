@@ -26,7 +26,8 @@ struct FitnessPair : public moStat<EOT, std::pair<double, double>> {
     value().first = sol.fitness();
   }
 
-  void operator()(EOT&) final {}
+  void operator()(EOT&) final {
+  }
 
   void lastCall(EOT& sol) final {
     if (sol.invalid())
@@ -53,7 +54,7 @@ struct FitnessPairTime : public moStat<EOT, std::pair<double, double>> {
 };
 
 template <class EOT>
-class FitnessRewards {
+class FitnessRewards : public eoFunctorBase {
   FitnessPair<EOT> local;
   FitnessPairTime<EOT> global;
 

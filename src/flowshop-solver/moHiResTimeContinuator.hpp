@@ -38,7 +38,7 @@ class moHighResTimeContinuator : public moContinuator<Neighbor> {
    * To get the starting time
    * @return starting time
    */
-  std::chrono::system_clock::time_point getStartingTime() const {
+  [[nodiscard]] std::chrono::system_clock::time_point getStartingTime() const {
     return start;
   }
 
@@ -53,7 +53,7 @@ class moHighResTimeContinuator : public moContinuator<Neighbor> {
    * Returns false when the running time is reached.
    * @param _sol the current solution
    */
-  bool operator()(EOT&) final {
+  auto operator()(EOT&) -> bool final {
     auto now = std::chrono::system_clock::now();
     auto duration = std::chrono::duration_cast<TimeT>(now - start);
     bool res = (duration.count() < max);

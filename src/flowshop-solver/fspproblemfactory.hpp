@@ -43,11 +43,11 @@ class FSPProblemFactory {
     };
   }
 
-  static std::string instFolder() {
+  static auto instFolder() -> std::string {
     return data_folder + "/instances/flowshop/";
   }
 
-  static std::string lowerBoundsFile() {
+  static auto lowerBoundsFile() -> std::string {
     return data_folder + "/lower_bounds_data.csv";
   }
 
@@ -73,8 +73,8 @@ class FSPProblemFactory {
     } while (fl);
   }
 
-  static unsigned getLowerBound(const std::string& instance,
-                                const std::string& objective) {
+  static auto getLowerBound(const std::string& instance,
+                                const std::string& objective) -> unsigned {
     auto l = std::find_if(
         lower_bounds_data.begin(), lower_bounds_data.end(),
         [&](const std::unordered_map<std::string, std::string>& line) {

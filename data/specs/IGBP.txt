@@ -1,0 +1,24 @@
+IGBP.Init                      "" c (random,neh)
+IGBP.Init.NEH.Priority         "" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3) | IGBP.Init == neh
+IGBP.Init.NEH.PriorityOrder    "" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | IGBP.Init == neh
+IGBP.Init.NEH.PriorityWeighted "" i (0,1) | IGBP.Init == neh
+IGBP.Init.NEH.Insertion        "" c (first_best,last_best,random_best) | IGBP.Init == neh
+IGBP.Comp.Strat                "" c (strict,equal)
+IGBP.Neighborhood.Size         "" r (0.0,9.999)
+IGBP.Neighborhood.Strat        "" c (ordered,random)
+
+IGBP.Local.Search              "" c (first_improvement,best_improvement,random_best_improvement,best_insertion)
+IGBP.LS.Single.Step            "" c (0, 1)
+
+IGBP.Accept                    "" c (always,better,temperature)
+IGBP.Accept.Temperature        "" r (0.0,5.0)    | IGBP.Accept == temperature
+
+IGBP.Perturb                   "" c (rs,lsps,adaptive)
+IGBP.Perturb.DestructionSize   "" i (2,8)
+IGBP.Perturb.Insertion         "" c (first_best,last_best,random_best)
+
+IGBP.LSPS.Local.Search         "" c (first_improvement,best_improvement,random_best_improvement,best_insertion) | IGBP.Perturb == lsps
+IGBP.LSPS.Single.Step          "" c (0,1)    | IGBP.Perturb == lsps
+
+IGBP.AOS.Strategy              "" c (probability_matching,frrmab,linucb,thompson_sampling,random) | IGBP.Perturb == adaptive
+IGBP.AOS.RewardType            "" c (0,1,2,3)  | IGBP.Perturb == adaptive

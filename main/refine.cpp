@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <iostream>
 
@@ -8,12 +9,17 @@
 #include "flowshop-solver/heuristics/all.hpp"
 #include "flowshop-solver/specsdata.hpp"
 
+
+
 auto main(int, char*[]) noexcept -> int {
   long seed = 123;  // std::stol(argv[1]);
   std::cerr << seed << '\n';
   RNG::seed(seed);
-  FSPProblemFactory::init(DATA_FOLDER);
-  MHParamsSpecsFactory::init(DATA_FOLDER "/specs", true);
+  FSPProblemFactory::init("/home/lucasmp/dev/ig-aos-flowshop/data");
+  MHParamsSpecsFactory::init(
+      "/home/lucasmp/dev/ig-aos-flowshop/data"
+      "/specs",
+      true);
 
   std::unordered_map<std::string, std::string> prob;
   prob["problem"]            = "FSP";
@@ -22,7 +28,6 @@ auto main(int, char*[]) noexcept -> int {
   prob["budget"]             = "med";
   prob["instance"]           = "taillard_rand_50_20_09.dat";
   prob["stopping_criterium"] = "FIXEDTIME";
-
   std::unordered_map<std::string, std::string> params;
   params["IG.Init"]                      = "neh";
   params["IG.Init.NEH.Priority"]         = "sum_pij";
@@ -44,81 +49,6 @@ auto main(int, char*[]) noexcept -> int {
   params["IG.AOS.Strategy"]              = "frrmab";
   params["IG.AOS.RewardType"]            = "1";
 
-  RunOptions runOptions;
-  runOptions.printBestFitness = true;
-
-  FSPProblem     problem = FSPProblemFactory::get(prob);
-  MHParamsSpecs  specs   = MHParamsSpecsFactory::get("IG");
-  MHParamsValues paramsValues(&specs);
-  paramsValues.readValues(params);
-
-  eoFSPFactory factory{paramsValues, problem};
-
-  FitnessRewards<FSP> rewards;
-  RewardPrinter<FSP>  rewardPrinter{rewards};
-  if (runOptions.printFitnessReward) {
-    std::cout << rewardPrinter.header();
-    problem.checkpoint().add(rewards.localStat());
-    problem.checkpointGlobal().add(rewards.globalStat());
-    problem.checkpointGlobal().add(rewardPrinter);
-  }
-
-  myTimeStat<FSP>           timer;
-  myTimeFitnessPrinter<FSP> timeFitness{timer};
-  if (runOptions.printBestFitness) {
-    std::puts("runtime,fitness");
-    problem.checkpointGlobal().add(timeFitness);
-  }
-
-  auto init    = factory.buildInit();
-  auto algo    = factory.buildLocalSearch();
-  auto accept  = factory.buildAcceptanceCriterion();
-  auto perturb = factory.buildPerturb();
-
-  FSP _solution;
-  (*init)(_solution);
-  problem.checkpoint().init(_solution);
-  problem.checkpointGlobal().init(_solution);
-
-  FSP         currentSol;
-  FSPNeighbor emptyNeighbor;
-
-  if (_solution.invalid())
-    problem.eval()(_solution);
-
-  // initialization of the parameter of the search (for example fill empty the
-  // tabu list)
-  perturb->init(_solution);
-  accept->init(_solution);
-
-  // initialization of the external continuator (for example the time, or the
-  // number of generations)
-  problem.continuator().init(_solution);
-  bool firstIteration = true;
-  do {
-    // perturb solution exept at the first iteration
-    currentSol = _solution;
-    if (!firstIteration)
-      (*perturb)(currentSol);
-    else
-      firstIteration = false;
-
-    // apply the local search on the copy
-    (*algo)(currentSol);
-
-    // if a solution in the neighborhood can be accepted
-    if ((*accept)(_solution, currentSol)) {
-      _solution   = currentSol;
-      perturb->add(_solution, emptyNeighbor);
-      accept->add(_solution, emptyNeighbor);
-    }
-
-    perturb->update(_solution, emptyNeighbor);
-    accept->update(_solution, emptyNeighbor);
-
-  } while (problem.checkpointGlobal()(_solution));
-
-  problem.checkpointGlobal().lastCall(_solution);
 
   return 0;
 }
