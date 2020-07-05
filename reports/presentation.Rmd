@@ -17,7 +17,10 @@ runs <- list(
   rs_ig_destruction_sizes = read_runs("rs-ig-destruction-sizes"),
   rs_reward_types = read_runs('best-perturb-fitness'),
   aos_ig = read_runs('aos-ig'),
-  aos_tunning = read_runs('aos-tunning')
+  #aos_tunning = read_runs('aos-tunning'),
+  aos_tunning_race = read_runs('aos-tunning-final-test'),
+  aos_tunning_generarization = read_runs('aos-tunning-generarization'),
+  aos_148 = read_runs('aos-148-final-comparison')
 )
 ```
 
@@ -41,7 +44,7 @@ Setup: `r n_distinct(ig_compare_d_dt$instance)` instances, `r n_distinct(ig_comp
 ```{r}
 compareRpdsCI <- function(runs_dt) {
   plt_dt <- runs_dt %>%
-    group_by(problem, type, objective, instance, name) %>%
+    group_by(problem, type, objective, instance, name, seed) %>%
     filter(fitness == min(fitness))
   plt_dt <- plt_dt %>%
     group_by(problem, type, objective, instance) %>%
@@ -51,14 +54,14 @@ compareRpdsCI <- function(runs_dt) {
     mutate(rpd = 100 * (fitness - best_known) / best_known)
   plt_dt <- plt_dt %>%
     group_by(problem, type, objective, budget, stopping_criterium, name) %>%
-    mutate(
+    summarise(
       mrpd = mean(rpd),
       ci = sd(rpd) * sqrt(1 / (2 * n()))
     )
   plt_dt %>%
     ggplot(aes(x = name)) +
-    geom_errorbar(aes(y = mrpd, ymin = mrpd - ci, ymax = mrpd + ci)) + 
-    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    geom_errorbar(aes(y = mrpd, ymin = mrpd - ci, ymax = mrpd + ci, color = paste(problem, type, objective))) + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "bottom") +
     theme_bw()
 }
 
@@ -254,3 +257,28 @@ bind_rows(best_ig, best_aos) %>%
 
 ```
 
+```{r}
+best_ig <- runs$rs_ig_destruction_sizes %>%
+  filter(name %in% c("IG (d=4)")) ##, "IG RND"))
+best_aos <- runs$aos_tunning_race 
+bind_rows(best_ig, best_aos) %>%
+  filter(type == 'PERM', objective == 'MAKESPAN', no_jobs >= 50, no_machines >= 10) %>%
+  compareRpdsCI() +
+  coord_flip()
+```
+
+
+```{r}
+best_ig <- runs$rs_ig_destruction_sizes %>%
+  filter(name %in% c("IG (d=4)", "IG RND"))
+bind_rows(best_ig, runs$aos_148) %>%
+  filter(type == 'PERM', objective == 'MAKESPAN', no_jobs >= 50, no_machines >= 10) %>%
+  compareRpdsCI() +
+  coord_flip()
+```
+
+```{r}
+runs$aos_tunning_generarization %>%
+  compareRpdsCI() +
+  coord_flip()
+```

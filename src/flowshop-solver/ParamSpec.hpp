@@ -58,6 +58,8 @@ class ParamSpec {
 
   [[nodiscard]] virtual auto fromStrValue(const std::string& s) const -> float {
     try {
+      if (s == "NA")
+        return std::numeric_limits<float>::quiet_NaN();
       return std::stof(s.c_str());
     } catch (std::invalid_argument e) {
       std::cerr << "Value " << s << " cannot be converted to values for paramater " << name;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <stdexcept>
 #include "flowshop-solver/aos/adaptive_operator_selection.hpp"
 #include "flowshop-solver/continuators/myTimeStat.hpp"

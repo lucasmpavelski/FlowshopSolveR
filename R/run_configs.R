@@ -12,13 +12,17 @@ EXPERIMENTS <- c(
   'reward-distributions',
   'best-perturb-fitness',
   'best-perturb-destruction-size',
-  'aos-tunning'
+  'aos-tunning',
+  'aos-tunning-final-test',
+  'aos-tunning-generarization',
+  'aos-148-final-comparison',
+  'ig-lsps'
 )
 
 
 # paths
 ROOT <- here()
-EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[6])
+EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[10])
 DATA <- file.path(ROOT, 'data')
 EXECUTABLE <- file.path(ROOT, 'build', 'main', 'fsp_solver')
 OPTIONS <- read_lines(file.path(EXPR, 'params.txt'))
@@ -61,8 +65,8 @@ solveCmd <- function(mh, seed, params, output, core, ...) {
 
 set.seed(31415)
 seeds <- c(
-  123# for easy debugging
-  # as.integer(runif(1) * 1e6)
+  123, # for easy debugging
+  as.integer(runif(4) * 1e6)
 )
 
 experiments <- crossing(

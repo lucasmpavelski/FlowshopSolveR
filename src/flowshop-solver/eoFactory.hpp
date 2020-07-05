@@ -144,7 +144,6 @@ class eoFactory : public eoFunctorStore {
 
     auto& eval = _problem.eval();
     auto& nEval = _problem.neighborEval();
-    auto& cont = _problem.continuator();
     auto& cp = _problem.checkpoint();
     auto& nghCp = _problem.neighborhoodCheckpoint();
 
@@ -168,10 +167,9 @@ class eoFactory : public eoFunctorStore {
     }
 
     if (categorical(".LS.Single.Step")) {
-      auto singleStepContinuator = pack<moCombinedContinuator<Ngh>>(cp);
-      auto falseCont = pack<falseContinuator<Ngh>>();
-      singleStepContinuator.add(falseCont);
-      ret->setContinuator(singleStepContinuator);
+      // auto& singleStepContinuator = pack<moCombinedContinuator<Ngh>>(cp);
+      auto& falseCont = pack<falseContinuator<Ngh>>();
+      cp.add(falseCont);
     }
     return ret;
   }

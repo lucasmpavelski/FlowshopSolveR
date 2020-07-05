@@ -80,7 +80,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     const int nh_size_lsps = pow(_problem.size() - destruction_size - 1, 2);
     auto      neighborhood = buildNeighborhood(nh_size_lsps);
 
-    const std::string name = categoricalName("IG.LSPS.Local.Search");
+    const std::string name = categoricalName(".LSPS.Local.Search");
 
     auto  compNN = buildNeighborComparator();
     auto  compSN = buildSolNeighborComparator();
@@ -107,14 +107,19 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   }
 
   auto buildOperatorSelection() -> OperatorSelection<int>* {
-    std::vector<int>  options = {2, 4, 8};
+    std::string opts = categoricalName(".AOS.Options");
+    std::vector<int>  options;
+    if (opts == "2_4_8")
+      options = {2, 4, 8};
+    else if (opts == "1_4_8")
+      options = {1, 4, 8};
     const std::string name    = categoricalName(".AOS.Strategy");
 
     OperatorSelection<int>* strategy = nullptr;
     if (name == "probability_matching") {
       strategy = &pack<ProbabilityMatching<int>>(
           options, categoricalName(".AOS.PM.RewardType"), real(".AOS.PM.Alpha"),
-          real(".AOS.PM.PMin"));
+          real(".AOS.PM.PMin"), integer(".AOS.PM.UpdateWindow"));
     } else if (name == "frrmab") {
       strategy = &pack<FRRMAB<int>>(options, integer(".AOS.FRRMAB.WindowSize"),
                                 real(".AOS.FRRMAB.Scale"),
@@ -140,7 +145,11 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
 
       strategy = &pack<LinUCB<int>>(options, context, real(".AOS.LINUCB.Alpha"));
     } else if (name == "thompson_sampling") {
-      strategy = &pack<ThompsonSampling<int>>(options);
+      if (categoricalName(".AOS.TS.Strategy") == "static") {
+        strategy = &pack<ThompsonSampling<int>>(options);
+      } else if (categoricalName(".AOS.TS.Strategy") == "dynamic") {
+        strategy = &pack<DynamicThompsonSampling<int>>(options, integer(".AOS.TS.C"));
+      }
     } else if (name == "random") {
       strategy = &pack<Random<int>>(options);
     }
@@ -148,7 +157,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     auto warmUpProportion = real(".AOS.WarmUp.Proportion");
     auto warmUpStrategy = categoricalName(".AOS.WarmUp.Strategy");
     auto maxTime = _problem.getFixedTime() * warmUpProportion;
-    auto& warmUpContinuator = pack<moHighResTimeContinuator<OperatorSelection<int>::DummyNgh>>(maxTime);
+    auto& warmUpContinuator = pack<moHighResTimeContinuator<OperatorSelection<int>::DummyNgh>>(maxTime, false);
     strategy->setWarmUp(warmUpContinuator, warmUpStrategy, 1);
 
     return strategy;

@@ -2,6 +2,7 @@
 #define PROBABILITY_MATCHING_H
 
 #include <cctype>
+#include <iostream>
 #include <limits>
 
 #include "adaptive_operator_selection.hpp"
@@ -27,6 +28,9 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
   real_vec S;
   int_vec  nr_S;
   real_vec maior_S;
+
+  int updateCounter = 0;
+  int updateWindow  = 5;
 
   void updateRewards();
   auto updateQualities() -> double;
@@ -68,26 +72,30 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
   ProbabilityMatching(const std::vector<OpT>& operators,
                       const RewardType&       rew_type,
                       const double            alpha,
-                      const double            p_min)
+                      const double            p_min,
+                      const int               updateWindow)
       : OperatorSelection<OpT>(operators),
         alpha(alpha),
         p_min(p_min),
         rew_type(rew_type),
-        quality(noOperators()),
-        reward(noOperators()),
-        prob(noOperators()),
-        S(noOperators()),
-        nr_S(noOperators()),
-        maior_S(noOperators()) {
+        quality(operators.size()),
+        reward(operators.size()),
+        prob(operators.size()),
+        S(operators.size()),
+        nr_S(operators.size()),
+        maior_S(operators.size()),
+        updateCounter{1},
+        updateWindow{updateWindow} {
     reset(std::numeric_limits<double>::infinity());
   };
 
   ProbabilityMatching(const std::vector<OpT>& operators,
-                      const std::string&      rew_type = "avgabs",
-                      const double            alpha    = 0.8,
-                      const double            p_min    = 0.1)
+                      const std::string&      rew_type     = "avgabs",
+                      const double            alpha        = 0.8,
+                      const double            p_min        = 0.1,
+                      const int               updateWindow = 1)
       : ProbabilityMatching{operators, rewardTypeFromString(rew_type), alpha,
-                            p_min} {}
+                            p_min, updateWindow} {}
 
   void reset(const double) final;
   void feedback(const double) final;
@@ -135,6 +143,8 @@ void ProbabilityMatching<OpT>::reset(double best_f) {
 
 template <typename OpT>
 void ProbabilityMatching<OpT>::feedback(double feedback) {
+  if (chosen_strat == -1)
+    return;
   S[chosen_strat] += feedback;
   nr_S[chosen_strat]++;
   if (feedback > maior_S[chosen_strat])
@@ -143,10 +153,13 @@ void ProbabilityMatching<OpT>::feedback(double feedback) {
 
 template <typename OpT>
 void ProbabilityMatching<OpT>::update() {
+  updateCounter++;
+  if (updateCounter % updateWindow > 0)
+    return;
   this->updateRewards();
   const double q_total = this->updateQualities();
 
-  if (q_total == 0.0)  // no improvement, maintain the probabilities
+  if (q_total <= 1e-6)  // no improvement, maintain the probabilities
     return;
 
   const double s = (1.0 - noOperators() * p_min) / q_total;
@@ -179,7 +192,7 @@ void ProbabilityMatching<OpT>::updateRewards() {
       }
       // calcula o reward
       for (int k = 0; k < noOperators(); ++k)
-        reward[k] = nr_S[k] > 0 ? rew_linha[k] / max_rew_linha : 0.0;
+        reward[k] = nr_S[k] > 0 ? rew_linha[k] / (max_rew_linha + 1e-6) : 0.0;
       break;
     }
     case RewardType::ExtAbs: {

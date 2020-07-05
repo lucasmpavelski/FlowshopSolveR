@@ -3,20 +3,23 @@ library(tidyverse)
 library(irace)
 library(future)
 
-plan(sequential)
-# plan(multisession)
-
+# plan(sequential)
+plan(multisession)
 
 EXPERIMENTS <- c(
-  'irace-aos'
+  'irace-ts',
+  'irace-pm',
+  'irace-frrmab',
+  'irace-aos',
+  'irace_148_opts'
 )
 
 # paths
 ROOT <- here()
-EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[1])
-DATA <- EXPR
-EXECUTABLE <- file.path(ROOT, 'build', 'main', 'fsp_solver')
-N_CORES <- 1
+EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[5])
+BUILD <- file.path(ROOT, 'build', 'main', 'fsp_solver')
+EXECUTABLE <- file.path(EXPR, 'fsp_solver')
+N_CORES <- 7
 OPTIONS <- ''
 
 # datasets
@@ -44,16 +47,20 @@ solveCmd <- function(problem, config, seed, core) {
     paste0("--", names(config), "=", config),
     '--printBestFitness'
   )
-  #print(paste0(c('START', exe_bin, args), collapse = ' '))
   data <- system2(exe_bin, args, stdout = TRUE)
-  as.integer(str_split(last(data), ',', simplify = T)[,2])
+  dt <- str_split(last(data), ',', simplify = T)
+  if (ncol(dt) < 2) {
+    write_lines(paste("error in command", args, collapse = ' '), 'errors.txt', append=T)
+    return(999999999999)
+  } else {
+     as.integer(dt[,2])
+  }
 }
 
 fspTargetRunnerCmdSequential <- function(experiments_dt) {
   experiments_dt %>%
     pmap(., solveCmd)
 }
-
 
 fspTargetRunnerCmdParallel <- function(experiments, scenario, config, ...) {
   problems <- scenario$targetRunnerData
@@ -66,6 +73,7 @@ fspTargetRunnerCmdParallel <- function(experiments, scenario, config, ...) {
   experiments_futures <- expetiments_dt %>%
     group_split(core) %>%
     map(function(exp_dt) {
+      # fspTargetRunnerCmdSequential(exp_dt)
       futureCall(fspTargetRunnerCmdSequential, 
                  args = list(experiments_dt = exp_dt))
     })
@@ -76,24 +84,22 @@ fspTargetRunnerCmdParallel <- function(experiments, scenario, config, ...) {
 }
 
 MH <- 'IG'
-specs <- file.path(DATA, "specs", paste0(MH, '.txt'))
+specs <- file.path(EXPR, paste0(MH, '.txt'))
 parameters <- readParameters(specs)
 print(parameters)
-max_config_eval <- 5000
+max_config_eval <- 1000
 scenario <- defaultScenario(list(
   targetRunnerParallel = fspTargetRunnerCmdParallel,
   maxExperiments = max_config_eval,
   instances = 1:nrow(problems),
   targetRunnerData = problems,
-  #logFile = file.path(results_fdr, logNameForConfig(config)),
-  parallel = 1#,
-  #testType = "T-test"
+  logFile = file.path(EXPR, 'irace_log.Rdata'),
+  parallel = 1
 ))
-    # write(inst_name, stderr())
-    # write(inst_name, stdout())
-    irace.result <- irace(scenario = scenario, parameters = parameters)
-#    save(irace.result, file = file.path(results_fdr, result_name))
 
+file.copy(BUILD, EXPR)
 
+irace_result <- irace(scenario = scenario, parameters = parameters)
+save(irace_result, file = file.path(EXPR, 'irace_result.Rdata'))
 
 plan(sequential)
