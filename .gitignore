@@ -1,6 +1,9 @@
 build/*
 /logs
-runs/*
+runs/**/*.out
+runs/**/*.Rdata
+runs/**/experiments.csv
+runs/**/fsp_solver
 data/results/*
 data/raw/*
 data/models/*

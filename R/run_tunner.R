@@ -11,15 +11,16 @@ EXPERIMENTS <- c(
   'irace-pm',
   'irace-frrmab',
   'irace-aos',
-  'irace_148_opts'
+  'irace_148_opts',
+  'ig-lsps-aos-tunning'
 )
 
 # paths
 ROOT <- here()
-EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[5])
+EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[6])
 BUILD <- file.path(ROOT, 'build', 'main', 'fsp_solver')
 EXECUTABLE <- file.path(EXPR, 'fsp_solver')
-N_CORES <- 7
+N_CORES <- 2
 OPTIONS <- ''
 
 # datasets
@@ -50,7 +51,9 @@ solveCmd <- function(problem, config, seed, core) {
   data <- system2(exe_bin, args, stdout = TRUE)
   dt <- str_split(last(data), ',', simplify = T)
   if (ncol(dt) < 2) {
-    write_lines(paste("error in command", args, collapse = ' '), 'errors.txt', append=T)
+    write_lines(paste('"', args, '",'), 'errors.txt', append=T)
+    write_lines(paste('output:', data), 'errors.txt', append=T)
+    write_lines(paste(args, collapse = ' '), 'errors.txt', append=T)
     return(999999999999)
   } else {
      as.integer(dt[,2])
@@ -97,7 +100,7 @@ scenario <- defaultScenario(list(
   parallel = 1
 ))
 
-file.copy(BUILD, EXPR)
+file.copy(BUILD, EXPR, overwrite = T)
 
 irace_result <- irace(scenario = scenario, parameters = parameters)
 save(irace_result, file = file.path(EXPR, 'irace_result.Rdata'))

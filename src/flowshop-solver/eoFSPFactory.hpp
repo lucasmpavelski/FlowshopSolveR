@@ -101,8 +101,8 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
                                                *compNN, *compSN);
     } else if (name == "best_insertion") {
       auto explorer =
-          pack<BestInsertionExplorer<EOT>>(nEval, nghCp, *compNN, *compSN);
-      localSearch = &pack<moLocalSearch<Ngh>>(explorer, cont, eval);
+          &pack<BestInsertionExplorer<EOT>>(nEval, nghCp, *compNN, *compSN);
+      localSearch = &pack<moLocalSearch<Ngh>>(*explorer, cont, eval);
     }
     return &pack<myResizableLocalSearch<Ngh>>(
         *localSearch, *neighborhood,
