@@ -168,10 +168,9 @@ class eoFactory : public eoFunctorStore {
     }
 
     if (categorical(".LS.Single.Step")) {
-      auto singleStepContinuator = pack<moCombinedContinuator<Ngh>>(cp);
-      auto falseCont = pack<falseContinuator<Ngh>>();
-      singleStepContinuator.add(falseCont);
-      ret->setContinuator(singleStepContinuator);
+      // auto& singleStepContinuator = pack<moCombinedContinuator<Ngh>>(cp);
+      auto& falseCont = pack<falseContinuator<Ngh>>();
+      cp.add(falseCont);
     }
     return ret;
   }

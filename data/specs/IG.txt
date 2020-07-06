@@ -26,11 +26,13 @@ IG.LSPS.Local.Search         "" c (first_improvement,best_improvement,random_bes
 IG.LSPS.Single.Step          "" c (0,1)    | IG.Perturb == lsps
 
 IG.AOS.Strategy              "" c (probability_matching,frrmab,linucb,thompson_sampling,random) | IG.Perturb == adaptive
-IG.AOS.RewardType            "" c (0,1,2,3)  | IG.Perturb == adaptive
+IG.AOS.RewardType            "" c (0,1,2,3) | IG.Perturb == adaptive
+IG.AOS.Options               "" c (2_4_8, 1_4_8)
 
 IG.AOS.PM.RewardType         "" c (avgabs,avgnorm,extabs,extnorm) 
 IG.AOS.PM.Alpha              "" r (0.1, 0.9)
 IG.AOS.PM.PMin               "" r (0.05, 0.2)
+IG.AOS.PM.UpdateWindow       "" i (1,500)
 
 IG.AOS.FRRMAB.WindowSize     "" i (10, 500)
 IG.AOS.FRRMAB.Scale          "" r (0.01, 100)
@@ -40,3 +42,6 @@ IG.AOS.LINUCB.Alpha          "" r (0.0, 1.5)
 
 IG.AOS.WarmUp.Proportion     "" r (0.0,0.5)
 IG.AOS.WarmUp.Strategy       "" c (random, fixed)
+
+IG.AOS.TS.Strategy           "" c (static, dynamic)
+IG.AOS.TS.C                  "" i (1,500) | IG.AOS.TS.Strategy == dynamic
