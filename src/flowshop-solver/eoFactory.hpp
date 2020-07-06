@@ -1,5 +1,6 @@
 #pragma once
 
+#include <perturb/moPerturbation.h>
 #include <type_traits>
 
 #include <paradiseo/eo/eo>
@@ -31,7 +32,7 @@ class eoFactory : public eoFunctorStore {
   virtual auto domainAcceptanceCriterion() -> moAcceptanceCriterion<Ngh>* {
     return nullptr;
   }
-  virtual auto domainNeighborhood() -> moNeighborhood<Ngh>* { return nullptr; }
+  virtual auto domainNeighborhood() -> moIndexNeighborhood<Ngh>* { return nullptr; }
   virtual auto domainPerturb() -> moPerturbation<Ngh>* { return nullptr; }
 
   virtual auto domainSolComparator() -> moSolComparator<Ngh>* {
@@ -92,11 +93,11 @@ class eoFactory : public eoFunctorStore {
     return domainAcceptanceCriterion();
   }
 
-  auto buildNeighborhood() -> moNeighborhood<Ngh>* {
+  auto buildNeighborhood() -> moIndexNeighborhood<Ngh>* {
     return buildNeighborhood(_problem.maxNeighborhoodSize());
   }
 
-  auto buildNeighborhood(const int max_size) -> moNeighborhood<Ngh>* {
+  auto buildNeighborhood(const int max_size) -> moIndexNeighborhood<Ngh>* {
     const int size = max_size * real(".Neighborhood.Size");
     const std::string name = categoricalName(".Neighborhood.Strat");
     if (name == "ordered") {
@@ -144,7 +145,6 @@ class eoFactory : public eoFunctorStore {
 
     auto& eval = _problem.eval();
     auto& nEval = _problem.neighborEval();
-    auto& cont = _problem.continuator();
     auto& cp = _problem.checkpoint();
     auto& nghCp = _problem.neighborhoodCheckpoint();
 

@@ -3,12 +3,12 @@
 #include <stdexcept>
 #include "flowshop-solver/aos/adaptive_operator_selection.hpp"
 #include "flowshop-solver/continuators/myTimeStat.hpp"
-#include "flowshop-solver/heuristics/perturb/DestructionConstruction.hpp"
 #include "flowshop-solver/heuristics/FitnessReward.hpp"
+#include "flowshop-solver/heuristics/perturb/DestructionConstruction.hpp"
 #include "heuristics/InsertionStrategy.hpp"
 
 template <class Ngh>
-class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
+class AdaptiveDestructionSize : public DestructionSize {
   using EOT = typename Ngh::EOT;
 
   FitnessRewards<EOT>& rewards;
@@ -21,14 +21,12 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
   myTimeStat<EOT> time;
 
  public:
-  AdaptiveDestructionConstruction(InsertionStrategy<Ngh>& insert,
-                                  OperatorSelection<int>& operatorSelection,
-                                  FitnessRewards<EOT>& rewards,
-                                  int rewardType,
-                                  bool printRewards = false,
-                                  bool printChoices = false)
-      : DestructionConstruction<Ngh>{insert, 2},
-        rewards{rewards},
+  AdaptiveDestructionSize(OperatorSelection<int>& operatorSelection,
+                          FitnessRewards<EOT>& rewards,
+                          int rewardType,
+                          bool printRewards = false,
+                          bool printChoices = false)
+      : rewards{rewards},
         operatorSelection{operatorSelection},
         rewardType{rewardType},
         printChoices{printChoices},
@@ -39,9 +37,7 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
       std::cout << "runtime,ig,lg,il,ll\n";
   }
 
-  using DestructionConstruction<Ngh>::destructionSize;
-
-  [[nodiscard]] auto reward() -> double  {
+  [[nodiscard]] auto reward() -> double {
     double pf, cf;
     switch (rewardType) {
       case 0:
@@ -66,9 +62,10 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
     return (pf - cf) / pf;
   }
 
-  auto operator()(EOT& sol) -> bool override {
+  auto value() -> int override {
     if (iteration >= 2) {
       if (printRewards) {
+        EOT sol;
         time(sol);
         std::cout << time.value() << ',' << rewards.initialGlobal() << ','
                   << rewards.lastGlobal() << ',' << rewards.initialLocal()
@@ -80,15 +77,10 @@ class AdaptiveDestructionConstruction : public DestructionConstruction<Ngh> {
     iteration++;
     int d = operatorSelection.selectOperator();
     if (printChoices) {
+      EOT sol;
       time(sol);
       std::cout << time.value() << ',' << d << '\n';
     }
-    destructionSize(d);
-    return DestructionConstruction<Ngh>::operator()(sol);
+    return d;
   }
-
-  void init(EOT&) override{};
-  void add(EOT&, Ngh&) override{};
-  void update(EOT&, Ngh&) override{};
-  void clearMemory() override{};
 };

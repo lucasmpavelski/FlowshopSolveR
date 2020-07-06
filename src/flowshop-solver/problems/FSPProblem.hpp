@@ -154,8 +154,10 @@ struct FSPProblem : public Problem<FSPNeighbor> {
     }
   }
 
-  [[nodiscard]] auto maxNeighborhoodSize() const -> int override {
-    return std::pow(eval_func->noJobs() - 1, 2);
+  using Problem<Ngh>::maxNeighborhoodSize;
+
+  [[nodiscard]] auto getNeighborhoodSize(int size) const -> int override {
+    return std::pow(size - 1, 2);
   }
 
   template <class Ngh, class EOT = typename Ngh::EOT>

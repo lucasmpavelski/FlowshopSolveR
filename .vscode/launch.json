@@ -5,13 +5,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch",
-            "type": "lldb",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/test/test-aos",
-            "args": [],
-        },
-        {
             "name": "fsp_solver_example",
             "type": "lldb",
             "request": "launch",
@@ -39,7 +32,8 @@
                 "--IG.LS.Single.Step=0",                                               
                 "--IG.Accept=temperature",                                               
                 "--IG.Accept.Temperature=0.5",                                               
-                "--IG.Perturb=adaptive",                                               
+                "--IG.Perturb=lsps",                                                  
+                "--IG.Perturb.DestructionSizeStrategy=fixed",                                   
                 "--IG.Perturb.DestructionSize=4",                                               
                 "--IG.Perturb.Insertion=first_best",                                               
                 "--IG.LSPS.Local.Search=best_insertion",                                               

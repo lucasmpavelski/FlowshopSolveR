@@ -1,6 +1,5 @@
 #pragma once
 
-#include <perturb/moPerturbation.h>
 #include <algorithm>
 
 #include <paradiseo/eo/eo>
@@ -8,26 +7,40 @@
 
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 
+class DestructionSize : public eoFunctorBase {
+  public:
+  virtual auto value() -> int = 0;
+};
+
+class FixedDestructionSize : public DestructionSize {
+  int destructionSize;
+
+  public:
+  FixedDestructionSize(int destructionSize) :
+    destructionSize{destructionSize} {};
+
+  auto value() -> int override {
+    return destructionSize;
+  }
+};
+
 template <class Ngh, typename EOT = typename Ngh::EOT>
 class DestructionConstruction : public moPerturbation<Ngh> {
   InsertionStrategy<Ngh>& _insertionStrategy;
-  unsigned _destructionSize;
+  DestructionSize& _destructionSize;
 
  public:
   DestructionConstruction(InsertionStrategy<Ngh>& insertionStrategy,
-                          unsigned destructionSize)
+                          DestructionSize& destructionSize)
       : _insertionStrategy{insertionStrategy},
         _destructionSize{destructionSize} {}
 
-  auto destructionSize() const -> int { return _destructionSize; }
-  void destructionSize(int _destructionSize) {
-    this->_destructionSize = _destructionSize;
-  }
-
+  [[nodiscard]] auto destructionSize() const -> const DestructionSize& { return _destructionSize; }
+  
   auto destruction(EOT& sol) -> std::vector<int> {
     int n = sol.size();
     std::vector<int> removed;
-    int ds = std::min(destructionSize(), n);
+    int ds = std::min(_destructionSize.value(), n);
     for (int k = 0; k < ds; k++) {
       int index = rng.random(sol.size());
       removed.push_back(sol[index]);

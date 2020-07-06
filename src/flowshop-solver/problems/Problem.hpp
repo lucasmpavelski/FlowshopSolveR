@@ -26,5 +26,9 @@ struct Problem {
   [[nodiscard]] virtual auto size(int i = 0) const -> int = 0;
   [[nodiscard]] virtual auto upperBound() const -> double = 0;
   [[nodiscard]] virtual auto noEvals() const -> int = 0;
-  [[nodiscard]] virtual auto maxNeighborhoodSize() const -> int = 0;
+  [[nodiscard]] virtual auto getNeighborhoodSize(int size) const -> int = 0;
+
+  [[nodiscard]] auto maxNeighborhoodSize() const -> int {
+    return getNeighborhoodSize(size());
+  }
 };

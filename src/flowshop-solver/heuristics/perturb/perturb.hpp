@@ -5,4 +5,4 @@
 #include "flowshop-solver/heuristics/perturb/ilsKickOp.hpp"
 #include "flowshop-solver/heuristics/perturb/randomNeutralWalkExplorer.hpp"
 #include "flowshop-solver/heuristics/perturb/OpPerturbDestConst.hpp"
-#include "flowshop-solver/heuristics/ig_lsps.hpp"
+#include "flowshop-solver/heuristics/perturb/IGLocalSearchPartialSolution.hpp"

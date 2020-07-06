@@ -1,11 +1,13 @@
 #pragma once
 
+#include <algo/moLocalSearch.h>
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/MHParamsValues.hpp"
 #include "flowshop-solver/eoFactory.hpp"
 
+#include "heuristics/perturb/DestructionConstruction.hpp"
 #include "problems/FSP.hpp"
 #include "problems/FSPProblem.hpp"
 
@@ -18,7 +20,7 @@
 #include "flowshop-solver/heuristics/perturb/perturb.hpp"
 
 #include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
-#include "flowshop-solver/heuristics/ig_lsps.hpp"
+#include "flowshop-solver/heuristics/perturb/IGLocalSearchPartialSolution.hpp"
 
 #include "flowshop-solver/aos/frrmab.hpp"
 #include "flowshop-solver/aos/lin_ucb.hpp"
@@ -45,10 +47,10 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   auto domainAcceptanceCriterion() -> moAcceptanceCriterion<Ngh>* override {
     const std::string name = categoricalName(".Accept");
     if (name == "temperature") {
-      const int    noJobs      = _problem.getData().noJobs();
-      const int    noMachines  = _problem.getData().noMachines();
-      const int    maxCT       = _problem.getData().maxCT();
-      const double tempScale   = maxCT / (10.0 * noJobs * noMachines);
+      const int noJobs = _problem.getData().noJobs();
+      const int noMachines = _problem.getData().noMachines();
+      const int maxCT = _problem.getData().maxCT();
+      const double tempScale = maxCT / (10.0 * noJobs * noMachines);
       const double temperature = real(".Accept.Temperature") * tempScale;
       return &pack<acceptCritTemperature<Ngh>>(temperature);
     }
@@ -58,8 +60,8 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   auto domainInit() -> eoInit<EOT>* override {
     const std::string name = categoricalName(".Init");
     if (name == "neh") {
-      auto nehPriority         = categoricalName(".Init.NEH.Priority");
-      auto nehPriorityOrder    = categoricalName(".Init.NEH.PriorityOrder");
+      auto nehPriority = categoricalName(".Init.NEH.Priority");
+      auto nehPriorityOrder = categoricalName(".Init.NEH.PriorityOrder");
       auto nehPriorityWeighted = integer(".Init.NEH.PriorityWeighted");
 
       auto priority = buildPriority(_problem.data(), nehPriority,
@@ -76,39 +78,40 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     return nullptr;
   }
 
-  auto buildLSPSLocalSearch(const int destruction_size) -> moLocalSearch<Ngh>* {
-    const int nh_size_lsps = pow(_problem.size() - destruction_size - 1, 2);
-    auto      neighborhood = buildNeighborhood(nh_size_lsps);
+  auto buildLSPSLocalSearch()
+      -> myResizableLocalSearch<Ngh>* {
+    auto neighborhood = buildNeighborhood(_problem.maxNeighborhoodSize());
+    auto compNN = buildNeighborComparator();
+    auto compSN = buildSolNeighborComparator();
+    auto& eval = _problem.eval();
+    auto& nEval = _problem.neighborEval();
+    auto& cont = _problem.continuator();
+    auto& nghCp = _problem.neighborhoodCheckpoint();
 
-    const std::string name = categoricalName("IG.LSPS.Local.Search");
-
-    auto  compNN = buildNeighborComparator();
-    auto  compSN = buildSolNeighborComparator();
-    auto& eval   = _problem.eval();
-    auto& nEval  = _problem.neighborEval();
-    auto& cont   = _problem.continuator();
-    auto& nghCp  = _problem.neighborhoodCheckpoint();
-
+    moLocalSearch<Ngh>* localSearch = nullptr;
+    const std::string name = categoricalName(".LSPS.Local.Search");
     if (name == "first_improvement") {
-      return &pack<moFirstImprHC<Ngh>>(*neighborhood, eval, nEval, cont,
-                                       *compNN, *compSN);
+      localSearch = &pack<moFirstImprHC<Ngh>>(*neighborhood, eval, nEval, cont,
+                                              *compNN, *compSN);
     } else if (name == "best_improvement") {
-      return &pack<moSimpleHC<Ngh>>(*neighborhood, eval, nEval, cont, *compNN,
-                                    *compSN);
+      localSearch = &pack<moSimpleHC<Ngh>>(*neighborhood, eval, nEval, cont,
+                                           *compNN, *compSN);
     } else if (name == "random_best_improvement") {
-      return &pack<moRandomBestHC<Ngh>>(*neighborhood, eval, nEval, cont,
-                                        *compNN, *compSN);
+      localSearch = &pack<moRandomBestHC<Ngh>>(*neighborhood, eval, nEval, cont,
+                                               *compNN, *compSN);
     } else if (name == "best_insertion") {
       auto explorer =
           pack<BestInsertionExplorer<EOT>>(nEval, nghCp, *compNN, *compSN);
-      return &pack<moLocalSearch<Ngh>>(explorer, cont, eval);
+      localSearch = &pack<moLocalSearch<Ngh>>(explorer, cont, eval);
     }
-    return nullptr;
+    return &pack<myResizableLocalSearch<Ngh>>(
+        *localSearch, *neighborhood,
+        [this](int size) { return this->_problem.getNeighborhoodSize(size); });
   }
 
   auto buildOperatorSelection() -> OperatorSelection<int>* {
-    std::vector<int>  options = {2, 4, 8};
-    const std::string name    = categoricalName(".AOS.Strategy");
+    std::vector<int> options = {2, 4, 8};
+    const std::string name = categoricalName(".AOS.Strategy");
 
     OperatorSelection<int>* strategy = nullptr;
     if (name == "probability_matching") {
@@ -117,13 +120,13 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
           real(".AOS.PM.PMin"));
     } else if (name == "frrmab") {
       strategy = &pack<FRRMAB<int>>(options, integer(".AOS.FRRMAB.WindowSize"),
-                                real(".AOS.FRRMAB.Scale"),
-                                real(".AOS.FRRMAB.Decay"));
+                                    real(".AOS.FRRMAB.Scale"),
+                                    real(".AOS.FRRMAB.Decay"));
     } else if (name == "linucb") {
       auto& fitnessHistory = pack<FitnessHistory<EOT>>();
-      auto& awSize         = pack<AdaptiveWalkLengthFLA<EOT>>(fitnessHistory,
+      auto& awSize = pack<AdaptiveWalkLengthFLA<EOT>>(fitnessHistory,
                                                       1.0 / _problem.size());
-      auto& autocorr       = pack<AutocorrelationFLA<EOT>>(fitnessHistory);
+      auto& autocorr = pack<AutocorrelationFLA<EOT>>(fitnessHistory);
       auto& fdc = pack<FitnessDistanceCorrelationFLA<EOT>>(fitnessHistory);
       auto& neutralityFLA = pack<NeutralityFLA<Ngh>>();
 
@@ -138,7 +141,8 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
       context.add(autocorr);
       context.add(fdc);
 
-      strategy = &pack<LinUCB<int>>(options, context, real(".AOS.LINUCB.Alpha"));
+      strategy =
+          &pack<LinUCB<int>>(options, context, real(".AOS.LINUCB.Alpha"));
     } else if (name == "thompson_sampling") {
       strategy = &pack<ThompsonSampling<int>>(options);
     } else if (name == "random") {
@@ -148,35 +152,47 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     auto warmUpProportion = real(".AOS.WarmUp.Proportion");
     auto warmUpStrategy = categoricalName(".AOS.WarmUp.Strategy");
     auto maxTime = _problem.getFixedTime() * warmUpProportion;
-    auto& warmUpContinuator = pack<moHighResTimeContinuator<OperatorSelection<int>::DummyNgh>>(maxTime);
+    auto& warmUpContinuator =
+        pack<moHighResTimeContinuator<OperatorSelection<int>::DummyNgh>>(
+            maxTime);
     strategy->setWarmUp(warmUpContinuator, warmUpStrategy, 1);
 
     return strategy;
   }
 
-  auto domainPerturb() -> moPerturbation<Ngh>* override {
-    const int destructionSize = integer(".Perturb.DestructionSize");
-
-    auto insertionName = categoricalName(".Perturb.Insertion");
-    auto insertion =
-        buildInsertionStrategy(insertionName, _problem.neighborEval());
-    storeFunctor(insertion);
-
-    const std::string name = categoricalName(".Perturb");
-    if (name == "rs") {
-      return &pack<DestructionConstruction<Ngh>>(*insertion, destructionSize);
-    } else if (name == "lsps") {
-      auto lspsLocalSearch = buildLSPSLocalSearch(destructionSize);
-      return &pack<IGLocalSearchPartialSolution<Ngh>>(
-          *insertion, *lspsLocalSearch, destructionSize);
+  auto buildDestructionSize() -> DestructionSize* {
+    const std::string name =
+        categoricalName(".Perturb.DestructionSizeStrategy");
+    DestructionSize* destructionSize = nullptr;
+    if (name == "fixed") {
+      const int fixedDs = integer(".Perturb.DestructionSize");
+      destructionSize = &pack<FixedDestructionSize>(fixedDs);
     } else if (name == "adaptive") {
       auto& rewards = pack<FitnessRewards<EOT>>();
       _problem.checkpoint().add(rewards.localStat());
       _problem.checkpointGlobal().add(rewards.globalStat());
       auto operator_selection = buildOperatorSelection();
-      return &pack<AdaptiveDestructionConstruction<Ngh>>(
-          *insertion, *operator_selection, rewards,
-          categorical(".AOS.RewardType"));
+      int rewardType = categorical(".AOS.RewardType");
+      return &pack<AdaptiveDestructionSize<Ngh>>(*operator_selection, rewards,
+                                                 rewardType);
+    }
+    return destructionSize;
+  }
+
+  auto domainPerturb() -> moPerturbation<Ngh>* override {
+    auto insertionName = categoricalName(".Perturb.Insertion");
+    auto insertion =
+        buildInsertionStrategy(insertionName, _problem.neighborEval());
+    storeFunctor(insertion);
+    auto destructionSize = buildDestructionSize();
+
+    const std::string name = categoricalName(".Perturb");
+    if (name == "rs") {
+      return &pack<DestructionConstruction<Ngh>>(*insertion, *destructionSize);
+    } else if (name == "lsps") {
+      auto lspsLocalSearch = buildLSPSLocalSearch();
+      return &pack<IGLocalSearchPartialSolution<Ngh>>(
+          *insertion, *destructionSize, *lspsLocalSearch);
     }
     return nullptr;
   }

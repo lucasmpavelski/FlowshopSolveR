@@ -16,7 +16,10 @@ IG.Accept                    "" c (always,better,temperature)
 IG.Accept.Temperature        "" r (0.0,5.0)    | IG.Accept == temperature
 
 IG.Perturb                   "" c (rs,lsps,adaptive)
-IG.Perturb.DestructionSize   "" i (2,8)
+
+IG.Perturb.DestructionSizeStrategy "" c (fixed,adaptive)
+IG.Perturb.DestructionSize   "" i (2,8) | IG.Perturb.DestructionSizeStrategy == 'fixed'
+ 
 IG.Perturb.Insertion         "" c (first_best,last_best,random_best)
 
 IG.LSPS.Local.Search         "" c (first_improvement,best_improvement,random_best_improvement,best_insertion) | IG.Perturb == lsps

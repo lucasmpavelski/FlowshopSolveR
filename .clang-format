@@ -1,4 +1,2 @@
 ---
 BasedOnStyle: Chromium
-AlignConsecutiveAssignments: true
-AlignConsecutiveDeclarations: true
