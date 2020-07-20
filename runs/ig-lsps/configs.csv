@@ -1,0 +1,6 @@
+name,mh,params
+
+IG-LSPS,IG,IG.Init=neh IG.Init.NEH.Priority=sum_pij IG.Init.NEH.PriorityOrder=incr IG.Init.NEH.PriorityWeighted=0 IG.Init.NEH.Insertion=first_best IG.Comp.Strat=strict IG.Neighborhood.Size=1 IG.Neighborhood.Strat=random IG.Local.Search=best_insertion IG.LS.Single.Step=0 IG.Accept=temperature IG.Accept.Temperature=0.7 IG.Perturb=lsps IG.Perturb.DestructionSize=2 IG.Perturb.Insertion=first_best IG.LSPS.Local.Search=best_insertion
+
+IG-LSPS-tune-rs,IG,IG.Init=neh IG.Init.NEH.Priority=sum_pij IG.Init.NEH.PriorityOrder=incr IG.Init.NEH.PriorityWeighted=0 IG.Init.NEH.Insertion=first_best IG.Comp.Strat=strict IG.Neighborhood.Size=1 IG.Neighborhood.Strat=ordered IG.Local.Search=best_insertion IG.LS.Single.Step=0 IG.Accept=temperature IG.Accept.Temperature=0.8 IG.Perturb=lsps IG.Perturb.DestructionSizeStrategy=adaptive IG.Perturb.Insertion=first_best IG.LSPS.Local.Search=best_insertion IG.LSPS.Single.Step=0 IG.AOS.Strategy=probability_matching IG.AOS.RewardType=1 IG.AOS.Options=2_4_8 IG.AOS.PM.RewardType=avgnorm IG.AOS.PM.Alpha=0.5043 IG.AOS.PM.PMin=0.1169 IG.AOS.PM.UpdateWindow=499 IG.AOS.WarmUp.Proportion=0.3 IG.AOS.WarmUp.Strategy=random
+

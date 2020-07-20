@@ -1,0 +1,3 @@
+name,mh,params
+BP LL,IGBP,IGBP.Init=neh IGBP.Init.NEH.Priority=sum_pij IGBP.Init.NEH.PriorityOrder=incr IGBP.Init.NEH.PriorityWeighted=0 IGBP.Init.NEH.Insertion=first_best IGBP.Comp.Strat=strict IGBP.Neighborhood.Size=1 IGBP.Neighborhood.Strat=random IGBP.Local.Search=best_insertion IGBP.LS.Single.Step=0 IGBP.Accept=temperature IGBP.Accept.Temperature=0.5 IGBP.Perturb=rs IGBP.Perturb.DestructionSize=4 IGBP.Perturb.Insertion=first_best IGBP.LSPS.Local.Search=best_insertion IGBP.LSPS.Single.Step=0 IGBP.AOS.Strategy=frrmab IGBP.AOS.RewardType=3
+

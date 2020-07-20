@@ -20,7 +20,7 @@ ROOT <- here()
 EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[6])
 BUILD <- file.path(ROOT, 'build', 'main', 'fsp_solver')
 EXECUTABLE <- file.path(EXPR, 'fsp_solver')
-N_CORES <- 2
+N_CORES <- 6
 OPTIONS <- ''
 
 # datasets

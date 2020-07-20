@@ -1,0 +1,5 @@
+name,mh,params
+
+best-PM,IG,IG.Init=neh IG.Init.NEH.Priority=sum_pij IG.Init.NEH.PriorityOrder=incr IG.Init.NEH.PriorityWeighted=0 IG.Init.NEH.Insertion=first_best IG.Comp.Strat=strict IG.Neighborhood.Size=1 IG.Neighborhood.Strat=random IG.Local.Search=best_insertion IG.LS.Single.Step=0 IG.Accept=temperature IG.Accept.Temperature=0.5 IG.Perturb=adaptive IG.Perturb.DestructionSize=4 IG.Perturb.Insertion=first_best IG.LSPS.Local.Search=best_insertion IG.LSPS.Single.Step=0 IG.AOS.Strategy=probability_matching IG.AOS.WarmUp.Strategy=fixed IG.AOS.WarmUp.Proportion=0.0 IG.AOS.RewardType=1 IG.AOS.PM.RewardType=extabs IG.AOS.PM.Alpha=0.2 IG.AOS.PM.PMin=0.1
+IG (d=4),IG,IG.Init=neh IG.Init.NEH.Priority=sum_pij IG.Init.NEH.PriorityOrder=incr IG.Init.NEH.PriorityWeighted=0 IG.Init.NEH.Insertion=first_best IG.Comp.Strat=strict IG.Neighborhood.Size=1 IG.Neighborhood.Strat=random IG.Local.Search=best_insertion IG.LS.Single.Step=0 IG.Accept=temperature IG.Accept.Temperature=0.5 IG.Perturb=rs IG.Perturb.DestructionSize=4 IG.Perturb.Insertion=first_best IG.LSPS.Local.Search=best_insertion IG.LSPS.Single.Step=0
+

@@ -1,0 +1,18 @@
+name,mh,params
+
+# random initialization
+
+IG (d=2),IG,IG.Init=random IG.Comp.Strat=0 IG.Neighborhood.Size=9.9999 IG.Neighborhood.Strat=0 IG.Local.Search=3 IG.Accept=temperature IG.Accept.Temperature=0.5 IG.Algo=rs IG.Destruction.Size=2 IG.LS.Single.Step=0 IG.LSPS.Local.Search=0 IG.LSPS.Single.Step=0 IG.AOS.Strategy=probability_matching
+IG (d=4),IG,IG.Init=random IG.Comp.Strat=0 IG.Neighborhood.Size=9.9999 IG.Neighborhood.Strat=0 IG.Local.Search=3 IG.Accept=temperature IG.Accept.Temperature=0.5 IG.Algo=rs IG.Destruction.Size=4 IG.LS.Single.Step=0 IG.LSPS.Local.Search=0 IG.LSPS.Single.Step=0 IG.AOS.Strategy=probability_matching
+IG (d=8),IG,IG.Init=random IG.Comp.Strat=0 IG.Neighborhood.Size=9.9999 IG.Neighborhood.Strat=0 IG.Local.Search=3 IG.Accept=temperature IG.Accept.Temperature=0.5 IG.Algo=rs IG.Destruction.Size=8 IG.LS.Single.Step=0 IG.LSPS.Local.Search=0 IG.LSPS.Single.Step=0 IG.AOS.Strategy=probability_matching
+IG MAB,IG,IG.Init=random IG.Comp.Strat=0 IG.Neighborhood.Size=9.9999 IG.Neighborhood.Strat=0 IG.Local.Search=3 IG.Accept=temperature IG.Accept.Temperature=0.5 IG.Algo=adaptive IG.Destruction.Size=2 IG.LS.Single.Step=0 IG.LSPS.Local.Search=3 IG.LSPS.Single.Step=0 IG.AOS.Strategy=frrmab
+IG PM,IG,IG.Init=random IG.Comp.Strat=0 IG.Neighborhood.Size=9.9999 IG.Neighborhood.Strat=0 IG.Local.Search=3 IG.Accept=temperature IG.Accept.Temperature=0.5 IG.Algo=adaptive IG.Destruction.Size=2 IG.LS.Single.Step=0 IG.LSPS.Local.Search=3 IG.LSPS.Single.Step=0 IG.AOS.Strategy=linucb
+
+# classic neh initialization
+
+IGn (d=2),IG,IG.Init=neh IG.Init.NEH.Priority=sum_pij IG.Init.NEH.PriorityOrder=incr IG.Init.NEH.PriorityWeighted=0 IG.Init.NEH.Insertion=first_best IG.Comp.Strat=0 IG.Neighborhood.Size=9.9999 IG.Neighborhood.Strat=0 IG.Local.Search=3 IG.Accept=temperature IG.Accept.Temperature=0.5 IG.Algo=rs IG.Destruction.Size=2 IG.LS.Single.Step=0 IG.LSPS.Local.Search=0 IG.LSPS.Single.Step=0 IG.AOS.Strategy=probability_matching
+IGn (d=4),IG,IG.Init=neh IG.Init.NEH.Priority=sum_pij IG.Init.NEH.PriorityOrder=incr IG.Init.NEH.PriorityWeighted=0 IG.Init.NEH.Insertion=first_best IG.Comp.Strat=0 IG.Neighborhood.Size=9.9999 IG.Neighborhood.Strat=0 IG.Local.Search=3 IG.Accept=temperature IG.Accept.Temperature=0.5 IG.Algo=rs IG.Destruction.Size=4 IG.LS.Single.Step=0 IG.LSPS.Local.Search=0 IG.LSPS.Single.Step=0 IG.AOS.Strategy=probability_matching
+IGn (d=8),IG,IG.Init=neh IG.Init.NEH.Priority=sum_pij IG.Init.NEH.PriorityOrder=incr IG.Init.NEH.PriorityWeighted=0 IG.Init.NEH.Insertion=first_best IG.Comp.Strat=0 IG.Neighborhood.Size=9.9999 IG.Neighborhood.Strat=0 IG.Local.Search=3 IG.Accept=temperature IG.Accept.Temperature=0.5 IG.Algo=rs IG.Destruction.Size=8 IG.LS.Single.Step=0 IG.LSPS.Local.Search=0 IG.LSPS.Single.Step=0 IG.AOS.Strategy=probability_matching
+
+
+

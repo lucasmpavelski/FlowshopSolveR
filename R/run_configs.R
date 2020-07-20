@@ -31,6 +31,8 @@ OPTIONS <- read_lines(file.path(EXPR, 'params.txt'))
 problems <- read_csv(file.path(EXPR, 'problems.csv'), comment = "#")
 configs <- read_csv(file.path(EXPR, 'configs.csv'), comment = "#")
 
+ncores <- 1
+
 # auxiliar functions
 parseParams <- function(params) { 
   params <- str_split(params, '\\s', simplify = T) %>%
@@ -88,7 +90,6 @@ experiments %>%
 
 walk(file.path(EXPR, configs$name), dir.create, showWarnings = F)
 
-ncores <- 7
 
 experiments <- experiments %>%
   mutate(core = seq_len(nrow(experiments)) %% ncores) 

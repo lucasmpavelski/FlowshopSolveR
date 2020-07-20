@@ -1,0 +1,39 @@
+IG.Init                      "" c (neh)
+IG.Init.NEH.Priority         "" c (sum_pij)
+IG.Init.NEH.PriorityOrder    "" c (incr)
+IG.Init.NEH.PriorityWeighted "" c (0)
+IG.Init.NEH.Insertion        "" c (first_best)
+
+IG.Comp.Strat                "" c (strict)
+
+IG.Neighborhood.Size         "" c (1)
+IG.Neighborhood.Strat        "" c (random)
+
+IG.Local.Search              "" c (best_insertion)
+IG.LS.Single.Step            "" c (0)
+
+IG.Accept                    "" c (temperature)
+IG.Accept.Temperature        "" c (0.5)
+
+IG.Perturb                   "" c (adaptive)
+IG.Perturb.DestructionSize   "" c (4)
+IG.Perturb.Insertion         "" c (first_best)
+
+IG.AOS.Strategy              "" c (probability_matching,frrmab,linucb,thompson_sampling) # (probability_matching,frrmab,linucb,thompson_sampling,random)
+
+IG.AOS.RewardType            "" c (0,1,2,3)  | IG.Perturb == 'adaptive'
+IG.AOS.WarmUp.Proportion     "" r (0.0,0.5)
+IG.AOS.WarmUp.Strategy       "" c (random, fixed)
+
+IG.AOS.PM.RewardType         "" c (avgabs,extabs) | IG.AOS.Strategy == 'probability_matching'
+IG.AOS.PM.Alpha              "" r (0.1, 0.9)                      | IG.AOS.Strategy == 'probability_matching'
+IG.AOS.PM.PMin               "" r (0.05, 0.2)                     | IG.AOS.Strategy == 'probability_matching'
+
+IG.AOS.FRRMAB.WindowSize     "" i (10, 500)   | IG.AOS.Strategy == 'frrmab'
+IG.AOS.FRRMAB.Scale          "" r (0.01, 100) | IG.AOS.Strategy == 'frrmab'
+IG.AOS.FRRMAB.Decay          "" r (0.25, 1.0) | IG.AOS.Strategy == 'frrmab'
+
+IG.AOS.LINUCB.Alpha          "" r (0.0, 1.5) | IG.AOS.Strategy == 'linucb'
+
+IG.AOS.TS.NoSamples          "" i (1,10) | IG.AOS.Strategy == 'thompson_sampling'
+

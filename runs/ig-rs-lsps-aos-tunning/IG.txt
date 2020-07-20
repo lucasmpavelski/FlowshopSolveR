@@ -15,7 +15,7 @@ IG.LS.Single.Step            "" c (0)
 IG.Accept                    "" c (temperature)
 IG.Accept.Temperature        "" c (0.8)    | IG.Accept == 'temperature'
 
-IG.Perturb                   "" c (lsps)
+IG.Perturb                   "" c (rs,lsps)
 
 IG.Perturb.DestructionSizeStrategy "" c (adaptive)
 IG.Perturb.DestructionSize   "" c (4) | IG.Perturb.DestructionSizeStrategy == 'fixed'
