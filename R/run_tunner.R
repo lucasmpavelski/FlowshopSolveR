@@ -12,12 +12,13 @@ EXPERIMENTS <- c(
   'irace-frrmab',
   'irace-aos',
   'irace_148_opts',
-  'ig-lsps-aos-tunning'
+  'ig-lsps-aos-tunning',
+  'ig-lsps-aos-tunning-10000evals'
 )
 
 # paths
 ROOT <- here()
-EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[6])
+EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[7])
 BUILD <- file.path(ROOT, 'build', 'main', 'fsp_solver')
 EXECUTABLE <- file.path(EXPR, 'fsp_solver')
 N_CORES <- 6
@@ -90,7 +91,7 @@ MH <- 'IG'
 specs <- file.path(EXPR, paste0(MH, '.txt'))
 parameters <- readParameters(specs)
 print(parameters)
-max_config_eval <- 1000
+max_config_eval <- 10000
 scenario <- defaultScenario(list(
   targetRunnerParallel = fspTargetRunnerCmdParallel,
   maxExperiments = max_config_eval,
