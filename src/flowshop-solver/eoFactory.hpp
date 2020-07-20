@@ -150,7 +150,10 @@ class eoFactory : public eoFunctorStore {
 
     const std::string name = categoricalName(".Local.Search");
     moLocalSearch<Ngh>* ret = nullptr;
-    if (name == "first_improvement") {
+    if (name == "none") {
+      auto& explorer = pack<moDummyExplorer<Ngh>>();
+      ret = &pack<moLocalSearch<Ngh>>(explorer, cp, eval);
+    } else if (name == "first_improvement") {
       ret = &pack<moFirstImprHC<Ngh>>(*neighborhood, eval, nEval, cp, *compNN,
                               *compSN);
     } else if (name == "best_improvement") {

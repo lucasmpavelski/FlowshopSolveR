@@ -1,12 +1,12 @@
 #pragma once
 
-#include <algo/moLocalSearch.h>
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/MHParamsValues.hpp"
 #include "flowshop-solver/eoFactory.hpp"
 
+#include "global.hpp"
 #include "heuristics/perturb/DestructionConstruction.hpp"
 #include "problems/FSP.hpp"
 #include "problems/FSPProblem.hpp"
@@ -90,7 +90,9 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
 
     moLocalSearch<Ngh>* localSearch = nullptr;
     const std::string name = categoricalName(".LSPS.Local.Search");
-    if (name == "first_improvement") {
+    if (name == "none") {
+      localSearch = &pack<moDummyLS<Ngh>>(eval);
+    } else if (name == "first_improvement") {
       localSearch = &pack<moFirstImprHC<Ngh>>(*neighborhood, eval, nEval, cont,
                                               *compNN, *compSN);
     } else if (name == "best_improvement") {
@@ -111,13 +113,10 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
 
   auto buildOperatorSelection() -> OperatorSelection<int>* {
     std::string opts = categoricalName(".AOS.Options");
-    std::vector<int>  options;
-    if (opts == "2_4_8")
-      options = {2, 4, 8};
-    else if (opts == "1_4_8")
-      options = {1, 4, 8};
+    std::vector<std::string> opts_strs = tokenize(opts, '_');
+    std::vector<int> options(opts_strs.size());
+    std::transform(begin(opts_strs), end(opts_strs), begin(options), [](std::string& s) { return std::stoi(s); });
     const std::string name    = categoricalName(".AOS.Strategy");
-
     OperatorSelection<int>* strategy = nullptr;
     if (name == "probability_matching") {
       strategy = &pack<ProbabilityMatching<int>>(
