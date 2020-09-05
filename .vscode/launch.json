@@ -3,7 +3,7 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
+    "configurations": [                
         {
             "name": "fsp_solver_example",
             "type": "lldb",
@@ -54,6 +54,13 @@
                 " --IG.AOS.TS.C=NA ",
                 " --printBestFitness ",
             ],
+        },                
+        {
+            "name": "test-fsp",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/test/test-fsp",
+            "args": [],
         },
         {
             "name": "(gdb) Launch",

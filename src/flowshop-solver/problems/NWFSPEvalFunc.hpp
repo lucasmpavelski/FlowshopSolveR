@@ -17,14 +17,14 @@ class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
       : FSPEvalFunc<EOT>(std::move(fd), ObjT),
         delayMatrix(computeDelayMatrix()) {}
 
-  std::string type() const final { return "NOWAIT"; }
+  [[nodiscard]] auto type() const -> std::string final { return "NOWAIT"; }
 
  private:
   /** delayMatrix[i][j] = the values between the start of any two consecutive
    * jobs i and j */
-  std::valarray<int> delayMatrix;
+  std::vector<int> delayMatrix;
 
-  void completionTime(const EOT& _fsp, std::valarray<int>& Ct) final {
+  void completionTime(const EOT& _fsp, std::valarray<int>& Ct) override {
     const int N = noJobs();
     const int _N = _fsp.size();
     // for each job...
@@ -42,11 +42,11 @@ class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
    * computation of the delay matrix
    * delayMatrix[i][j] = the delay during the start of two jobs
    */
-  std::valarray<int> computeDelayMatrix() const {
+  [[nodiscard]] auto computeDelayMatrix() const -> std::vector<int> {
     const int N = noJobs();
     const int M = noMachines();
     const auto& p = fsp_data.procTimesRef();
-    std::valarray<int> _delayMatrix(N * N);
+    std::vector<int> _delayMatrix(N * N);
     // See : A heuristic for no-wait flow shop scheduling (2013) Sagar U. Sapkal
     // & Dipak Laha for the computation of the delay matrix
     // for each job...

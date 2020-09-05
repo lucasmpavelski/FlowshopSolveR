@@ -1,5 +1,4 @@
 set(FSP_SOURCES
-  problems/FSPData.cpp
   problems/fastfspeval.cpp
   fspproblemfactory.cpp
   specsdata.cpp

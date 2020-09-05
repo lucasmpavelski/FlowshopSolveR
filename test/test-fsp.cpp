@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <numeric>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -394,7 +395,7 @@ TEST(TaillardAcceleration, DestructionConstruction) {
   rng.reseed(65465l);
   const int no_jobs = 50;
   const int no_machines = 10;
-  const int ds = 3;
+  auto ds = FixedDestructionSize(3);
 
   FSPData fspData(no_jobs, no_machines, 100);
 
@@ -411,6 +412,7 @@ TEST(TaillardAcceleration, DestructionConstruction) {
 
   InsertFirstBest<FSPNeighbor> fbf(fullNe);
   DestructionConstruction<FSPNeighbor> opdc(fbf, ds);
+  
   rng.reseed(65465l);
   opdc(sol);
 
@@ -480,17 +482,22 @@ TEST(Heuristic, FSPOrderHeuristics) {
                                     "ss_srs",     "ss_srn_rcn",  "ss_sra_rcn",
                                     "ss_srs_rcn", "ss_sra_2rcn", "ra_c1",
                                     "ra_c2",      "ra_c3",       "ra_c3"};
-  std::vector<std::string> orders = {"incr",    "decr",    "valley",
+  std::vector<std::string> orders = {//"incr",    "decr",   
+                                     "valley",
                                      "hill",    "hi_hilo", "hi_lohi",
                                      "lo_hilo", "lo_lohi"};
   FSPData dt(20, 5);
-  FSP sol;
+  std::vector<int> ref(20);
   for (const auto& name : names) {
     for (const auto& order : orders) {
+      FSP sol;
+      std::iota(begin(ref), end(ref), 0);
+      sol = ref;
       auto init = buildPriority(dt, name, false, order);
       (*init)(sol);
-      auto initw = buildPriority(dt, name, true, order);
-      (*initw)(sol);
+      ASSERT_TRUE(std::is_permutation(begin(sol), end(sol), begin(ref)));
+//      auto initw = buildPriority(dt, name, true, order);
+ //     (*initw)(sol);
     }
   }
 }

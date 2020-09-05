@@ -36,32 +36,34 @@ class FSPOrderHeuristic : public eoInit<FSP> {
       std::reverse(begin(order), end(order));
     }
     if (orderType == "hill") {
-      std::transform(begin(order), end(order), begin(order),
-                     [&n](int i) { return -(i - n / 2) * (i - n / 2); });
+      std::transform(begin(order), end(order), begin(order), [&n](int i) {
+        return i < n / 2 ? 2 * i : 2 * (n - i) - 1;
+      });
     }
     if (orderType == "valley") {
-      std::transform(begin(order), end(order), begin(order),
-                     [&n](int i) { return (i - n / 2) * (i - n / 2); });
+      std::transform(begin(order), end(order), begin(order), [&n](int i) {
+        return i < n / 2 ? n - 2 * i - 1 : 2 * i - n;
+      });
     }
     if (orderType == "hi_hilo") {
       std::transform(begin(order), end(order), begin(order), [&n](int i) {
-        int iv = n - i;
-        return iv * pow(-1, iv + n % 2);
+        return i % 2 == 0 ? n - i / 2 - 1 : (i - 1) / 2;
       });
     }
     if (orderType == "hi_lohi") {
       std::transform(begin(order), end(order), begin(order), [&n](int i) {
-        int iv = n - i;
-        return -iv * pow(-1, iv + n % 2);
+        return i % 2 == 0 ? i / 2 : n - i / 2 - 1;
       });
     }
     if (orderType == "lo_hilo") {
-      std::transform(begin(order), end(order), begin(order),
-                     [&n](int i) { return i * std::pow(-1, n - i + n % 2); });
+      std::transform(begin(order), end(order), begin(order), [&n](int i) {
+        return i % 2 == 0 ? n / 2 + i / 2 : n / 2 - (i - 1) / 2 - 1;
+      });
     }
     if (orderType == "lo_lohi") {
-      std::transform(begin(order), end(order), begin(order),
-                     [&n](int i) { return -i * std::pow(-1, n - i + n % 2); });
+      std::transform(begin(order), end(order), begin(order), [&n](int i) {
+        return i % 2 == 0 ? n / 2 - i / 2 - 1 : n / 2 + (i - 1) / 2;
+      });
     }
     return order;
   }
@@ -317,44 +319,45 @@ struct RA_C3 : public RagendranFOH {
   }
 };
 
-
-  /**
-   * FSP priority rule orders
-   * - sum_pij from the original NEH
-   * - dev_pig and avgdev_pij from An improved NEH-based heuristic for the permutation
-   * flowshop problem by Xingye Dong, Houkuan Huang and Ping Chen
-   * - remaining orders from Different initial sequences for the heuristic of
-   * Nawaz, Enscore and Ham to minimize makespan, idletime or flowtime in the
-   * static permutation flowshop sequencing problem by
-   * Jose M. Framinan, Rainer Leisten and Chandrasekharan Rajendran
-   */
-  inline auto buildPriority(const FSPData& data, const std::string& name, bool weighted, const std::string& order)
-      -> FSPOrderHeuristic* {
-    if (name == "sum_pij")
-      return new SUM_PIJ(data, weighted, order);
-    if (name == "dev_pij")
-      return new DEV_PIJ(data, weighted, order);
-    if (name == "avgdev_pij")
-      return new AVGDEV_PIJ(data, weighted, order);
-    if (name == "abs_dif")
-      return new ABS_DIF(data, weighted, order);
-    if (name == "ss_sra")
-      return new SS_SRA(data, weighted, order);
-    if (name == "ss_srs")
-      return new SS_SRS(data, weighted, order);
-    if (name == "ss_srn_rcn")
-      return new SS_SRN_RCN(data, weighted, order);
-    if (name == "ss_sra_rcn")
-      return new SS_SRA_RCN(data, weighted, order);
-    if (name == "ss_srs_rcn")
-      return new SS_SRS_RCN(data, weighted, order);
-    if (name == "ss_sra_2rcn")
-      return new SS_SRA_2RCN(data, weighted, order);
-    if (name == "ra_c1")
-      return new RA_C1(data, weighted, order);
-    if (name == "ra_c2")
-      return new RA_C2(data, weighted, order);
-    if (name == "ra_c3")
-      return new RA_C3(data, weighted, order);
-    return nullptr;
+/**
+ * FSP priority rule orders
+ * - sum_pij from the original NEH
+ * - dev_pig and avgdev_pij from An improved NEH-based heuristic for the
+ * permutation flowshop problem by Xingye Dong, Houkuan Huang and Ping Chen
+ * - remaining orders from Different initial sequences for the heuristic of
+ * Nawaz, Enscore and Ham to minimize makespan, idletime or flowtime in the
+ * static permutation flowshop sequencing problem by
+ * Jose M. Framinan, Rainer Leisten and Chandrasekharan Rajendran
+ */
+inline auto buildPriority(const FSPData& data,
+                          const std::string& name,
+                          bool weighted,
+                          const std::string& order) -> FSPOrderHeuristic* {
+  if (name == "sum_pij")
+    return new SUM_PIJ(data, weighted, order);
+  if (name == "dev_pij")
+    return new DEV_PIJ(data, weighted, order);
+  if (name == "avgdev_pij")
+    return new AVGDEV_PIJ(data, weighted, order);
+  if (name == "abs_dif")
+    return new ABS_DIF(data, weighted, order);
+  if (name == "ss_sra")
+    return new SS_SRA(data, weighted, order);
+  if (name == "ss_srs")
+    return new SS_SRS(data, weighted, order);
+  if (name == "ss_srn_rcn")
+    return new SS_SRN_RCN(data, weighted, order);
+  if (name == "ss_sra_rcn")
+    return new SS_SRA_RCN(data, weighted, order);
+  if (name == "ss_srs_rcn")
+    return new SS_SRS_RCN(data, weighted, order);
+  if (name == "ss_sra_2rcn")
+    return new SS_SRA_2RCN(data, weighted, order);
+  if (name == "ra_c1")
+    return new RA_C1(data, weighted, order);
+  if (name == "ra_c2")
+    return new RA_C2(data, weighted, order);
+  if (name == "ra_c3")
+    return new RA_C3(data, weighted, order);
+  return nullptr;
 };
