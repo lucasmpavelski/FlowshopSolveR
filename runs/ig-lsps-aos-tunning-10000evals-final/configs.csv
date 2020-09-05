@@ -1,0 +1,4 @@
+name,mh,params
+
+irace-adapt,IG,IG.Init=neh IG.Init.NEH.Priority=sum_pij IG.Init.NEH.PriorityOrder=incr IG.Init.NEH.PriorityWeighted=0 IG.Init.NEH.Insertion=first_best IG.Comp.Strat=strict IG.Neighborhood.Size=1 IG.Neighborhood.Strat=random IG.Local.Search=best_insertion IG.LS.Single.Step=0 IG.Accept=temperature IG.Accept.Temperature=0.5614 IG.Perturb=lsps IG.Perturb.DestructionSize=4 IG.Perturb.Insertion=first_best IG.LSPS.Local.Search=best_insertion IG.LSPS.Single.Step=1 IG.AOS.Strategy=linucb IG.AOS.WarmUp.Strategy=fixed IG.AOS.WarmUp.Proportion=0.3572 IG.AOS.RewardType=0 IG.AOS.Options=1_2 IG.AOS.LINUCB.Alpha=0.6429
+

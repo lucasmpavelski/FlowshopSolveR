@@ -16,13 +16,14 @@ EXPERIMENTS <- c(
   'aos-tunning-final-test',
   'aos-tunning-generarization',
   'aos-148-final-comparison',
-  'ig-lsps'
+  'ig-lsps',
+  'ig-lsps-aos-tunning-10000evals-generalization'#'ig-lsps-aos-tunning-10000evals-final'
 )
 
 
 # paths
 ROOT <- here()
-EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[10])
+EXPR <- file.path(ROOT, 'runs', EXPERIMENTS[11])
 DATA <- file.path(ROOT, 'data')
 EXECUTABLE <- file.path(ROOT, 'build', 'main', 'fsp_solver')
 OPTIONS <- read_lines(file.path(EXPR, 'params.txt'))
@@ -31,7 +32,7 @@ OPTIONS <- read_lines(file.path(EXPR, 'params.txt'))
 problems <- read_csv(file.path(EXPR, 'problems.csv'), comment = "#")
 configs <- read_csv(file.path(EXPR, 'configs.csv'), comment = "#")
 
-ncores <- 1
+ncores <- 7
 
 # auxiliar functions
 parseParams <- function(params) { 

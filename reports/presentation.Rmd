@@ -20,7 +20,8 @@ runs <- list(
   #aos_tunning = read_runs('aos-tunning'),
   aos_tunning_race = read_runs('aos-tunning-final-test'),
   aos_tunning_generarization = read_runs('aos-tunning-generarization'),
-  aos_148 = read_runs('aos-148-final-comparison')
+  aos_148 = read_runs('aos-148-final-comparison'),
+  aos_10k_final = read_runs('ig-lsps-aos-tunning-10000evals-final')
 )
 ```
 
@@ -279,6 +280,15 @@ bind_rows(best_ig, runs$aos_148) %>%
 
 ```{r}
 runs$aos_tunning_generarization %>%
+  compareRpdsCI() +
+  coord_flip()
+```
+
+```{r}
+best_ig <- runs$rs_ig_destruction_sizes %>%
+  filter(name %in% c("IG (d=4)", "IG RND"))
+bind_rows(best_ig, runs$aos_10k_final) %>%
+  filter(type == 'PERM', objective == 'MAKESPAN', no_jobs >= 50, no_machines >= 10) %>%
   compareRpdsCI() +
   coord_flip()
 ```
