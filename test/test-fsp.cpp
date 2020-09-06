@@ -6,12 +6,12 @@
 
 #include <gtest/gtest.h>
 
+#include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 #include "flowshop-solver/problems/FSPData.hpp"
 #include "flowshop-solver/problems/FSPEvalFunc.hpp"
 #include "flowshop-solver/problems/NIFSPEvalFunc.hpp"
 #include "flowshop-solver/problems/NWFSPEvalFunc.hpp"
 #include "flowshop-solver/problems/fastfspeval.hpp"
-#include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 
 #ifdef NDEBUG
 #undef NDEBUG
@@ -301,9 +301,9 @@ TEST(FSPTaillardAcelleration, NeighborhoodEval) {
 }
 
 #include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
+#include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 #include "flowshop-solver/heuristics/perturb/DestructionConstruction.hpp"
 #include "flowshop-solver/heuristics/perturb/perturb.hpp"
-#include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 
 TEST(TaillardAcceleration, BestInsertionNeighborhood) {
   rng.reseed(65465l);
@@ -412,7 +412,7 @@ TEST(TaillardAcceleration, DestructionConstruction) {
 
   InsertFirstBest<FSPNeighbor> fbf(fullNe);
   DestructionConstruction<FSPNeighbor> opdc(fbf, ds);
-  
+
   rng.reseed(65465l);
   opdc(sol);
 
@@ -482,22 +482,21 @@ TEST(Heuristic, FSPOrderHeuristics) {
                                     "ss_srs",     "ss_srn_rcn",  "ss_sra_rcn",
                                     "ss_srs_rcn", "ss_sra_2rcn", "ra_c1",
                                     "ra_c2",      "ra_c3",       "ra_c3"};
-  std::vector<std::string> orders = {//"incr",    "decr",   
-                                     "valley",
+  std::vector<std::string> orders = {"incr",    "decr",    "valley",
                                      "hill",    "hi_hilo", "hi_lohi",
                                      "lo_hilo", "lo_lohi"};
   FSPData dt(20, 5);
   std::vector<int> ref(20);
+  std::iota(begin(ref), end(ref), 0);
   for (const auto& name : names) {
     for (const auto& order : orders) {
-      FSP sol;
-      std::iota(begin(ref), end(ref), 0);
-      sol = ref;
+      FSP sol = ref;
       auto init = buildPriority(dt, name, false, order);
       (*init)(sol);
       ASSERT_TRUE(std::is_permutation(begin(sol), end(sol), begin(ref)));
-//      auto initw = buildPriority(dt, name, true, order);
- //     (*initw)(sol);
+      auto initw = buildPriority(dt, name, true, order);
+      (*initw)(sol);
+      ASSERT_TRUE(std::is_permutation(begin(sol), end(sol), begin(ref)));
     }
   }
 }
