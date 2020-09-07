@@ -2,7 +2,7 @@ CXX_STD = CXX17
 PARADISEO_INC_FOLDER=/usr/local/include/paradiseo
 PARADISEO_LIB_FOLDER=/usr/local/lib64
 FSP_INC_FOLDER=../src
-FSP_LIB_FOLDER=../install/src/flowshop-solver
+FSP_LIB_FOLDER=../_install/src/flowshop-solver
 PKG_LIBS=-L${FSP_LIB_FOLDER} -lflowshop_solver_lib \
          -pthread -lstdc++fs -static-libgcc -static-libstdc++ \
          -L$(PARADISEO_LIB_FOLDER) -leo -leoutils -les -lga

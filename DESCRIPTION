@@ -8,5 +8,12 @@ Maintainer: Your Name <your@email.com>
 Description: One paragraph description of what the package does as one or more full
           sentences.
 License: GPL (>= 2)
+Depends:
+    Rcpp,
+    irace,
+    dplyr,
+    tidyr,
+    purrr,
+    stringr
 Imports: Rcpp (>= 1.0.4)
 LinkingTo: Rcpp

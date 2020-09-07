@@ -71,9 +71,13 @@ auto runExperiment(eoInit<EOT>& init,
     prob.checkpoint().init(sol);
     prob.checkpointGlobal().init(sol);
     algo(sol);
+    prob.checkpoint().lastCall(sol);
+    prob.checkpointGlobal().lastCall(sol);
+
   });
   Result res;
-  res.fitness = prob.bestSoFar().value().fitness();
+  res.fitness = std::min(prob.bestSoFar().value().fitness(),
+                         prob.bestLocalSoFar().value().fitness());
   res.time = time;
   res.no_evals = prob.noEvals();
   return res;

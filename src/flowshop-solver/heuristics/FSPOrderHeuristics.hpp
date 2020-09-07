@@ -88,7 +88,7 @@ class FSPOrderHeuristic : public eoInit<FSP> {
   }
 
   [[nodiscard]] auto w(int i) const -> int {
-    return 1 + weighted & (fspData.noMachines() - i);
+    return 1 + (weighted & (fspData.noMachines() - i));
   }
 
   virtual auto sortingOrder() -> std::vector<double> = 0;

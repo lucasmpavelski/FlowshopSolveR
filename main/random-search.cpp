@@ -21,7 +21,6 @@
 
 #include "MHParamsSpecs.hpp"
 #include "MHParamsValues.hpp"
-#include "MHSolve.hpp"
 
 auto main(int argc, char* argv[]) -> int {
  /* using std::cout;

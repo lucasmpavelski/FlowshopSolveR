@@ -1,7 +1,8 @@
 #!/bin/sh
 
-echo "hello"
-mkdir -p install
-cd install
-cmake ..
-make
+## TODO: test if system contains: CMake, Ninja, Paradiseo, Eigen etc
+
+mkdir -p _install
+cd _install
+cmake .. -G Ninja
+ninja
