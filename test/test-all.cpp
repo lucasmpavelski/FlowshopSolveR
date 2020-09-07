@@ -155,7 +155,7 @@ TEST(Solve, HC) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
   prob["instance"] = "binom_rand_30_20_01.dat";
-  prob["stopping_criterium"] = "EVALS";
+  prob["stopping_criterion"] = "EVALS";
 
   MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("HC");
   MHParamsValues values(&mhParamsSpecs);
@@ -176,7 +176,7 @@ TEST(Solve, SA) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
   prob["instance"] = "taill-like_rand_20_10_01.dat";
-  prob["stopping_criterium"] = "FITNESS";
+  prob["stopping_criterion"] = "FITNESS";
 
   MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("SA");
   MHParamsValues values(&mhParamsSpecs);
@@ -200,7 +200,7 @@ TEST(FLA, ADAPTIVE) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
   prob["instance"] = "exp_rand_30_20_01.dat";
-  prob["stopping_criterium"] = "EVALS";
+  prob["stopping_criterion"] = "EVALS";
 
   std::unordered_map<string, string> sampling;
   sampling["Init.Strat"] = "RANDOM";
@@ -222,7 +222,7 @@ TEST(FLA, ADAPTIVE_WALK) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
   prob["instance"] = "exp_rand_30_20_01.dat";
-  prob["stopping_criterium"] = "EVALS";
+  prob["stopping_criterion"] = "EVALS";
 
   std::unordered_map<string, string> sampling;
   sampling["Init.Strat"] = "RANDOM";
@@ -244,7 +244,7 @@ TEST(Solve, TS) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
   prob["instance"] = "binom_rand_30_20_01.dat";
-  prob["stopping_criterium"] = "EVALS";
+  prob["stopping_criterion"] = "EVALS";
 
   for (int i = 0; i < 10; i++) {
     MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("TS");
@@ -267,7 +267,7 @@ TEST(Solve, ILS) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
   prob["instance"] = "binom_rand_30_20_01.dat";
-  prob["stopping_criterium"] = "TIME";
+  prob["stopping_criterion"] = "TIME";
 
   MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("ILS");
   MHParamsValues values(&mhParamsSpecs);
@@ -288,7 +288,7 @@ TEST(Solve, IHC) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
   prob["instance"] = "binom_rand_30_20_01.dat";
-  prob["stopping_criterium"] = "EVALS";
+  prob["stopping_criterion"] = "EVALS";
 
   for (int i = 0; i < 10; i++) {
     MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("IHC");
@@ -309,14 +309,14 @@ TEST(Solve, IG) {
   // prob["objective"] = "MAKESPAN";
   // prob["budget"] = "low";
   // prob["instance"] = "binom_rand_30_20_01.dat";
-  // prob["stopping_criterium"] = "EVALS";
+  // prob["stopping_criterion"] = "EVALS";
 
   prob["problem"] = "FSP";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
   prob["instance"] = "taill-like_rand_30_20_01.dat";
-  prob["stopping_criterium"] = "EVALS";
+  prob["stopping_criterion"] = "EVALS";
 
   MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("IG");
   MHParamsValues values(&mhParamsSpecs);
@@ -339,7 +339,7 @@ TEST(Solve, ISA) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
   prob["instance"] = "binom_rand_30_20_01.dat";
-  prob["stopping_criterium"] = "TIME";
+  prob["stopping_criterion"] = "TIME";
 
   MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("ISA");
   MHParamsValues values(&mhParamsSpecs);
@@ -361,7 +361,7 @@ TEST(Solve, ACO) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
   prob["instance"] = "binom_jcorr_10_10_05.dat";
-  prob["stopping_criterium"] = "EVALS";
+  prob["stopping_criterion"] = "EVALS";
 
   MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("ACO");
   MHParamsValues values(&mhParamsSpecs);
@@ -402,7 +402,7 @@ TEST(Solve, SolveAllMHs) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
   prob["instance"] = "binom_rand_30_20_01.dat";
-  prob["stopping_criterium"] = "EVALS";
+  prob["stopping_criterion"] = "EVALS";
   RNG::seed(1234);
 
   for (std::string mh : all_mh) {
@@ -429,7 +429,7 @@ TEST(Solve, SolveAllMHs) {
 //   prob["objective"] = "MAKESPAN";
 //   prob["budget"] = "low";
 //   prob["instance"] = "exp_rand_30_20_01.dat";
-//   prob["stopping_criterium"] = "EVALS";
+//   prob["stopping_criterion"] = "EVALS";
 
 //   std::unordered_map<string, double> params;
 //   params["Comp.Strat"        ] = 0.0;

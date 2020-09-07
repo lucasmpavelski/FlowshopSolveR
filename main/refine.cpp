@@ -27,7 +27,7 @@ auto main(int, char*[]) noexcept -> int {
   prob["objective"]          = "MAKESPAN";
   prob["budget"]             = "med";
   prob["instance"]           = "taillard_rand_50_20_09.dat";
-  prob["stopping_criterium"] = "FIXEDTIME";
+  prob["stopping_criterion"] = "FIXEDTIME";
   std::unordered_map<std::string, std::string> params;
   params["IG.Init"]                      = "neh";
   params["IG.Init.NEH.Priority"]         = "sum_pij";

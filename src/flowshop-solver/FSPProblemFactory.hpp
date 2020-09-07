@@ -28,7 +28,7 @@ class FSPProblemFactory {
       "instance",
       "objective",
       "budget",
-      "stopping_criterium"
+      "stopping_criterion"
     };
   }
 
@@ -75,8 +75,8 @@ class FSPProblemFactory {
     return std::atol(l->at("best_bound").c_str());
   }
 
-  static FSPProblem get(
-      const std::unordered_map<std::string, std::string>& prob_data) {
+  static auto get(
+      const std::unordered_map<std::string, std::string>& prob_data) -> FSPProblem {
     assert(prob_data.at("problem") == "FSP");
     const auto instance = prob_data.at("instance");
     if (!cache.count(instance)) {
@@ -85,9 +85,9 @@ class FSPProblemFactory {
     FSPData data(cache.at(instance));
     const std::string type = prob_data.at("type");
     const std::string objective = prob_data.at("objective");
-    const std::string stopping_criterium = prob_data.at("stopping_criterium");
+    const std::string stopping_criterion = prob_data.at("stopping_criterion");
     unsigned lower_bound = getLowerBound(prob_data.at("instance"), objective);
     return FSPProblem(std::move(data), type, objective, prob_data.at("budget"),
-                      stopping_criterium, lower_bound);
+                      stopping_criterion, lower_bound);
   }
 };

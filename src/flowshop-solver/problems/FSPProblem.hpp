@@ -51,7 +51,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   myMovedSolutionStat<EOT> movedStat;
   NeigborhoodCheckpoint<Ngh> _neighborhoodCheckpoint;
 
-  const std::string stopping_criterium;
+  const std::string stopping_criterion;
   const std::string budget;
   const unsigned lower_bound;
 
@@ -59,7 +59,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
              const std::string& type,
              const std::string& obj,
              std::string _budget,
-             std::string _stopping_criterium,
+             std::string _stopping_criterion,
              unsigned lower_bound = 0)
       : Problem<FSPNeighbor>(),
         _data{std::move(dt)},
@@ -67,7 +67,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
         eval_counter(*eval_func),
         eval_neighbor(getNeighborEvalFunc(type, obj)),
         eval_neighbor_counter(*eval_neighbor),
-        stopping_criterium(std::move(_stopping_criterium)),
+        stopping_criterion(std::move(_stopping_criterion)),
         budget(std::move(_budget)),
         lower_bound(lower_bound) {
     reset();
@@ -79,7 +79,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
       << "objective: " << d.eval_func->ObjT << '\n'
       << "type: " << d.eval_func->type() << '\n'
       << "budget: " << d.budget << '\n'
-      << "stopping_criterium: " << d.stopping_criterium << '\n';
+      << "stopping_criterion: " << d.stopping_criterion << '\n';
     return o;
   }
 
@@ -181,20 +181,20 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   };
 
   auto newContinuator() -> moContinuator<Ngh>* {
-    if (stopping_criterium == "EVALS")
+    if (stopping_criterion == "EVALS")
       return new moEvalsContinuator<Ngh>(eval_counter, eval_neighbor_counter,
                                          getMaxEvals(), false);
-    if (stopping_criterium == "TIME")
+    if (stopping_criterion == "TIME")
       return new moHighResTimeContinuator<Ngh>(getMaxTime(), false, true);
-    if (stopping_criterium.find("FIXEDTIME") == 0)
+    if (stopping_criterion.find("FIXEDTIME") == 0)
       return new moHighResTimeContinuator<Ngh>(getFixedTime(), false, true);
-    if (stopping_criterium == "FITNESS") {
+    if (stopping_criterion == "FITNESS") {
       return new moFitAndEvalsContinuator<Ngh>(getMaxFitness(), eval_counter,
                                                eval_neighbor_counter,
                                                2 * getMaxEvals(), false);
     }
-    throw std::runtime_error("Unknown stopping criterium: " +
-                             stopping_criterium);
+    throw std::runtime_error("Unknown stopping criterion: " +
+                             stopping_criterion);
     return nullptr;
   }
 
@@ -226,11 +226,11 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   }
 
   auto getFixedTime() -> unsigned {
-    auto split = stopping_criterium.find('_');
+    auto split = stopping_criterion.find('_');
     int multiplier = 1;
     if (split != std::string::npos) {
-      auto times_str = stopping_criterium.substr(
-          split + 1, split + 1 - stopping_criterium.size());
+      auto times_str = stopping_criterion.substr(
+          split + 1, split + 1 - stopping_criterion.size());
       multiplier = std::stoi(times_str);
     }
     return 60 * getData().noJobs() * getData().noMachines() * multiplier;

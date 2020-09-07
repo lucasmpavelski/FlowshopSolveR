@@ -159,7 +159,7 @@ try {
 //       prob_data["fsp_type"],
 //       prob_data["objective"],
 //       prob_data["budget"],
-//       prob_data["stopping_criterium"]
+//       prob_data["stopping_criterion"]
 //   );
 //   auto solutions = enumerateAllSolutions(problem);
 //   std::vector<std::vector<int>> sample_solutions;

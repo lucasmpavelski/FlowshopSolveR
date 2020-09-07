@@ -10,7 +10,7 @@ resdir="${dir}/runs/vanilla-ig/results/"
 rm -r $resdir
 mkdir $resdir
 
-problem_names="problem,type,objective,budget,stopping_criterium,instance"
+problem_names="problem,type,objective,budget,stopping_criterion,instance"
 
 
 for config in $(cat $configs)

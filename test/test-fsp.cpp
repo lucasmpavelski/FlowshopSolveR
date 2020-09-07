@@ -257,7 +257,7 @@ TEST(FSPTaillardAcelleration, Results) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
   prob["instance"] = "taill-like_rand_50_5_01.dat";
-  prob["stopping_criterium"] = "FIXEDTIME";
+  prob["stopping_criterion"] = "FIXEDTIME";
   // 2720
   FSPProblem problem = FSPProblemFactory::get(prob);
   problem.eval()(sol);
@@ -433,7 +433,7 @@ TEST(TaillardAcceleration, RecompileNeighbor) {
   prob_dt["objective"] = "MAKESPAN";
   prob_dt["budget"] = "med";
   prob_dt["instance"] = "taillard_rand_20_20_02.dat";
-  prob_dt["stopping_criterium"] = "FIXEDTIME";
+  prob_dt["stopping_criterion"] = "FIXEDTIME";
   FSPProblem prob = FSPProblemFactory::get(prob_dt);
 
   eoEvalFunc<FSP>& fullEval = prob.eval();

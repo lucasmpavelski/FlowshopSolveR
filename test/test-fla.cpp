@@ -13,7 +13,7 @@ TEST(SamplingLON, CanSampleLON) {
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
   prob["instance"] = "taill-like_rand_30_20_03.dat";
-  prob["stopping_criterium"] = "EVALS";
+  prob["stopping_criterion"] = "EVALS";
   std::unordered_map<std::string, std::string> sampling_params;
   sampling_params["Init.Strat"    ] = "NEH";
   sampling_params["Sampling.Strat"] = "FULL_IG";

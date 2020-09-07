@@ -49,7 +49,7 @@ auto main(int argc, char* argv[]) -> int {
   addProblemParam("instance", "taill-like_rand_20_20_01.dat"s);
   addProblemParam("objective", "MAKESPAN"s);
   addProblemParam("type", "PERM"s);
-  addProblemParam("stopping_criterium", "EVALS"s);
+  addProblemParam("stopping_criterion", "EVALS"s);
   addProblemParam("budget", "med"s);
 
   // std::cerr <<
@@ -57,7 +57,7 @@ auto main(int argc, char* argv[]) -> int {
   //     prob_data["instance"] << '\n' <<
   //     prob_data["objective"] << '\n' <<
   //     prob_data["type"] << '\n' <<
-  //     prob_data["stopping_criterium"] << '\n';
+  //     prob_data["stopping_criterion"] << '\n';
 
   auto mh = addParam("IHC"s, "mh");
   auto mh_specs = MHParamsSpecsFactory::get(mh);

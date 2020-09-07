@@ -17,7 +17,7 @@
                 " --type=PERM ",
                 " --objective=MAKESPAN ",
                 " --budget=med ",
-                " --stopping_criterium=FIXEDTIME ",
+                " --stopping_criterion=FIXEDTIME ",
                 " --instance=taill-like_rand_100_20_01.dat ",
                 " --IG.Init=neh ",
                 " --IG.Init.NEH.Priority=sum_pij ",

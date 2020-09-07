@@ -1,4 +1,4 @@
-problem,type,objective,budget,stopping_criterium,instance
+problem,type,objective,budget,stopping_criterion,instance
 FSP,PERM,MAKESPAN,med,FIXEDTIME,taill-like_rand_50_10_01.dat 
 FSP,PERM,MAKESPAN,med,FIXEDTIME,taill-like_rand_50_20_01.dat 
 FSP,PERM,MAKESPAN,med,FIXEDTIME,taill-like_rand_100_10_01.dat
