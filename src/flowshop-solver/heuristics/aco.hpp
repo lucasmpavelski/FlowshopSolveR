@@ -11,8 +11,8 @@
 #include "NEHInit.hpp"
 #include "falseContinuator.hpp"
 #include "flowshop-solver/heuristics.hpp"
-#include "fspproblemfactory.hpp"
-#include "specsdata.hpp"
+#include "FSPProblemFactory.hpp"
+#include "MHParamsSpecsFactory.hpp"
 
 template <class Ngh>
 class MinMaxAntSystem : public moPerturbation<Ngh> {

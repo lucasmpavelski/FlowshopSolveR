@@ -131,15 +131,16 @@ int lowerBound1(const FSPData& fspData) {
 //  ASSERT_TRUE(std::equal(perm.begin(), perm.end(), resp.begin(), resp.end()));
 //}
 
-#include "../src/flowshop-solver/heuristics/ilsKickOp.hpp"
-TEST(Operator, ilsKick) {
-  ilsKickOp<std::vector<int>> op(1, 0.0);
-  // for (int i = 0; i < 1000; i++) {
-  std::vector<int> a = {1, 2, 3, 4};
-  op(a);
-  std::cerr << a[0] << a[1] << a[2] << a[3] << '\n';
-  //}
-}
+// TODO: relocate operator files
+// #include "../src/flowshop-solver/heuristics/ilsKickOp.hpp"
+// TEST(Operator, ilsKick) {
+//   ilsKickOp<std::vector<int>> op(1, 0.0);
+//   // for (int i = 0; i < 1000; i++) {
+//   std::vector<int> a = {1, 2, 3, 4};
+//   op(a);
+//   std::cerr << a[0] << a[1] << a[2] << a[3] << '\n';
+//   //}
+// }
 
 TEST(Solve, HC) {
   using std::string;

@@ -5,9 +5,9 @@
 #include "../heuristics.hpp"
 #include "MHParamsValues.hpp"
 #include "NEHInit.hpp"
-#include "fspproblemfactory.hpp"
+#include "FSPProblemFactory.hpp"
 #include "op_cooling_schedule.hpp"
-#include "specsdata.hpp"
+#include "MHParamsSpecsFactory.hpp"
 
 template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
 auto solveWithISA(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {

@@ -90,10 +90,11 @@ class MHParamsValues : public eoReal<eoMaximizingFitness> {
     }
   }
 
-  [[nodiscard]] auto toMap() const -> std::unordered_map<std::string, double> {
-    std::unordered_map<std::string, double> values;
+  [[nodiscard]] auto toMap() const -> std::unordered_map<std::string, std::string> {
+    std::unordered_map<std::string, std::string> values;
+    // TODO: use categorical value string name
     for (const auto& ps : *specs)
-      values[ps->name] = this->operator[](ps->name);
+      values[ps->name] = std::to_string(this->operator[](ps->name));
     return values;
   }
 };

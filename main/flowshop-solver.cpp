@@ -70,8 +70,8 @@ auto main(int argc, char* argv[]) -> int {
   RNG::seed(seed);
 
   try {
-    auto res = solveWith(mh, prob_data, mh_params);
-    std::cout << res.fitness << ' ' << res.no_evals << ' ' << res.time << '\n';
+    // auto res = solveWith(mh, prob_data, mh_params);
+    // std::cout << res.fitness << ' ' << res.no_evals << ' ' << res.time << '\n';
   } catch (std::exception& e) {
     std::cerr << e.what() << '\n';
     std::cout << "ERROR\n";

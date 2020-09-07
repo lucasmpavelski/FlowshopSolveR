@@ -232,7 +232,7 @@ void testUpdate() {
 }
 
 #include "flowshop-solver/MHSolve.h"
-#include "flowshop-solver/fspproblemfactory.h"
+#include "flowshop-solver/FSPProblemFactory.h"
 
 void runMMAS() {
   initFactories("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/generated_intances/generated_instances_all/",

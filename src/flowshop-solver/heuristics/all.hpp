@@ -14,6 +14,7 @@
 #include "flowshop-solver/heuristics/sa.hpp"
 #include "flowshop-solver/heuristics/ts.hpp"
 #include "flowshop-solver/heuristics/IGBP.hpp"
+#include "flowshop-solver/heuristics/neh.hpp"
 
 #include "flowshop-solver/RunOptions.hpp"
 #include "flowshop-solver/eoFSPFactory.hpp"
@@ -66,7 +67,9 @@ inline auto solveWith(
     prob.checkpointGlobal().add(rewardPrinter);
   }
 
-  if (mh == "HC")
+  if (mh == "NEH")
+    return solveWithNEH(prob, factory, runOptions);
+  else if (mh == "HC")
     return solveWithHC(prob, params);
   else if (mh == "SA")
     return solveWithSA(prob, params);

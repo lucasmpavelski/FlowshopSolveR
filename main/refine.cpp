@@ -4,10 +4,10 @@
 
 #include <string>
 
-#include "flowshop-solver/fspproblemfactory.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
 #include "flowshop-solver/global.hpp"
 #include "flowshop-solver/heuristics/all.hpp"
-#include "flowshop-solver/specsdata.hpp"
+#include "flowshop-solver/MHParamsSpecsFactory.hpp"
 
 
 

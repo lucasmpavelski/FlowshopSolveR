@@ -33,9 +33,9 @@
 #include "flowshop-solver/heuristics/acceptCritTemperature.hpp"
 
 #include "flowshop-solver/MHParamsValues.hpp"
-#include "flowshop-solver/fspproblemfactory.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
 #include "flowshop-solver/problems/FSPProblem.hpp"
-#include "flowshop-solver/specsdata.hpp"
+#include "flowshop-solver/MHParamsSpecsFactory.hpp"
 
 template <class Ngh, class EOT = typename Ngh::EOT>
 void solveILS(const int N,

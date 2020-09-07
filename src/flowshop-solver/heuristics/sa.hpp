@@ -7,7 +7,7 @@
 #include "flowshop-solver/heuristics.hpp"
 #include "flowshop-solver/problems/Problem.hpp"
 #include "op_cooling_schedule.hpp"
-#include "specsdata.hpp"
+#include "MHParamsSpecsFactory.hpp"
 
 template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
 auto solveWithSA(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {

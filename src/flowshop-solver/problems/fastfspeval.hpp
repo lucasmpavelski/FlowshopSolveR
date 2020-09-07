@@ -121,7 +121,7 @@ auto keyToPositionPair(int val, int size) -> std::pair<int, int>;
 
 class FastFSPNeighborEval : public moEval<FSPNeighbor> {
   const FSPData fspData;
-  [[maybe_unused]] eoEvalFunc<EOT>& fullEval;
+  eoEvalFunc<EOT>& fullEval;
   std::vector<CompiledSchedule> compiledSchedules;
   std::vector<EOT> compiledSolutions;
 

@@ -221,7 +221,7 @@ TEST(FSPTaillardAcelleration, IndexConvert) {
   }
 }
 
-#include "flowshop-solver/fspproblemfactory.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
 
 TEST(FSPTaillardAcelleration, Results) {
   auto res = {

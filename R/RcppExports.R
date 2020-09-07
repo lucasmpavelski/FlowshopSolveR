@@ -5,3 +5,7 @@ initFactories <- function(data_folder) {
     invisible(.Call(`_FlowshopSolveR_initFactories`, data_folder))
 }
 
+solveFSP <- function(mh, rproblem, seed, rparams, verbose = FALSE) {
+    .Call(`_FlowshopSolveR_solveFSP`, mh, rproblem, seed, rparams, verbose)
+}
+

@@ -1,7 +1,7 @@
 set(FSP_SOURCES
   problems/fastfspeval.cpp
-  fspproblemfactory.cpp
-  specsdata.cpp
+  FSPProblemFactory.cpp
+  MHParamsSpecsFactory.cpp
   global.cpp
 )
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)

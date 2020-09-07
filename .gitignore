@@ -32,3 +32,4 @@ packrat/lib*/
 .clangd/*
 *.so
 *.o
+install/*

@@ -6,10 +6,10 @@
 
 #include <paradiseo/eo/eo>
 
-#include "flowshop-solver/fspproblemfactory.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
 #include "flowshop-solver/heuristics.hpp"
 #include "flowshop-solver/heuristics/all.hpp"
-#include "flowshop-solver/specsdata.hpp"
+#include "flowshop-solver/MHParamsSpecsFactory.hpp"
 #include "flowshop-solver/MHParamsSpecs.hpp"
 
 auto split(const std::string& val) -> std::vector<std::string> {

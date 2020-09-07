@@ -10,9 +10,9 @@
 #include "MHParamsValues.hpp"
 #include "flowshop-solver/RunOptions.hpp"
 #include "flowshop-solver/eoFSPFactory.hpp"
-#include "flowshop-solver/fspproblemfactory.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
 #include "flowshop-solver/global.hpp"
-#include "flowshop-solver/specsdata.hpp"
+#include "flowshop-solver/MHParamsSpecsFactory.hpp"
 
 template <class PertT, class LOT, class AccT, class EOT>
 void globalGlobalReward(bool                      firstIteration,

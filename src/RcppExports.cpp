@@ -15,9 +15,25 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// solveFSP
+List solveFSP(std::string mh, Rcpp::CharacterVector rproblem, long seed, Rcpp::CharacterVector rparams, bool verbose);
+RcppExport SEXP _FlowshopSolveR_solveFSP(SEXP mhSEXP, SEXP rproblemSEXP, SEXP seedSEXP, SEXP rparamsSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type mh(mhSEXP);
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type rproblem(rproblemSEXP);
+    Rcpp::traits::input_parameter< long >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type rparams(rparamsSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(solveFSP(mh, rproblem, seed, rparams, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_FlowshopSolveR_initFactories", (DL_FUNC) &_FlowshopSolveR_initFactories, 1},
+    {"_FlowshopSolveR_solveFSP", (DL_FUNC) &_FlowshopSolveR_solveFSP, 5},
     {NULL, NULL, 0}
 };
 

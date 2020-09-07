@@ -14,8 +14,8 @@
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 #include "flowshop-solver/heuristics/NEHInit.hpp"
 #include "flowshop-solver/heuristics/perturb/perturb.hpp"
-#include "flowshop-solver/fspproblemfactory.hpp"
-#include "flowshop-solver/specsdata.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
+#include "flowshop-solver/MHParamsSpecsFactory.hpp"
 #include "flowshop-solver/heuristics/acceptCritTemperature.hpp"
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 
@@ -696,11 +696,12 @@ graph<FSPProblem::EOT> sampleLON(
   /****
   *** Perturb
   ****/
-  const int destruction_size = N * params.real("IG.Destruction.Size");
-  OpPerturbDestConst<EOT> igOpPerturb(fullEval, destruction_size);
-  moMonOpPerturb<Ngh> igPerturb0(igOpPerturb, fullEval);
+  auto destruction_size = FixedDestructionSize(N * params.real("IG.Destruction.Size"));
+  InsertFirstBest<Ngh> insert(problem.neighborEval());
+  
+  DestructionConstruction<Ngh> igPerturb0(insert, destruction_size);
 
-  const int N_lsps = N - destruction_size;
+  const int N_lsps = N - destruction_size.value();
   const int nh_size_lsps =
       getNhSize(N_lsps, params.real("IG.Neighborhood.Size"));
 
@@ -758,18 +759,19 @@ graph<FSPProblem::EOT> sampleLON(
     igLSPSLocalSearh->setContinuator(singleStepContinuator);
   }
   auto& neEval = problem.neighborEval();
-  InsertFirstBest<Ngh> insert(neEval);
-  IGLocalSearchPartialSolution<Ngh> igPerturb1(insert, *igLSPSLocalSearh,
-                                           destruction_size);
+  InsertFirstBest<Ngh> insertPartial(neEval);
+  // TODO: use factories
+  // IGLocalSearchPartialSolution<Ngh> igPerturb1(insertPartial, *igLSPSLocalSearh,
+                                           // destruction_size);
 
   moPerturbation<Ngh>* perturb;
   switch (params.categorical("IG.Algo")) {
     case 0:
       perturb = &igPerturb0;
       break;
-    case 1:
-      perturb = &igPerturb1;
-      break;
+    // case 1:
+      // perturb = &igPerturb1;
+      // break;
     default:
       assert(false);
       break;

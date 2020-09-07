@@ -12,8 +12,8 @@
 #include "acceptCritTemperature.hpp"
 #include "falseContinuator.hpp"
 #include "flowshop-solver/heuristics.hpp"
-#include "flowshop-solver/specsdata.hpp"
-#include "fspproblemfactory.hpp"
+#include "flowshop-solver/MHParamsSpecsFactory.hpp"
+#include "FSPProblemFactory.hpp"
 #include "op_cooling_schedule.hpp"
 
 #include "flowshop-solver/heuristics/perturb/perturb.hpp"

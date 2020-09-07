@@ -11,7 +11,7 @@
 
 class FSPProblemFactory {
   static std::string data_folder;
-  //     static std::unordered_map<std::string, FSPData> cache;
+  static std::unordered_map<std::string, FSPData> cache;
   static std::vector<std::unordered_map<std::string, std::string>>
       lower_bounds_data;
 
@@ -19,17 +19,6 @@ class FSPProblemFactory {
   static void init(const std::string& data_folder) {
     FSPProblemFactory::data_folder = data_folder;
     loadLowerBoundsData();
-
-    /* const std::vector<std::string> objs{"PERM", "NOWAIT", "NOIDLE"};
-     if (!fs::is_directory(inst_folder))
-       throw std::runtime_error(inst_folder + " not found!");
-     for (auto p = fs::directory_iterator(inst_folder); p !=
-     fs::directory_iterator(); p++) { auto fn = p->path(); if
-     (fn.has_filename()) { FSPData dt(fn.string()); auto key =
-     fn.filename().string(); cache[key] = dt; if (!quiet) std::cerr << "instance
-     " << key << " cached\n";
-       }
-     }*/
   }
 
   static auto names() -> std::vector<std::string> {
@@ -89,7 +78,11 @@ class FSPProblemFactory {
   static FSPProblem get(
       const std::unordered_map<std::string, std::string>& prob_data) {
     assert(prob_data.at("problem") == "FSP");
-    FSPData data(FSPProblemFactory::instFolder() + prob_data.at("instance"));
+    const auto instance = prob_data.at("instance");
+    if (!cache.count(instance)) {
+      cache[instance] = FSPData(FSPProblemFactory::instFolder() + prob_data.at("instance"));
+    }
+    FSPData data(cache.at(instance));
     const std::string type = prob_data.at("type");
     const std::string objective = prob_data.at("objective");
     const std::string stopping_criterium = prob_data.at("stopping_criterium");
@@ -97,14 +90,4 @@ class FSPProblemFactory {
     return FSPProblem(std::move(data), type, objective, prob_data.at("budget"),
                       stopping_criterium, lower_bound);
   }
-
-  /* static FastFSPProblem getFast(const std::unordered_map<std::string,
- std::string>& prob_data) { assert(prob_data.at("problem") == "FSP"); FSPData
- data(FSPProblemFactory::instFolder() + prob_data.at("instance")); std::string
- type = prob_data.at("type"); std::string objective = prob_data.at("objective");
-     std::string stopping_criterium = prob_data.at("stopping_criterium");
-     unsigned lower_bound = getLowerBound(prob_data.at("instance"), objective);
-     return FastFSPProblem(data, type, objective, stopping_criterium,
- prob_data.at("budget"), lower_bound);
- }*/
 };

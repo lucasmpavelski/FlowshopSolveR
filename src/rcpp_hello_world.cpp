@@ -1,11 +1,11 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-#include "flowshop-solver/specsdata.hpp"
-#include "flowshop-solver/fspproblemfactory.hpp"
-// #include "flowshop-solver/fla_methods.hpp"
-// #include "flowshop-solver/heuristics/all.hpp"
-// #include "flowshop-solver/heuristics.hpp"
+#include "flowshop-solver/MHParamsSpecsFactory.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
+#include "flowshop-solver/fla_methods.hpp"
+#include "flowshop-solver/heuristics/all.hpp"
+#include "flowshop-solver/heuristics.hpp"
 
 // This is a simple function using Rcpp that creates an R list
 // containing a character vector and a numeric vector.
@@ -27,67 +27,40 @@ void initFactories(std::string data_folder)
   FSPProblemFactory::init(data_folder);
 }
 
-// // [[Rcpp::export]]
-// List solveFSP(std::string mh, Rcpp::CharacterVector rproblem, long seed,
-//               Rcpp::NumericVector rparams, bool verbose = false)
-// {
-//   Result result;
-//   try
-//   {
-//     RNG::seed(seed);
-//     auto params_names = Rcpp::as<std::vector<std::string>>(rparams.names());
-//     auto params_values = Rcpp::as<std::vector<double>>(rparams);
-//     std::unordered_map<std::string, double> params;
-//     for (int i = 0; i < params_names.size(); i++)
-//     {
-//       params[params_names[i]] = params_values[i];
-//       //  Rcpp::Rcout << params_names[i] << ": " << params_values[i] << '\n';
-//     }
-//     if (verbose) {
-//       for (int i = 0; i < params_names.size(); i++)
-//         Rcpp::Rcerr << params_names[i] << ": " << params_values[i] << '\n';
-//     }
-//     auto problem_names = Rcpp::as<std::vector<std::string>>(rproblem.names());
-//     auto problem_values = Rcpp::as<std::vector<std::string>>(rproblem);
-//     std::unordered_map<std::string, std::string> problem;
-//     for (int i = 0; i < problem_names.size(); i++)
-//     {
-//       problem[problem_names[i]] = problem_values[i];
-//       //  Rcpp::Rcout << problem_names[i] << ": " << problem_values[i] << '\n';
-//     }
-//     if (verbose) {
-//       for (int i = 0; i < problem_names.size(); i++)
-//         Rcpp::Rcerr << problem_names[i] << ": " << problem_values[i] << '\n';
-//     }
-//     result = solveWith(mh, problem, params);
-//   }
-//   catch (std::exception &ex)
-//   {
-//     throw Rcpp::exception(ex.what());
-//   }
-// 
-//   // Rcpp::DataFrame()
-//   //double result = solveWithFactories(mh, problem, seed, params);
-//   // std::cerr << "no_solves: " << ++no_solves << '\n';
-//   using namespace Rcpp;
-//   return List::create(
-//       Named("fitness") = result.fitness,
-//       Named("time") = result.time,
-//       Named("no_evals") = result.no_evals);
-// }
-// 
-// std::unordered_map<std::string, std::string>
-// rcharVec2map(Rcpp::CharacterVector charvec)
-// {
-//   auto names = Rcpp::as<std::vector<std::string>>(charvec.names());
-//   auto values = Rcpp::as<std::vector<std::string>>(charvec);
-//   std::unordered_map<std::string, std::string> ret;
-//   for (int i = 0; i < names.size(); i++)
-//   {
-//     ret[names[i]] = values[i];
-//   }
-//   return ret;
-// }
+auto rcharVec2map(Rcpp::CharacterVector charvec) -> std::unordered_map<std::string, std::string> {
+  std::unordered_map<std::string, std::string> ret;
+  for (const auto& name : Rcpp::as<std::vector<std::string>>(charvec.names())) {
+    ret[name] = charvec[name];
+  }
+  return ret;
+}
+
+
+// [[Rcpp::export]]
+List solveFSP(std::string mh, Rcpp::CharacterVector rproblem, long seed,
+              Rcpp::CharacterVector rparams, bool verbose = false) 
+try {
+  using namespace Rcpp;
+  
+  RNG::seed(seed);
+  std::unordered_map<std::string, std::string> params = rcharVec2map(rparams);
+  std::unordered_map<std::string, std::string> problem = rcharVec2map(rproblem);
+  
+  if (verbose) {
+    for (const auto& kv : params)
+      Rcerr << kv.first << ": " << kv.second << '\n';
+    for (const auto& kv : problem)
+      Rcerr << kv.first << ": " << kv.second << '\n';
+  }
+  auto result = solveWith(mh, problem, params);
+  return List::create(
+    Named("fitness") = result.fitness,
+    Named("time") = result.time,
+    Named("no_evals") = result.no_evals);
+} catch (std::exception &ex) {
+  throw Rcpp::exception(ex.what());
+}
+
 // 
 // // [[Rcpp::export]]
 // std::vector<double> randomWalk(Rcpp::CharacterVector rproblem,
