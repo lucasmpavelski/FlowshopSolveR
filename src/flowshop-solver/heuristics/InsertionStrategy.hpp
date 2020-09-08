@@ -83,9 +83,12 @@ class InsertLastBest : public InsertBest<Ngh> {
 
 template <class Ngh>
 class myRandomNeighborComparator : public moNeighborComparator<Ngh> {
-  double r;
+  double r{};
 
  public:
+
+  myRandomNeighborComparator() : r{RNG::realUniform<double>()} {}
+
   auto operator()(const Ngh& _neighbor1, const Ngh& _neighbor2)
       -> bool override {
     /**
@@ -93,7 +96,7 @@ class myRandomNeighborComparator : public moNeighborComparator<Ngh> {
      * Fan, C.; Muller, M.E.; Rezucha, I. (1962). "Development of sampling plans
      * by using sequential (item by item) selection techniques and digital
      * computers". Journal of the American Statistical Association. 57 (298):
-     * 387–402.
+     * 387-402.
      */
     if (_neighbor1.fitness() < _neighbor2.fitness()) {
       r = RNG::realUniform<double>();

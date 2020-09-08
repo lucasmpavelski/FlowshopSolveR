@@ -134,7 +134,7 @@ struct FSPData {
   auto jobProcTimesRef() -> ivec& { return total_job_proc_times; }
   [[nodiscard]] auto jobProcTimesRef() const -> const ivec& { return total_job_proc_times; }
 
-  [[nodiscard]] auto pt(const int j, const int m) const -> int {
+  [[nodiscard]] auto pt(const ivec::size_type j, const ivec::size_type m) const -> int {
     return proc_times[m * no_jobs + j];
   }
   auto pt(const int j, const int m) -> int& {

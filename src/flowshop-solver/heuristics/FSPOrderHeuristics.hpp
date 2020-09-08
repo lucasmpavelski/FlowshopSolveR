@@ -162,13 +162,13 @@ struct AVGDEV_PIJ : public FSPOrderHeuristic {
 
 struct StinsonSmithFOH : public FSPOrderHeuristic {
   using FSPOrderHeuristic::FSPOrderHeuristic;
-  [[nodiscard]] auto r(int j, int jl, int m) const -> int {
-    return fspData.pt(j, m) - fspData.pt(jl, m - 1);
+  [[nodiscard]] auto r(int j, int jl, int i) const -> int {
+    return i == 0 ? 0 : fspData.pt(j, i) - fspData.pt(jl, i - 1);
   }
 
-  [[nodiscard]] auto rs(int j, int jl, int m) const -> int {
-    const auto carryOver = std::min(r(j, jl, m - 1), 0);
-    return r(j, jl, m) + carryOver;
+  [[nodiscard]] auto rs(int j, int jl, int i) const -> int {
+    const auto carryOver = std::min(r(j, jl, i - 1), 0);
+    return r(j, jl, i) + carryOver;
   }
 
   virtual auto value(int j, int jl, int m) -> double = 0;
