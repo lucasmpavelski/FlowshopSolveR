@@ -11,7 +11,7 @@
 
 class FSPProblemFactory {
   static std::string data_folder;
-  static std::unordered_map<std::string, std::shared_ptr<FSPData>> cache;
+  static std::unordered_map<std::string, FSPData> cache;
   static std::vector<std::unordered_map<std::string, std::string>>
       lower_bounds_data;
 
@@ -79,14 +79,14 @@ class FSPProblemFactory {
       const std::unordered_map<std::string, std::string>& prob_data) -> FSPProblem {
     assert(prob_data.at("problem") == "FSP");
     const auto instance = prob_data.at("instance");
-    if (!cache.count(instance)) {
-      cache[instance] = std::make_shared<FSPData>(FSPProblemFactory::instFolder() + prob_data.at("instance"));
+    if (cache.find(instance) == cache.end()) {
+      cache.emplace(instance, FSPProblemFactory::instFolder() + prob_data.at("instance"));
     }
     const std::string type = prob_data.at("type");
     const std::string objective = prob_data.at("objective");
     const std::string stopping_criterion = prob_data.at("stopping_criterion");
     unsigned lower_bound = getLowerBound(prob_data.at("instance"), objective);
-    return FSPProblem(FSPData(FSPProblemFactory::instFolder() + prob_data.at("instance")), type, objective, prob_data.at("budget"),
+    return FSPProblem(cache.at(instance), type, objective, prob_data.at("budget"),
                       stopping_criterion, lower_bound);
   }
 };

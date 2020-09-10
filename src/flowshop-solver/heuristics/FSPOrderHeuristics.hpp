@@ -143,18 +143,24 @@ struct DEV_PIJ : public FSPOrderHeuristic {
 struct AVGDEV_PIJ : public FSPOrderHeuristic {
   using FSPOrderHeuristic::FSPOrderHeuristic;
   auto sortingOrder() -> std::vector<double> override {
-    std::vector<double> pt(fspData.noJobs(), 0);
-    for (int j = 0; j < fspData.noJobs(); j++) {
+    const int n = fspData.noJobs();
+    const int m = fspData.noMachines();
+    std::vector<double> pt(n);
+    for (int j = 0; j < n; j++) {
       int avg = 0;
-      for (int i = 0; i < fspData.noMachines(); i++)
+      for (int i = 0; i < m; i++) {
         avg += fspData.pt(j, i);
-      avg = avg / fspData.noMachines();
-      int dev = 0;
-      for (int i = 0; i < fspData.noMachines(); i++) {
-        dev += std::pow(avg - fspData.pt(j, i), 2);
       }
-      double std = std::sqrt((1.0 / (fspData.noMachines() - 1)) * dev);
-      pt[j] = avg + std;
+      avg = avg / m;
+      int sumSqDiff = 0, sumCubDiff = 0;
+      for (int i = 0; i < m; i++) {
+        sumSqDiff += std::pow(avg - fspData.pt(j, i), 2);
+        sumCubDiff += std::pow(avg - fspData.pt(j, i), 3);
+      }
+      double std = std::sqrt((1.0 / (fspData.noMachines() - 1)) * sumSqDiff);
+      double skew = std::sqrt((1.0 / fspData.noMachines()) * sumCubDiff) /
+                  std::pow((1.0 / fspData.noMachines()) * sumSqDiff, 3.0 / 2.0);
+      pt[j] = avg + std + std::abs(skew);
     }
     return pt;
   }
@@ -242,7 +248,7 @@ class RagendranFOH : public FSPOrderHeuristic {
     for (int i = 0; i < m; i++) {
       for (int j = 0; j < n; j++) {
         int sum = 0;
-        for (int k = 0; k < n; k++)
+        for (int k = 0; k < i; k++)
           sum += fspData.pt(j, k);
         lb(j, i) = sum;
       }
@@ -323,7 +329,9 @@ struct RA_C3 : public RagendranFOH {
  * FSP priority rule orders
  * - sum_pij from the original NEH
  * - dev_pig and avgdev_pij from An improved NEH-based heuristic for the
- * permutation flowshop problem by Xingye Dong, Houkuan Huang and Ping Chen
+ * permutation flowshop problem by Xingye Dong, Houkuan Huang and Ping Chen, 
+ * with skew addition by A new improved NEH heuristic for permutation flowshop 
+ * scheduling problems by Weibo Liu, Yan Jin and Mark Price.
  * - remaining orders from Different initial sequences for the heuristic of
  * Nawaz, Enscore and Ham to minimize makespan, idletime or flowtime in the
  * static permutation flowshop sequencing problem by

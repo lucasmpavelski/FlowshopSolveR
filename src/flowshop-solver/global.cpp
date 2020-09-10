@@ -47,9 +47,3 @@ auto operator>>(std::istream& str, CSVRow& data) -> std::istream& {
   return str;
 }
 
-auto factorial(unsigned n) -> long {
-  long ret = 1;
-  while (n >= 2)
-    ret *= n--;
-  return ret;
-}

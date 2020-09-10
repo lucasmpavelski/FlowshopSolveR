@@ -340,4 +340,9 @@ constexpr auto clamp(const T& v, const T& lo, const T& hi) -> const T& {
   // clamp(v, lo, hi, std::less<T>());
 }
 
-auto factorial(unsigned n) -> long;
+inline auto factorial(unsigned n) -> long {
+  long ret = 1;
+  while (n >= 2)
+    ret *= n--;
+  return ret;
+}
