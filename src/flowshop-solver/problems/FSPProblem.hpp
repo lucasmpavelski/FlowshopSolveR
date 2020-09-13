@@ -233,7 +233,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
           split + 1, split + 1 - stopping_criterion.size());
       multiplier = std::stoi(times_str);
     }
-    return 60 * getData().noJobs() * getData().noMachines() * multiplier;
+    return getData().noJobs() * getData().noMachines() * multiplier;
   }
 
   auto getMaxFitness() -> double {

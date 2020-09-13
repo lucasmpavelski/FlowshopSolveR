@@ -4,5 +4,5 @@
 
 mkdir -p _install
 cd _install
-cmake .. -G Ninja
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 ninja

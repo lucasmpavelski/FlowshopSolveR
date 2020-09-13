@@ -25,7 +25,7 @@ instance_data_from_filename <- function(instance_name) {
 #' @export
 #'
 #' @examples
-all_instances <- function() {
-  list.files(here("data", "instances", "flowshop")) %>%
+all_instances <- function(instances_folder) {
+  list.files(instances_folder) %>%
     map_df(instance_data_from_filename)
 }

@@ -5,8 +5,10 @@ require("metaOpt")
 require("FlowshopSolveR")
 require("future")
 
-
-plan("sequential")
+plan(multisession)
+NCORES <- 6
+# plan(sequential)
+# NCORES <- 1
 
 dataFrame2Character <- function(dataFrame) {
   values <- as.character(dataFrame)
@@ -16,16 +18,17 @@ dataFrame2Character <- function(dataFrame) {
 
 instances <- all_instances(here("data", "instances", "flowshop")) %>%
   filter(
-    no_jobs >= 30,
-    inst_n == 1,
-    dist != "taillard"
+    no_jobs >= 50,
+    no_jobs <= 100,
+    no_machines <= 20,
+    no_machines >= 10,
+    inst_n <= 5,
+    dist == "taill-like",
+    corr == 'rand'
   )
 
-modelling <- all_problem_data() %>%
-  filter(
-    stopping_criterion == "EVALS",
-    budget == "med"
-  )
+modelling <- fixed_time(15) %>%
+  filter(type == 'PERM')
 
 set.seed(98798)
 
@@ -35,23 +38,20 @@ problems <- crossing(instances, modelling) %>%
     dt <- list(...)
     Problem(name = str_c(dt$model, dt$instance, sep = "_"), data = list(dataFrame2Character(dt)))
   })) %>%
-  sample_n(30) %>%
   pull(problem_space)
 
 problem_space <- ProblemSpace(problems = problems)
 
-algorithms_space <- AlgorithmSpace(
-  algorithms = list(
-    Algorithm(
-      name = "NEH",
-      parameters = readParameters(here("data", "specs", "NEH.txt"))
-    )
+algorithm <- Algorithm(
+    name = "IG",
+    parameters = readParameters(here("data", "specs", "ADAPT-IG.txt"))
   )
-)
 
-initFactories(here("data"))
 
 solve <- function(algorithm, config, problem, seed, ...) {
+  initFactories(here("data"))
+  timestamp()
+  cat(unlist(problem@data))
   res <- solveFSP(
     mh = algorithm@name,
     rproblem = unlist(problem@data),
@@ -59,19 +59,21 @@ solve <- function(algorithm, config, problem, seed, ...) {
     seed = seed,
     verbose = F
   )
+  timestamp()
   list(
     cost = res$fitness,
     time = res$time
   )
 }
 
-results <- build_performance_data(
+results <- train_best_solver(
   problem_space = problem_space,
-  algorithm_space = algorithms_space,
+  algorithm = algorithm,
   solve_function = solve,
   irace_scenario = defaultScenario(list(
-    maxExperiments = 180
+    maxExperiments = 5000
   )),
-  parallel = 2#,
-  # cache_folder = here('performance_data', 'NEH')
+  parallel = NCORES
 )
+
+save(results, 'runs/irace-result-taill-like-ADAPT-IG.Rdata')

@@ -8,11 +8,21 @@ all_types <- function() {
 }
 
 all_stopping_criteria <- function() {
-  c('EVALS', 'TIME')
+  c('EVALS', 'TIME', 'FIXEDTIME')
 }
 
 all_budgets <- function() {
   c('low', 'med', 'high')
+}
+
+fixed_time <- function(multiplier) {
+  crossing(
+    objective = all_objectives(),
+    type = all_types(),
+    stopping_criterion = paste0('FIXEDTIME_', multiplier),
+    budget = all_budgets()[1]
+  ) %>%
+    mutate(model = str_c(objective, type, stopping_criterion, budget, sep = '_'))
 }
 
 all_problem_data <- function() {
