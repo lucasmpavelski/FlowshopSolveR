@@ -26,8 +26,8 @@ IG.LSPS.Local.Search         "" c (none,first_improvement,best_improvement,rando
 IG.LSPS.Single.Step          "" c (0,1) | IG.Perturb == 'lsps' & IG.LSPS.Local.Search != 'none'
 
 IG.AOS.Strategy              "" c (probability_matching,frrmab,linucb,thompson_sampling,random) | IG.Perturb.DestructionSizeStrategy == 'adaptive'
-IG.AOS.RewardType            "" c (0,1,2,3) | IG.Perturb.DestructionSizeStrategy == 'adaptive'
-IG.AOS.Options               "" c (2_4, 1_2, 1_4_8, 2_4_8) | IG.Perturb.DestructionSizeStrategy == 'adaptive'
+IG.AOS.RewardType            "" c (0,1,2,3) | IG.Perturb.DestructionSizeStrategy == 'adaptive'  & IG.AOS.Strategy != 'random'
+IG.AOS.Options               "" c (2_4, 1_2, 1_4_8, 2_4_8) | IG.Perturb.DestructionSizeStrategy == 'adaptive' & IG.AOS.Strategy != 'random'
 
 IG.AOS.PM.RewardType         "" c (avgabs,avgnorm,extabs,extnorm)  | IG.Perturb.DestructionSizeStrategy == 'adaptive' & IG.AOS.Strategy == 'probability_matching'
 IG.AOS.PM.Alpha              "" r (0.1, 0.9) | IG.Perturb.DestructionSizeStrategy == 'adaptive' & IG.AOS.Strategy == 'probability_matching'

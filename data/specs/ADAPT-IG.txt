@@ -13,9 +13,9 @@ IG.Local.Search              "" c (best_insertion)
 IG.LS.Single.Step            "" c (0)
 
 IG.Accept                    "" c (temperature)
-IG.Accept.Temperature        "" c (0.8)    | IG.Accept == 'temperature'
+IG.Accept.Temperature        "" c (0.5)    | IG.Accept == 'temperature'
 
-IG.Perturb                   "" c (lsps)
+IG.Perturb                   "" c (rs)
 
 IG.Perturb.DestructionSizeStrategy "" c (adaptive)
 IG.Perturb.DestructionSize   "" c (4) | IG.Perturb.DestructionSizeStrategy == 'fixed'
@@ -25,9 +25,9 @@ IG.Perturb.Insertion         "" c (first_best)
 IG.LSPS.Local.Search         "" c (best_insertion) | IG.Perturb == 'lsps'
 IG.LSPS.Single.Step          "" c (0) | IG.Perturb == 'lsps'
 
-IG.AOS.Strategy              "" c (probability_matching,frrmab,linucb,thompson_sampling,random) | IG.Perturb.DestructionSizeStrategy == 'adaptive'
-IG.AOS.RewardType            "" c (0,1,2,3) | IG.Perturb.DestructionSizeStrategy == 'adaptive'
-IG.AOS.Options               "" c (2_4_8) | IG.Perturb.DestructionSizeStrategy == 'adaptive'
+IG.AOS.Strategy              "" c (probability_matching,frrmab,linucb,thompson_sampling) | IG.Perturb.DestructionSizeStrategy == 'adaptive'
+IG.AOS.RewardType            "" c (0,1,2,3) | IG.Perturb.DestructionSizeStrategy == 'adaptive' & IG.AOS.Strategy != 'random'
+IG.AOS.Options               "" c (2_4_8) | IG.Perturb.DestructionSizeStrategy == 'adaptive' & IG.AOS.Strategy != 'random'
 
 IG.AOS.PM.RewardType         "" c (avgabs,avgnorm,extabs,extnorm)  | IG.Perturb.DestructionSizeStrategy == 'adaptive' & IG.AOS.Strategy == 'probability_matching'
 IG.AOS.PM.Alpha              "" r (0.1, 0.9) | IG.Perturb.DestructionSizeStrategy == 'adaptive' & IG.AOS.Strategy == 'probability_matching'
@@ -40,7 +40,7 @@ IG.AOS.FRRMAB.Decay          "" r (0.25, 1.0) | IG.Perturb.DestructionSizeStrate
 
 IG.AOS.LINUCB.Alpha          "" r (0.0, 1.5) | IG.Perturb.DestructionSizeStrategy == 'adaptive' & IG.AOS.Strategy == 'linucb'
 
-IG.AOS.WarmUp.Proportion     "" r (0.0,0.5) | IG.Perturb.DestructionSizeStrategy == 'adaptive'
+IG.AOS.WarmUp.Proportion     "" r (0.0,0.5) | IG.Perturb.DestructionSizeStrategy == 'adaptive' 
 IG.AOS.WarmUp.Strategy       "" c (random, fixed) | IG.Perturb.DestructionSizeStrategy == 'adaptive'
 
 IG.AOS.TS.Strategy           "" c (static, dynamic) | IG.Perturb.DestructionSizeStrategy == 'adaptive' & IG.AOS.Strategy == 'thompson_sampling'
