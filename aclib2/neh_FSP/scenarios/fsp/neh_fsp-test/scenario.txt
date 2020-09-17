@@ -1,0 +1,8 @@
+algo = python3 ./target_algorithms/fsp/mh/wrapper.py
+paramfile = ./target_algorithms/fsp/neh/params.pcs
+execdir = .
+deterministic = 0
+run_obj = quality
+runcount_limit
+instance_file = instances/fsp/sets/test/training.txt
+test_instance_file = instances/fsp/sets/test/test.txt
