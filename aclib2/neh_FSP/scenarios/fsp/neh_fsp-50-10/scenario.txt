@@ -1,0 +1,9 @@
+algo = python3 ./target_algorithms/fsp/neh/wrapper.py
+paramfile = ./target_algorithms/fsp/neh/params.pcs
+execdir = .
+deterministic = 1
+run_obj = quality
+runcount_limit = 5000
+cutoff_time = 500000
+instance_file = instances/fsp/sets/50-10/training.txt
+test_instance_file = instances/fsp/sets/50-10/test.txt

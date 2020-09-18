@@ -33,8 +33,8 @@ class DummyWrapper(AbstractWrapper):
         self.mh_name = 'NEH'
     
     def get_command_line_args(self, runargs, config):
-        cmd = "./_install/main/fsp_solver --printLastFitness --data_folder=data --mh=%s --seed=%d " % (self.mh_name, runargs["seed"])
-        inst_splits = runargs['instance'].split(',')
+        cmd = "/_install/main/fsp_solver --printLastFitness --data_folder=/data --mh=%s --seed=%d " % (self.mh_name, runargs["seed"])
+        inst_splits = runargs['instance'].split('/')[-1].split(',')
         prob_data = {
             "problem": inst_splits[0],
             "type": inst_splits[1],
@@ -46,7 +46,7 @@ class DummyWrapper(AbstractWrapper):
         for key, value in prob_data.items() :
             cmd += "--%s=%s " %(key, value)
         for key, value in config.items():
-            cmd += "-%s=%s " %(key, value)
+            cmd += "-%s=%s " %(key.replace('_', '.'), value)
         print(cmd)
         return cmd
     
