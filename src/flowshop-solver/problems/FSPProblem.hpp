@@ -11,7 +11,7 @@
 #include "flowshop-solver/problems/FSPEvalFunc.hpp"
 #include "flowshop-solver/problems/NIFSPEvalFunc.hpp"
 #include "flowshop-solver/problems/NWFSPEvalFunc.hpp"
-#include "flowshop-solver/problems/fastfspeval.hpp"
+#include "flowshop-solver/problems/FastFSPNeighborEval.hpp"
 #include "problems/FSPData.hpp"
 
 using FSPMax = eoInt<eoMaximizingFitness>;

@@ -115,10 +115,6 @@ struct CompiledSchedule {
   }
 };
 
-auto positionPairToKey(int first, int second, int size) -> int;
-
-auto keyToPositionPair(int val, int size) -> std::pair<int, int>;
-
 class FastFSPNeighborEval : public moEval<FSPNeighbor> {
   const FSPData fspData;
   [[maybe_unused]] eoEvalFunc<EOT>& fullEval;

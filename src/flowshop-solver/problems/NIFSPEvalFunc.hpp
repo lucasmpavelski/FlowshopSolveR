@@ -26,7 +26,7 @@ class NIFSPEvalFunc : public FSPEvalFunc<EOT> {
   std::valarray<int> S;
   std::valarray<int> H;
 
-  void completionTime(const EOT& _fsp, std::valarray<int>& Ct) override {
+  void completionTime(const EOT& _fsp, std::vector<int>& Ct) override {
     const int _N = _fsp.size();
     const int M = noMachines();
     const int N = noJobs();

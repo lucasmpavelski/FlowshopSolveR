@@ -7,7 +7,7 @@
 #include "flowshop-solver/heuristics/NEHInit.hpp"
 #include "flowshop-solver/heuristics/fastnehheuristic.hpp"
 #include "problems/FSPEvalFunc.hpp"
-#include "problems/fastfspeval.hpp"
+#include "problems/FastFSPNeighborEval.hpp"
 
 #ifdef NDEBUG
 #undef NDEBUG

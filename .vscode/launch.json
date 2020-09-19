@@ -68,7 +68,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/build/test/test-fsp",
-            "args": [],
+            "args": ["--gtest_filter=NWFSP.*"],
         },
         {
             "name": "(gdb) Launch",

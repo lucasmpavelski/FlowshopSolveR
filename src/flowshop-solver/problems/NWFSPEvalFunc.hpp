@@ -19,12 +19,16 @@ class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
 
   [[nodiscard]] auto type() const -> std::string final { return "NOWAIT"; }
 
+  [[nodiscard]] auto delay(int i, int j) const -> int {
+    return delayMatrix[i * fsp_data.noJobs() + j];
+  }
+
  private:
   /** delayMatrix[i][j] = the values between the start of any two consecutive
    * jobs i and j */
   std::vector<int> delayMatrix;
 
-  void completionTime(const EOT& _fsp, std::valarray<int>& Ct) override {
+  void completionTime(const EOT& _fsp, std::vector<int>& Ct) override {
     const int N = noJobs();
     const int _N = _fsp.size();
     // for each job...

@@ -32,7 +32,7 @@ void testSolveWithFactories() {
   }
 }
 
-#include "problems/fastfspeval.hpp"
+#include "problems/FastFSPNeighborEval.hpp"
 
 void testSolve() {
   int seed = 481571373;

@@ -38,17 +38,14 @@ class FSPEvalFunc : public eoEvalFunc<EOT> {
  public:
   using Fitness = typename EOT::Fitness;
   FSPData fsp_data;
-  std::valarray<int> Ct;  // vector of completion times
+  std::vector<int> Ct;  // vector of completion times
   Objective ObjT;
-  int no_evals;
 
   FSPEvalFunc(FSPData fd, Objective ObjT = Objective::MAKESPAN)
       : fsp_data{std::move(fd)}, Ct(fsp_data.noJobs()), ObjT(ObjT) {
-    no_evals = 0;
   }
 
   void operator()(EOT& s) override {
-    no_evals++;
     completionTime(s, Ct);
     double fit = 0.0, max = fsp_data.maxCT();
     switch (ObjT) {
@@ -89,7 +86,7 @@ class FSPEvalFunc : public eoEvalFunc<EOT> {
     return std::accumulate(beg, end, 0);
   }
 
-  virtual void completionTime(const EOT& _fsp, std::valarray<int>& ct) = 0;
+  virtual void completionTime(const EOT& _fsp, std::vector<int>& ct) = 0;
 };
 
 template <class EOT>
@@ -105,9 +102,9 @@ class PermFSPEvalFunc : public FSPEvalFunc<EOT> {
   auto type() const -> std::string final { return "PERM"; }
 
  protected:
-  std::valarray<int> part_ct;  // matrice des comp time
+  std::vector<int> part_ct;
 
-  void completionTime(const EOT& _fsp, std::valarray<int>& Ct) override {
+  void completionTime(const EOT& _fsp, std::vector<int>& Ct) override {
     const int _N = _fsp.size();
     const int N = noJobs();
     const int M = noMachines();
@@ -124,10 +121,10 @@ class PermFSPEvalFunc : public FSPEvalFunc<EOT> {
         part_ct[j * N + i] =
             std::max(part_ct[j * N + i - 1], part_ct[(j - 1) * N + i]) +
             p[j * N + _fsp[i]];
-        // std::cout << part_ct[j * N + i - 1] << " ";
       }
-      // std::cout << "\n";
     }
-    Ct = part_ct[std::slice((M - 1) * N, _N, 1)];
+    auto from = part_ct.begin() + (M - 1) * N;
+    auto to = from + _N;
+    Ct.assign(from, to);
   }
 };

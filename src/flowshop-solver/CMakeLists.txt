@@ -1,5 +1,4 @@
 set(FSP_SOURCES
-  problems/fastfspeval.cpp
   FSPProblemFactory.cpp
   MHParamsSpecsFactory.cpp
   global.cpp

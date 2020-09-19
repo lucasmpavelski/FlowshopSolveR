@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -11,7 +12,8 @@
 #include "flowshop-solver/problems/FSPEvalFunc.hpp"
 #include "flowshop-solver/problems/NIFSPEvalFunc.hpp"
 #include "flowshop-solver/problems/NWFSPEvalFunc.hpp"
-#include "flowshop-solver/problems/fastfspeval.hpp"
+#include "flowshop-solver/problems/FastFSPNeighborEval.hpp"
+#include "flowshop-solver/problems/FastNWNeighborMakespanEval.hpp"
 
 #ifdef NDEBUG
 #undef NDEBUG
@@ -210,15 +212,6 @@ TEST(FSPNeighbor, MoveBegin) {
 TEST(FSPNeighbor, MoveEnd) {
   ASSERT_TRUE(
       auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 1, 6, {1, 3, 4, 5, 6, 2}));
-}
-
-TEST(FSPTaillardAcelleration, IndexConvert) {
-  int n = 200;
-  for (int i = 0; i < (n - 1) * (n - 1); i++) {
-    auto kp = keyToPositionPair(i, n);
-    auto pos = positionPairToKey(kp.first, kp.second, n);
-    ASSERT_TRUE(i == pos);
-  }
 }
 
 #include "flowshop-solver/FSPProblemFactory.hpp"
@@ -501,8 +494,40 @@ TEST(Heuristic, FSPOrderHeuristics) {
   }
 }
 
+
+TEST(NWFSP, NWFSPFastEvaluation) {
+  std::vector<int> pts = { //
+    20, 25, 25, 10, 17, //
+    30, 20, 25, 25, 28, //
+  };
+  FSPData dt{pts, 5, true};
+  NWFSPEvalFunc<FSP> nwFspEval{dt};
+  FastNWNeighborMakespanEval fastEval{dt, nwFspEval};
+
+  FSP sol;
+  sol.assign({0, 1, 2, 3, 4});
+
+  FSPNeighbor ngh1(2, 0, sol.size());
+  fastEval(sol, ngh1);
+  ASSERT_EQ(153, ngh1.fitness());
+
+  FSPNeighbor ngh2(2, 4, sol.size());
+  fastEval(sol, ngh2);
+  ASSERT_EQ(148, ngh2.fitness());
+
+  FSPNeighbor ngh3(2, 1, sol.size());
+  fastEval(sol, ngh3);
+  ASSERT_EQ(148, ngh3.fitness());
+}
+
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) -> int {
   testing::InitGoogleTest(&argc, argv);
-  // testing::InitGoogleTest(&argc, argv);
+  // int c = 2;
+  // char** v = new char*[2];
+  // char s[] = "--gtest_filter=\"NWFSP.*\"";
+  // v[1] = new char[200];
+  // std::strcpy(v[1], s);
+  // testing::InitGoogleTest(&c, v);
+
   return RUN_ALL_TESTS();
 }
