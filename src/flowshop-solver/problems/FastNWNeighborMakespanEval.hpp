@@ -11,7 +11,7 @@
 
 /**
  * Fast evaluation for No-wait flowshop as show in
- * An improved iterated greedy algorithm for the no-waitflow shop scheduling 
+ * An improved iterated greedy algorithm for the no-waitflow shop scheduling
  * problem with makespan criterion
  * by Quan-Ke Pan, Ling Wang and Bao-Hua Zhao
  */
@@ -26,32 +26,52 @@ class FastNWNeighborMakespanEval : public moEval<FSPNeighbor> {
 
   void operator()(FSP& sol, FSPNeighbor& ngh) final {
     auto firstSecond = ngh.firstSecond(sol);
-    int j = firstSecond.first;
-    int k = firstSecond.second;
-    const auto& T = fspData.jobProcTimesRef();
+    auto j = firstSecond.first;
+    auto k = firstSecond.second;
+    int cMax_ll = partialMakespan(sol, j);
+    ngh.fitness(neighborMakespan(cMax_ll, sol, j, k));
+  }
 
+ private:
+  auto partialMakespan(FSP& sol, unsigned j) -> int {
     if (sol.invalid()) {
       fullEval(sol);
     }
     int cmaxSol = sol.fitness();
+    int pj = sol[j];
+    const auto& T = fspData.jobProcTimesRef();
 
-    int cmaxSolll;
     if (j == 0) {
-      cmaxSolll = cmaxSol - fullEval.delay(j, 1);
-    } else if (j == fspData.noJobs() - 1) {
-      cmaxSolll = cmaxSol - fullEval.delay(j - 1, j) - T[j] + T[j - 1];
-    } else {
-      cmaxSolll = cmaxSol - fullEval.delay(j - 1, j) -
-                  fullEval.delay(j, j + 1) + fullEval.delay(j - 1, j + 1);
+      int p1 = sol[1];
+      return cmaxSol - fullEval.delay(pj, p1);
     }
+
+    int pj_m1 = sol[j - 1];
+    if (j == sol.size() - 1) {
+      return cmaxSol - fullEval.delay(pj_m1, pj) - T[pj] + T[pj_m1];
+    }
+
+    int pj_p1 = sol[j + 1];
+    return cmaxSol - fullEval.delay(pj_m1, pj) - fullEval.delay(pj, pj_p1) +
+           fullEval.delay(pj_m1, pj_p1);
+  }
+
+  auto neighborMakespan(int partialCmax, FSP& sol, unsigned j, unsigned k)
+      -> int {
+    int pj = sol[j];
+    int pk = j < k ? sol[k + 1] : sol[k];
+    const auto& T = fspData.jobProcTimesRef();
 
     if (k == 0) {
-      ngh.fitness(cmaxSolll + fullEval.delay(j, k));
-    } else if (k == fspData.noJobs() - 1) {
-      ngh.fitness(cmaxSolll + fullEval.delay(k - 1, j) - T[k - 1] + T[j]);
-    } else {
-      ngh.fitness(cmaxSolll + fullEval.delay(k - 1, j) + fullEval.delay(j, k) 
-        - fullEval.delay(k - 1, k));
+      return partialCmax + fullEval.delay(pj, pk);
     }
+
+    int pk_m1 = j < k ? sol[k] : sol[k - 1];
+    if (k == sol.size() - 1) {
+      return partialCmax + fullEval.delay(pk_m1, pj) - T[pk_m1] + T[pj];
+    }
+
+    return partialCmax + fullEval.delay(pk_m1, pj) + fullEval.delay(pj, pk) -
+           fullEval.delay(pk_m1, pk);
   }
 };

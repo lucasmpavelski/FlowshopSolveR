@@ -5,6 +5,7 @@
 #include <numeric>
 #include <string>
 
+#include <eoInit.h>
 #include <gtest/gtest.h>
 
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
@@ -178,10 +179,10 @@ TEST(FSPTaillardAcelleration, Evaluation) {
   ASSERT_EQ(sol.fitness(), csd.makespan[3]);
 }
 
-auto auxMoveNeighborCompare(std::initializer_list<int> init,
-                            int from,
-                            int to,
-                            std::initializer_list<int> result) -> bool {
+auto testMove(std::initializer_list<int> init,
+              int from,
+              int to,
+              std::initializer_list<int> result) -> bool {
   FSP sol;
   sol.assign(init);
   FSPNeighbor ng(from, to, sol.size());
@@ -189,30 +190,39 @@ auto auxMoveNeighborCompare(std::initializer_list<int> init,
   return std::equal(sol.begin(), sol.end(), result.begin());
 }
 
-TEST(FSPNeighbor, MoveOperatorEqual) {
-  ASSERT_TRUE(
-      auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 0, 0, {1, 2, 3, 4, 5, 6}));
+// TEST(FSPNeighbor, MoveOperatorEqual) {
+//   ASSERT_TRUE(
+//       auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 0, 0, {1, 2, 3, 4, 5, 6}));
+// }
+
+TEST(FSPNeighbor, MoveAheadNext) {
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 0, {1, 2, 3, 4, 5, 6}));
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 1, {2, 1, 3, 4, 5, 6}));
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 2, {2, 3, 1, 4, 5, 6}));
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 3, {2, 3, 4, 1, 5, 6}));
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 4, {2, 3, 4, 5, 1, 6}));
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 5, {2, 3, 4, 5, 6, 1}));
 }
 
-TEST(FSPNeighbor, MoveAhead) {
-  ASSERT_TRUE(
-      auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 1, 5, {1, 3, 4, 5, 2, 6}));
-}
+// TEST(FSPNeighbor, MoveAhead) {
+//   ASSERT_TRUE(
+//       auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 1, 5, {1, 3, 4, 5, 2, 6}));
+// }
 
-TEST(FSPNeighbor, MoveBack) {
-  ASSERT_TRUE(
-      auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 4, 1, {1, 5, 2, 3, 4, 6}));
-}
+// TEST(FSPNeighbor, MoveBack) {
+//   ASSERT_TRUE(
+//       auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 4, 1, {1, 5, 2, 3, 4, 6}));
+// }
 
-TEST(FSPNeighbor, MoveBegin) {
-  ASSERT_TRUE(
-      auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 4, 0, {5, 1, 2, 3, 4, 6}));
-}
+// TEST(FSPNeighbor, MoveBegin) {
+//   ASSERT_TRUE(
+//       auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 4, 0, {5, 1, 2, 3, 4, 6}));
+// }
 
-TEST(FSPNeighbor, MoveEnd) {
-  ASSERT_TRUE(
-      auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 1, 6, {1, 3, 4, 5, 6, 2}));
-}
+// TEST(FSPNeighbor, MoveEnd) {
+//   ASSERT_TRUE(
+//       auxMoveNeighborCompare({1, 2, 3, 4, 5, 6}, 1, 6, {1, 3, 4, 5, 6, 2}));
+// }
 
 #include "flowshop-solver/FSPProblemFactory.hpp"
 
@@ -366,7 +376,7 @@ TEST(TaillardAcceleration, ReCompileEval) {
   neighbor.set(0, sol.size() - 1, sol.size());
   ne(sol, neighbor);
 
-  for (int newPos = sol.size(); newPos >= 0; newPos--) {
+  for (int newPos = sol.size() - 1; newPos >= 0; newPos--) {
     neighbor.set(sol.size() / 2, newPos, sol.size());
     // ne(sol, neighbor);
 
@@ -518,6 +528,32 @@ TEST(NWFSP, NWFSPFastEvaluation) {
   FSPNeighbor ngh3(2, 1, sol.size());
   fastEval(sol, ngh3);
   ASSERT_EQ(148, ngh3.fitness());
+}
+
+TEST(NWFSP, NWFSPFastEvaluationRandom) {
+  const int no_jobs = 10;
+  const int no_machines = 10;
+  for (int i = 0; i < 100; i++) {
+    FSPData dt{no_jobs, no_machines};
+    NWFSPEvalFunc<FSP> nwFspEval{dt};
+    FastNWNeighborMakespanEval fastEval{dt, nwFspEval};
+    FSP sol(no_jobs);
+    FSP solMoved(no_jobs);
+    eoInitPermutation<FSP> init(no_jobs);
+    for (int j = 0; j < no_jobs; j++) {
+      for (int k = 0; k < no_jobs; k++) {
+        if (k != j && k != j - 1) {
+          init(sol);
+          FSPNeighbor ngh(j, k, sol.size());
+          fastEval(sol, ngh);
+          solMoved = sol;
+          ngh.move(solMoved);
+          nwFspEval(solMoved);
+          ASSERT_EQ(solMoved.fitness(), ngh.fitness());
+        }
+      }
+    }
+  }   
 }
 
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) -> int {

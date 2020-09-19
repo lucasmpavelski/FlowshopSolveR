@@ -92,7 +92,7 @@ class BestInsertionExplorer
     // bestNeighbor.fitness(std::numeric_limits<double>::max());
     int bestPosition = -1;
     neighborhoodCheckpoint.initNeighborhood(_solution);
-    for (int position = 0; position <= n; position++) {
+    for (int position = 0; position < n; position++) {
       if (insertPosition == position)
         continue;
       neighbor.set(insertPosition, position, n);

@@ -43,7 +43,7 @@ class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
       if (first == second) {
         return;
       } else if (first < second) {
-        std::rotate(begin + first, begin + first + 1, begin + second);
+        std::rotate(begin + first, begin + first + 1, begin + second + 1);
       } else {
         std::rotate(begin + second, begin + first, begin + first + 1);
       }

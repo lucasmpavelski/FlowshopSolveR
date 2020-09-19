@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <vector>
 
 #include "FSPEvalFunc.hpp"
@@ -21,6 +22,16 @@ class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
 
   [[nodiscard]] auto delay(int i, int j) const -> int {
     return delayMatrix[i * fsp_data.noJobs() + j];
+  }
+
+  auto printDelayMatrix(std::ostream& os) -> std::ostream& {
+    for (int i = 0; i < fsp_data.noJobs(); i++) {
+      for (int j = 0; j < fsp_data.noJobs(); j++) {
+        os << delay(i, j) << ' ';
+      }
+      os << '\n';
+    }
+    return os;
   }
 
  private:

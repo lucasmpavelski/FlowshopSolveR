@@ -41,7 +41,7 @@ class InsertBest : public InsertionStrategy<Ngh> {
 
   auto insert(EOT& sol, int positionToInsert) -> bool override {
     Ngh neighbor, bestNeighbor;
-    for (unsigned position = 0; position <= sol.size(); position++) {
+    for (unsigned position = 0; position < sol.size(); position++) {
       if (positionToInsert == static_cast<int>(position))
         continue;
       neighbor.set(positionToInsert, position, sol.size());
