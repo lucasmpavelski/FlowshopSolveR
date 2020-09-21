@@ -60,7 +60,7 @@ class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
     this->key = static_cast<unsigned>(-1);
   }
 
-  std::pair<unsigned, unsigned> firstSecond(EOT& _sol) {
+  auto firstSecond(EOT& _sol) -> std::pair<unsigned, unsigned> {
     if (static_cast<int>(key) >= 0) {
       size = _sol.size();
       translate(key + 1);
