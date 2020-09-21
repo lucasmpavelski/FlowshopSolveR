@@ -125,18 +125,23 @@ struct FSPData {
   [[nodiscard]] auto noMachines() const -> int { return no_machines; }
   [[nodiscard]] auto maxCT() const -> int { return max_ct; }
   [[nodiscard]] auto lowerBound() const -> int { return lower_bound; }
-  auto procTimesRef() -> ivec& { return proc_times; }
-  [[nodiscard]] auto procTimesRef() const -> const ivec& { return proc_times; }
+
   auto machineProcTimesRef() -> ivec& { return total_machine_proc_times; }
   [[nodiscard]] auto machineProcTimesRef() const -> const ivec& {
     return total_machine_proc_times;
   }
+  [[nodiscard]] auto machineProcTime(const int m) { return total_machine_proc_times[m]; }
+
   auto jobProcTimesRef() -> ivec& { return total_job_proc_times; }
   [[nodiscard]] auto jobProcTimesRef() const -> const ivec& { return total_job_proc_times; }
+  [[nodiscard]] auto jobProcTime(const int j) { return total_job_proc_times[j]; }
 
+  [[nodiscard]] auto procTimesRef() const -> const ivec& { return proc_times; }
   [[nodiscard]] auto pt(const ivec::size_type j, const ivec::size_type m) const -> int {
     return proc_times[m * no_jobs + j];
   }
+
+  auto procTimesRef() -> ivec& { return proc_times; }
   auto pt(const int j, const int m) -> int& {
     return proc_times[m * no_jobs + j];
   }

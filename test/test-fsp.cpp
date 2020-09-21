@@ -460,23 +460,22 @@ TEST(TaillardAcceleration, RecompileNeighbor) {
   ASSERT_EQ(ng.fitness(), sol2.fitness());
 }
 
-TEST(TaillardAcceleration, NEH) {
-  std::vector<int> vec;
-  vec.assign({
-      16, 4, 4, 14, 12,  //
-      14, 3, 4, 14, 10,  //
-      18, 5, 5, 15, 13,  //
-      4,  2, 2, 12, 3,   //
-      4,  2, 2, 12, 2,   //
-      3,  1, 2, 12, 1,   //
-      2,  2, 2, 11, 2,   //
-      5,  3, 4, 12, 4,   //
-      6,  4, 3, 12, 3,   //
-      7,  2, 4, 14, 4    //
-  });
-  FSPData fspData(vec, 10, false);
-  std::cerr << fspData << '\n';
-}
+// TEST(TaillardAcceleration, NEH) {
+//   std::vector<int> vec;
+//   vec.assign({
+//       16, 4, 4, 14, 12,  //
+//       14, 3, 4, 14, 10,  //
+//       18, 5, 5, 15, 13,  //
+//       4,  2, 2, 12, 3,   //
+//       4,  2, 2, 12, 2,   //
+//       3,  1, 2, 12, 1,   //
+//       2,  2, 2, 11, 2,   //
+//       5,  3, 4, 12, 4,   //
+//       6,  4, 3, 12, 3,   //
+//       7,  2, 4, 14, 4    //
+//   });
+//   FSPData fspData(vec, 10, false);
+// }
 
 #include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
 
@@ -540,10 +539,10 @@ TEST(NWFSP, NWFSPFastEvaluationRandom) {
     FSP sol(no_jobs);
     FSP solMoved(no_jobs);
     eoInitPermutation<FSP> init(no_jobs);
+    init(sol);
     for (int j = 0; j < no_jobs; j++) {
       for (int k = 0; k < no_jobs; k++) {
         if (k != j && k != j - 1) {
-          init(sol);
           FSPNeighbor ngh(j, k, sol.size());
           fastEval(sol, ngh);
           solMoved = sol;
@@ -553,7 +552,67 @@ TEST(NWFSP, NWFSPFastEvaluationRandom) {
         }
       }
     }
-  }   
+  }
+}
+
+TEST(AllFSP, ScheduleInfo) {
+  std::vector<int> pts = { //
+    15, 15, 10,  5, //
+    10,  5, 15,  5, //
+     5, 10, 10, 10, //
+  };
+  FSPData dt{pts, 4, true};
+
+  FSP sol(4);
+  sol.assign({0, 1, 2, 3});
+
+  PermFSPEvalFunc<FSP> permCmaxEval(dt, Objective::MAKESPAN);
+  PermFSPEvalFunc<FSP> permFTEval(dt, Objective::FLOWTIME);
+
+  NWFSPEvalFunc<FSP> nwCmaxEval(dt, Objective::MAKESPAN);
+  NWFSPEvalFunc<FSP> nwFTEval(dt, Objective::FLOWTIME);
+
+  NoIdleFSPEvalFunc<FSP> niCmaxEval(dt, Objective::MAKESPAN);
+  NoIdleFSPEvalFunc<FSP> niFTEval(dt, Objective::FLOWTIME);
+
+  permCmaxEval(sol);
+  std::cerr << "permCmaxEval " << sol.fitness() << '\n';
+  permFTEval(sol);
+  std::cerr << "permFTEval " << sol.fitness() << '\n';
+
+  nwCmaxEval(sol);
+  std::cerr << "nwCmaxEval " << sol.fitness() << '\n';
+  nwFTEval(sol);
+  std::cerr << "nwFTEval " << sol.fitness() << '\n';
+
+  niCmaxEval(sol);
+  std::cerr << "niCmaxEval " << sol.fitness() << '\n';
+  niFTEval(sol);
+  std::cerr << "niFTEval " << sol.fitness() << '\n';
+}
+
+TEST(NoIdleFSP, FullEval) {
+  const int no_jobs = 10;
+  const int no_machines = 10;
+  for (int i = 0; i < 100; i++) {
+    FSPData dt{no_jobs, no_machines};
+    NIFSPEvalFunc<FSP> eval1{dt};
+    NoIdleFSPEvalFunc<FSP> eval2{dt};
+    FSP sol(no_jobs);
+    FSP solMoved(no_jobs);
+    eoInitPermutation<FSP> init(no_jobs);
+    for (int j = 0; j < no_jobs; j++) {
+      for (int k = 0; k < no_jobs; k++) {
+        if (k != j && k != j - 1) {
+          init(sol);
+          solMoved = sol;
+          eval1(sol);
+          eval2(solMoved);
+          ASSERT_EQ(solMoved.fitness(), sol.fitness());
+        }
+      }
+    }
+  }
 }
 
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) -> int {

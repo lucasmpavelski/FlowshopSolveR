@@ -42,8 +42,7 @@ class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
   void completionTime(const EOT& _fsp, std::vector<int>& Ct) override {
     const int N = noJobs();
     const int _N = _fsp.size();
-    // for each job...
-    // Ci = sum delay + totalProcessinTime
+
     int delay = 0;
     Ct[0] = fsp_data.jobProcTimesRef()[_fsp[0]];
 
@@ -62,6 +61,7 @@ class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
     const int M = noMachines();
     const auto& p = fsp_data.procTimesRef();
     std::vector<int> _delayMatrix(N * N);
+
     // See : A heuristic for no-wait flow shop scheduling (2013) Sagar U. Sapkal
     // & Dipak Laha for the computation of the delay matrix
     // for each job...
@@ -69,7 +69,7 @@ class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
       // for each job...
       for (int j = 0; j < N; j++) {
         if (i != j) {
-          int max = 0;
+          int max = 0, idx = 0;
           for (int r = 1; r <= M; r++) {
             int s = 0;
             for (int h = 1; h < r; h++)
@@ -78,8 +78,10 @@ class NWFSPEvalFunc : public FSPEvalFunc<EOT> {
               s -= p[h * N + j];
             if (s < 0)
               s = 0;
-            if (s > max)
+            if (s > max) {
               max = s;
+              idx = r;
+            }
           }
           _delayMatrix[i * N + j] = p[0 * N + i] + max;
         } else {

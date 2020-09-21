@@ -33,9 +33,10 @@ class NIFSPEvalFunc : public FSPEvalFunc<EOT> {
     const auto& p = fsp_data.procTimesRef();
 
     for (int j = 0; j < M; j++) {
-      H[j * N + 0] = p[j * N + _fsp[0]];
+      H[j * N + 0] = p[j * N + _fsp[0]];  // j th machine, first job
       for (int i = 1; i < _N; i++) {
-        H[j * N + i] = H[j * N + i - 1] + p[j * N + _fsp[i]];
+        H[j * N + i] =
+            H[j * N + i - 1] + p[j * N + _fsp[i]];  // j th machine, ith job
       }
     }
     // calculate when a given machine can start processing with no needed idle
@@ -60,5 +61,48 @@ class NIFSPEvalFunc : public FSPEvalFunc<EOT> {
     // for (int i = 0; i < _N; i++)
     //  std::cout << Ct[i] << " ";
     // std::cout << "Ct:\n";
+  }
+};
+
+template <class EOT>
+class NoIdleFSPEvalFunc : public FSPEvalFunc<EOT> {
+  std::vector<int> _F;
+  auto F(int j, int m) -> int& { return _F[m * noJobs() + j]; }
+
+ public:
+  using FSPEvalFunc<EOT>::noJobs;
+  using FSPEvalFunc<EOT>::noMachines;
+  using FSPEvalFunc<EOT>::fsp_data;
+
+  NoIdleFSPEvalFunc(FSPData fspd, Objective ObjT = Objective::MAKESPAN)
+      : FSPEvalFunc<EOT>(std::move(fspd), ObjT), _F(noJobs() * noMachines()) {}
+
+  [[nodiscard]] auto type() const -> std::string final { return "NOIDLE"; }
+
+  void completionTime(const EOT& perm,
+                      std::vector<int>& completionTimes) override {
+    // forward pass calculation
+    for (int k = 0; k < noMachines() - 1; k++) {
+      F(0, k) = fsp_data.pt(perm[0], k + 1);
+    }
+    for (int j = 1; j < noJobs(); j++) {
+      for (int k = 0; k < noMachines() - 1; k++) {
+        const auto p_j_k = fsp_data.pt(perm[j], k);
+        const auto p_j_kp1 = fsp_data.pt(perm[j], k + 1);
+        const auto F_jm1_k = F(j - 1, k);
+        F(j, k) = std::max(F_jm1_k - p_j_k, 0) + p_j_kp1;
+      }
+    }
+    for (int j = 0; j < noJobs(); j++) {
+      int sum_f = 0;
+      for (int k = 0; k < noMachines() - 1; k++) {
+        sum_f += F(j, k);
+      }
+      completionTimes[j] = sum_f + fsp_data.machineProcTime(0);
+    }
+    for (int j = noJobs() - 2; j >= 0; j--) {
+      const auto p_jp1_m = fsp_data.pt(perm[j + 1], noMachines() - 1);
+      completionTimes[j] = completionTimes[j + 1] - p_jp1_m;
+    }
   }
 };

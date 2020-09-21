@@ -42,8 +42,7 @@ class FSPEvalFunc : public eoEvalFunc<EOT> {
   Objective ObjT;
 
   FSPEvalFunc(FSPData fd, Objective ObjT = Objective::MAKESPAN)
-      : fsp_data{std::move(fd)}, Ct(fsp_data.noJobs()), ObjT(ObjT) {
-  }
+      : fsp_data{std::move(fd)}, Ct(fsp_data.noJobs()), ObjT(ObjT) {}
 
   void operator()(EOT& s) override {
     completionTime(s, Ct);
@@ -63,11 +62,11 @@ class FSPEvalFunc : public eoEvalFunc<EOT> {
       s.fitness(fit);
   }
 
-  auto noJobs() const -> int { return fsp_data.noJobs(); }
-  auto noMachines() const -> int { return fsp_data.noMachines(); }
-  auto getData() const -> const FSPData& { return fsp_data; }
-  virtual auto type() const -> std::string { return "PERM"; };
-  auto objective() const -> Objective { return ObjT; };
+  [[nodiscard]] auto noJobs() const -> int { return fsp_data.noJobs(); }
+  [[nodiscard]] auto noMachines() const -> int { return fsp_data.noMachines(); }
+  [[nodiscard]] auto getData() const -> const FSPData& { return fsp_data; }
+  [[nodiscard]] virtual auto type() const -> std::string { return "PERM"; };
+  [[nodiscard]] auto objective() const -> Objective { return ObjT; };
 
   void printOn(std::ostream& o) {
     o << "FSPEvalFunc\n"
@@ -99,7 +98,7 @@ class PermFSPEvalFunc : public FSPEvalFunc<EOT> {
   PermFSPEvalFunc(const FSPData& fd, Objective ObjT = Objective::MAKESPAN)
       : FSPEvalFunc<EOT>(fd, ObjT), part_ct(noJobs() * noMachines()) {}
 
-  auto type() const -> std::string final { return "PERM"; }
+  [[nodiscard]] auto type() const -> std::string final { return "PERM"; }
 
  protected:
   std::vector<int> part_ct;
@@ -111,18 +110,47 @@ class PermFSPEvalFunc : public FSPEvalFunc<EOT> {
     const auto& p = fsp_data.procTimesRef();
     // std::cout << _fsp << '\n';
 
+
+    /** extra **/
+    // int idle = 0;
+    // std::cout << "idle ";
+
+    // int wait = 0;
+    // std::cout << "wait ";
+    /** extra **/
+
     part_ct[0 * N + 0] = p[0 * N + _fsp[0]];
-    for (int i = 1; i < _N; i++)
+    for (int i = 1; i < _N; i++) {
       part_ct[0 * N + i] = part_ct[0 * N + i - 1] + p[0 * N + _fsp[i]];
-    for (int j = 1; j < M; j++)
+    }
+
+    for (int j = 1; j < M; j++) {
       part_ct[j * N + 0] = part_ct[(j - 1) * N + 0] + p[j * N + _fsp[0]];
+    }
+
     for (int j = 1; j < M; j++) {
       for (int i = 1; i < _N; i++) {
         part_ct[j * N + i] =
             std::max(part_ct[j * N + i - 1], part_ct[(j - 1) * N + i]) +
             p[j * N + _fsp[i]];
+
+        /** extra **/
+        // idle += std::max(part_ct[(j - 1) * N + i] - part_ct[j * N + i - 1], 0);
+        // std::cout << '(' << i << ',' << j << ')' << std::max(part_ct[(j - 1) * N + i] - part_ct[j * N + i - 1], 0) << ' ';
+        /** extra **/
+            
+        /** extra **/
+        // wait += std::max(part_ct[j * N + i - 1] - part_ct[(j - 1) * N + i] , 0);
+        // std::cout << '(' << i << ',' << j << ')' << std::max(part_ct[(j - 1) * N + i] - part_ct[j * N + i - 1], 0) << ' ';
+        /** extra **/
       }
     }
+
+    /** extra **/
+    // std::cout << "final idle " << idle << '\n';
+    // std::cout << "final wait " << wait << '\n';
+    /** extra **/
+
     auto from = part_ct.begin() + (M - 1) * N;
     auto to = from + _N;
     Ct.assign(from, to);
