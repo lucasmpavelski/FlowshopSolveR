@@ -4,15 +4,14 @@
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
-#include "Problem.hpp"
-#include "continuators/myMovedSolutionStat.hpp"
+#include "flowshop-solver/problems/Problem.hpp"
 #include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/moHiResTimeContinuator.hpp"
 #include "flowshop-solver/problems/FSPEvalFunc.hpp"
 #include "flowshop-solver/problems/NIFSPEvalFunc.hpp"
 #include "flowshop-solver/problems/NWFSPEvalFunc.hpp"
-#include "flowshop-solver/problems/FastFSPNeighborEval.hpp"
-#include "problems/FSPData.hpp"
+#include "flowshop-solver/problems/PermNeighborMakespanEval.hpp"
+#include "flowshop-solver/problems/FSPData.hpp"
 
 using FSPMax = eoInt<eoMaximizingFitness>;
 using FSPMin = eoInt<eoMinimizingFitness>;
@@ -48,7 +47,6 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   std::unique_ptr<moCheckpoint<Ngh>> checkpointGlobal_ptr;
   myBestSoFarStat<EOT> bestFound;
   myBestSoFarStat<EOT> bestFoundGlobal;
-  myMovedSolutionStat<EOT> movedStat;
   NeigborhoodCheckpoint<Ngh> _neighborhoodCheckpoint;
 
   const std::string stopping_criterion;
@@ -274,7 +272,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   auto getNeighborEvalFunc(const std::string& type, const std::string& obj)
       -> std::unique_ptr<moEval<Ngh>> {
     if (type == "PERM" && obj == "MAKESPAN") {
-      return std::make_unique<FastFSPNeighborEval>(_data, *eval_func);
+      return std::make_unique<PermNeighborMakespanEval>(_data);
     } else {
       return std::make_unique<moFullEvalByCopy<Ngh>>(*eval_func);
     }
