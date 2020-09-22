@@ -7,7 +7,7 @@
 
 #include "flowshop-solver/problems/FSP.hpp"
 #include "flowshop-solver/problems/FSPData.hpp"
-#include "flowshop-solver/problems/NWFSPEvalFunc.hpp"
+#include "flowshop-solver/problems/NoWaitFSPEval.hpp"
 
 /**
  * Fast evaluation for No-wait flowshop as show in
@@ -15,24 +15,10 @@
  * problem with makespan criterion
  * by Quan-Ke Pan, Ling Wang and Bao-Hua Zhao
  */
-class FastNWNeighborMakespanEval : public moEval<FSPNeighbor> {
+class NoWaitFSPNeighborMakespanEval : public moEval<FSPNeighbor> {
   const FSPData& fspData;
-  [[maybe_unused]] NWFSPEvalFunc<EOT>& fullEval;
+  [[maybe_unused]] NoWaitFSPEval& fullEval;
 
- public:
-  FastNWNeighborMakespanEval(const FSPData& fspData,
-                             NWFSPEvalFunc<EOT>& fullEval)
-      : fspData(fspData), fullEval(fullEval) {}
-
-  void operator()(FSP& sol, FSPNeighbor& ngh) final {
-    auto firstSecond = ngh.firstSecond(sol);
-    auto j = firstSecond.first;
-    auto k = firstSecond.second;
-    int cMax_ll = partialMakespan(sol, j);
-    ngh.fitness(neighborMakespan(cMax_ll, sol, j, k));
-  }
-
- private:
   auto partialMakespan(FSP& sol, unsigned j) -> int {
     if (sol.invalid()) {
       fullEval(sol);
@@ -73,5 +59,18 @@ class FastNWNeighborMakespanEval : public moEval<FSPNeighbor> {
 
     return partialCmax + fullEval.delay(pk_m1, pj) + fullEval.delay(pj, pk) -
            fullEval.delay(pk_m1, pk);
+  }
+
+ public:
+  NoWaitFSPNeighborMakespanEval(const FSPData& fspData,
+                                NoWaitFSPEval& fullEval)
+      : fspData(fspData), fullEval(fullEval) {}
+
+  void operator()(FSP& sol, FSPNeighbor& ngh) final {
+    auto firstSecond = ngh.firstSecond(sol);
+    auto j = firstSecond.first;
+    auto k = firstSecond.second;
+    int cMax_ll = partialMakespan(sol, j);
+    ngh.fitness(neighborMakespan(cMax_ll, sol, j, k));
   }
 };

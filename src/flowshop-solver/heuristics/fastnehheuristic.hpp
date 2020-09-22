@@ -2,7 +2,7 @@
 
 #include "FSPOrderHeuristics.hpp"
 #include "problems/FSPData.hpp"
-#include "problems/FSPEvalFunc.hpp"
+#include "problems/FSPEval.hpp"
 #include "problems/FastFSPNeighborEval.hpp"
 
 class FastNEH : public eoInit<FSP> {

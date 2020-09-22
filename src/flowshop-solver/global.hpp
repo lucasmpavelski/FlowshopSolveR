@@ -163,7 +163,15 @@ struct RNG {
   static std::mt19937_64 engine;
   static std::random_device true_rand_engine;
 
-  static auto seed(long s = true_rand_engine()) -> long;
+  static auto seed(long s = true_rand_engine()) -> long {
+    // my own RNG
+    engine.seed(s);
+    // C RNG
+    srand(unsigned(s));
+    // ParadisEO RNG
+    rng.reseed(uint32_t(s));
+    return s;
+  };
 
   inline static auto trueRandom() -> long { return true_rand_engine(); }
 
@@ -274,8 +282,25 @@ auto getWithDef(const Map& m, const Key& key, const Val& defval) -> Val {
   return it == m.end() ? defval : it->second;
 }
 
-auto getNextLineAndSplitIntoTokens(std::istream& str)
-    -> std::vector<std::string>;
+inline auto getNextLineAndSplitIntoTokens(std::istream& str)
+    -> std::vector<std::string> {
+  std::vector<std::string> result;
+  std::string line;
+  std::getline(str, line);
+
+  std::stringstream lineStream(line);
+  std::string cell;
+
+  while (std::getline(lineStream, cell, ',')) {
+    result.push_back(cell);
+  }
+  // This checks for a trailing comma with no data after it.
+  if (!lineStream && cell.empty()) {
+    // If there was a trailing comma then add an empty element.
+    result.emplace_back("");
+  }
+  return result;
+}
 
 class CSVRow {
  public:
@@ -301,11 +326,14 @@ class CSVRow {
     }
   }
 
+  friend auto operator>>(std::istream& str, CSVRow& data) -> std::istream& {
+    data.readNexthrow(str);
+    return str;
+  }
+
  private:
   std::vector<std::string> m_data;
 };
-
-auto operator>>(std::istream& str, CSVRow& data) -> std::istream&;
 
 // trim from start (in place)
 static inline void ltrim(std::string& s) {

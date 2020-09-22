@@ -9,7 +9,6 @@
 #include <iterator>
 #include <random>
 #include <string>
-#include <valarray>
 
 #include "flowshop-solver/global.hpp"
 

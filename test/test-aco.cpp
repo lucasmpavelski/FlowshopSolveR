@@ -5,7 +5,7 @@
 #include <random>
 #include <vector>
 
-#include "problems/FSPEvalFunc.hpp"
+#include "problems/FSPEval.hpp"
 
 /*
 #include "eigen3/Eigen/Dense"

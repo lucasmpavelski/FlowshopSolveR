@@ -7,10 +7,10 @@
 
 #include "flowshop-solver/problems/FSP.hpp"
 #include "flowshop-solver/problems/FSPData.hpp"
-#include "flowshop-solver/problems/FSPEvalFunc.hpp"
+#include "flowshop-solver/problems/FSPEval.hpp"
 #include "flowshop-solver/problems/Problem.hpp"
 
-class PermNeighborMakespanEval : public moEval<FSPNeighbor> {
+class PermFSPNeighborMakespanEval : public moEval<FSPNeighbor> {
 
   struct CompiledSchedule {
     using ivec = std::vector<int>;
@@ -118,7 +118,7 @@ class PermNeighborMakespanEval : public moEval<FSPNeighbor> {
   std::vector<CompiledSchedule> compiledSchedules;
 
  public:
-  PermNeighborMakespanEval(const FSPData& fspData) :
+  PermFSPNeighborMakespanEval(const FSPData& fspData) :
         compiledSchedules(fspData.noJobs(), fspData) {}
 
   void operator()(FSP& sol, FSPNeighbor& ngh) final {

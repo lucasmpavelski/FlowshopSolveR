@@ -8,10 +8,10 @@
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
-#include "problems/FSPEvalFunc.hpp"
+#include "problems/FSPEval.hpp"
 #include "problems/FSPProblem.hpp"
-#include "problems/NIFSPEvalFunc.hpp"
-#include "problems/NWFSPEvalFunc.hpp"
+#include "problems/NoIdleFSPEval.hpp"
+#include "problems/NoWaitFSPEval.hpp"
 
 #include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
 #include "flowshop-solver/heuristics/NEHInit.hpp"

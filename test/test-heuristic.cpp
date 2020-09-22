@@ -6,7 +6,7 @@
 #include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
 #include "flowshop-solver/heuristics/NEHInit.hpp"
 #include "flowshop-solver/heuristics/fastnehheuristic.hpp"
-#include "problems/FSPEvalFunc.hpp"
+#include "problems/FSPEval.hpp"
 #include "problems/FastFSPNeighborEval.hpp"
 
 #ifdef NDEBUG
@@ -17,7 +17,7 @@ std::string instances_folder = TEST_FIXTURES_FOLDER;
 
 
 void testNEH() {
-  PermFSPEvalFunc<FSPMin> fsp_eval{FSPData{instances_folder + "test.txt"}};
+  PermFSPEval<FSPMin> fsp_eval{FSPData{instances_folder + "test.txt"}};
   FSPMin sol(fsp_eval.noJobs());
   //FSPDefaultNEH<FSPMin> neh(fsp_eval, moSolComparator<FSPMin>());
   //neh(sol);
@@ -25,7 +25,7 @@ void testNEH() {
   assert(sol.fitness() == 54);
   // maximization problem
   FSPMax sol_max(fsp_eval.noJobs());
-  PermFSPEvalFunc<FSPMax> fsp_eval_max{FSPData{instances_folder + "test.txt"}};
+  PermFSPEval<FSPMax> fsp_eval_max{FSPData{instances_folder + "test.txt"}};
   //FSPDefaultNEH<FSPMax> neh_max(fsp_eval_max, moSolComparator<FSPMax>());
   //neh_max(sol_max);
   fsp_eval_max(sol_max);
@@ -33,9 +33,9 @@ void testNEH() {
 }
 
 void testFastNEH() {
-  // PermFSPEvalFunc<FastFSPSolution> fsp_eval{FSPData{instances_folder +
+  // PermFSPEval<FastFSPSolution> fsp_eval{FSPData{instances_folder +
   // "test.txt"}}; FastFSPSolution sol(fsp_eval.noJobs()); FastNEH
-  // neh(fsp_eval.fsp_data); neh(sol); fsp_eval(sol); assert(sol.fitness() ==
+  // neh(fsp_eval.fspData); neh(sol); fsp_eval(sol); assert(sol.fitness() ==
   // 54);
 }
 

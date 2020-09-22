@@ -1,17 +1,26 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/problems/Problem.hpp"
 #include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/moHiResTimeContinuator.hpp"
-#include "flowshop-solver/problems/FSPEvalFunc.hpp"
-#include "flowshop-solver/problems/NIFSPEvalFunc.hpp"
-#include "flowshop-solver/problems/NWFSPEvalFunc.hpp"
-#include "flowshop-solver/problems/PermNeighborMakespanEval.hpp"
+
 #include "flowshop-solver/problems/FSPData.hpp"
+
+#include "flowshop-solver/problems/FSPEval.hpp"
+
+#include "flowshop-solver/problems/PermFSPEval.hpp"
+#include "flowshop-solver/problems/PermFSPNeighborMakespanEval.hpp"
+
+#include "flowshop-solver/problems/NoIdleFSPEval.hpp"
+#include "flowshop-solver/problems/NoIdleFSPNeighborEval.hpp"
+
+#include "flowshop-solver/problems/NoWaitFSPEval.hpp"
+#include "flowshop-solver/problems/NoWaitFSPNeighborMakespanEval.hpp"
 
 using FSPMax = eoInt<eoMaximizingFitness>;
 using FSPMin = eoInt<eoMinimizingFitness>;
@@ -38,7 +47,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   using EOT = FSP;
   using Ngh = FSPNeighbor;
   FSPData _data;
-  std::unique_ptr<FSPEvalFunc<EOT>> eval_func;
+  std::unique_ptr<FSPEval> eval_func;
   eoEvalFuncCounter<EOT> eval_counter;
   std::unique_ptr<moEval<Ngh>> eval_neighbor;
   moEvalCounter<Ngh> eval_neighbor_counter;
@@ -74,7 +83,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   friend auto operator<<(std::ostream& o, const FSPProblem& d)
       -> std::ostream& {
     o << d.getData() << '\n'
-      << "objective: " << d.eval_func->ObjT << '\n'
+      << "objective: " << d.eval_func->objective() << '\n'
       << "type: " << d.eval_func->type() << '\n'
       << "budget: " << d.budget << '\n'
       << "stopping_criterion: " << d.stopping_criterion << '\n';
@@ -248,31 +257,30 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   }
 
   auto getEvalFunc(const std::string& type, const std::string& obj)
-      -> std::unique_ptr<FSPEvalFunc<EOT>> {
-    std::unique_ptr<FSPEvalFunc<EOT>> ret(nullptr);
+      -> std::unique_ptr<FSPEval> {
     if (type == "PERM" && obj == "MAKESPAN") {
-      ret = std::make_unique<PermFSPEvalFunc<EOT>>(_data, Objective::MAKESPAN);
+      return std::make_unique<PermFSPMakespanEval>(_data);
     } else if (type == "PERM" && obj == "FLOWTIME") {
-      ret = std::make_unique<PermFSPEvalFunc<EOT>>(_data, Objective::FLOWTIME);
+      return std::make_unique<PermFSPFlowtimeEval>(_data);
     } else if (type == "NOWAIT" && obj == "MAKESPAN") {
-      ret = std::make_unique<NWFSPEvalFunc<EOT>>(_data, Objective::MAKESPAN);
+      return std::make_unique<NoWaitFSPMakespanEval>(_data);
     } else if (type == "NOWAIT" && obj == "FLOWTIME") {
-      ret = std::make_unique<NWFSPEvalFunc<EOT>>(_data, Objective::FLOWTIME);
+      return std::make_unique<NoWaitFSPFlowtimeEval>(_data);
     } else if (type == "NOIDLE" && obj == "MAKESPAN") {
-      ret = std::make_unique<NIFSPEvalFunc<EOT>>(_data, Objective::MAKESPAN);
+      return std::make_unique<NoIdleFSPMakespanEval>(_data);
     } else if (type == "NOIDLE" && obj == "FLOWTIME") {
-      ret = std::make_unique<NIFSPEvalFunc<EOT>>(_data, Objective::FLOWTIME);
+      return std::make_unique<NoIdleFSPFlowtimeEval>(_data);
     } else {
       throw std::runtime_error("No FSP problem for type " + type +
                                " and objective " + obj);
+      return nullptr;
     }
-    return ret;
   }
 
   auto getNeighborEvalFunc(const std::string& type, const std::string& obj)
       -> std::unique_ptr<moEval<Ngh>> {
     if (type == "PERM" && obj == "MAKESPAN") {
-      return std::make_unique<PermNeighborMakespanEval>(_data);
+      return std::make_unique<PermFSPNeighborMakespanEval>(_data);
     } else {
       return std::make_unique<moFullEvalByCopy<Ngh>>(*eval_func);
     }

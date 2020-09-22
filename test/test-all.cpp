@@ -47,11 +47,11 @@ TEST(LowerBound, JohnsonAlgorithm) {
 
 #include "../flowshop-solver/problems/FSP.hpp"
 #include "../flowshop-solver/problems/FSPData.hpp"
-#include "../flowshop-solver/problems/FSPEvalFunc.hpp"
+#include "../flowshop-solver/problems/FSPEval.hpp"
 
 int lowerBound1(const FSPData& fspData) {
   int no_jobs = fspData.noJobs(), no_machines = fspData.noMachines();
-  PermFSPEvalFunc<FSPMin> completionTime(fspData, Objective::MAKESPAN);
+  PermFSPEval<FSPMin> completionTime(fspData, Objective::MAKESPAN);
 
   std::vector<int> scheduled(1);
   std::vector<int> unscheduled;

@@ -5,7 +5,7 @@
 #include <paradiseo/eo/eo>
 
 #include "flowshop-solver/FSP.h"
-#include "flowshop-solver/FSPEvalFunc.h"
+#include "flowshop-solver/FSPEval.h"
 #include "flowshop-solver/fspEval.h"
 
 static void BM_FSPEval(benchmark::State &state) {
@@ -33,7 +33,7 @@ static void BM_FSPEval2(benchmark::State &state) {
   FSP sol;
   eoInitPermutation<FSP> init_random(200);
   init_random(sol);
-  PermFSPEvalFunc<FSP> fsp_eval{FSPData{500, 20}};
+  PermFSPEval<FSP> fsp_eval{FSPData{500, 20}};
   while (state.KeepRunning()) {
     fsp_eval(sol);
   }
@@ -45,7 +45,7 @@ BENCHMARK(BM_FSPEval2);
 //  FSP sol;
 //  eoInitPermutation<FSP> init_random(200);
 //  init_random(sol);
-//  PermFSPEvalFuncEigen<FSP> fsp_eval{FSPData{500, 20}};
+//  PermFSPEvalEigen<FSP> fsp_eval{FSPData{500, 20}};
 //  while (state.KeepRunning()) {
 //    fsp_eval(sol);
 //  }

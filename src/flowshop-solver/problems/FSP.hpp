@@ -1,8 +1,8 @@
 #pragma once
 
 #include <paradiseo/eo/eoInt.h>
-#include "paradiseo/eo/eoScalarFitness.h"
-#include "paradiseo/mo/problems/permutation/moShiftNeighbor.h"
+#include <paradiseo/eo/eoScalarFitness.h>
+#include <paradiseo/mo/problems/permutation/moShiftNeighbor.h>
 
 template <class EOT, class Fitness = typename EOT::Fitness>
 class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
@@ -61,11 +61,15 @@ class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
   }
 
   auto firstSecond(EOT& _sol) -> std::pair<unsigned, unsigned> {
+    return firstSecond(_sol.size());
+  }
+
+  auto firstSecond(int solSize) -> std::pair<unsigned, unsigned> {
     if (static_cast<int>(key) >= 0) {
-      size = _sol.size();
+      size = solSize;
       translate(key + 1);
-      // if (first < second)
-      //   second--;
+      if (first < second)
+        second--;
     }
     return {first, second};
   }
@@ -114,7 +118,5 @@ class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
   unsigned int size;
 };
 
-using FSPMax = eoInt<eoMaximizingFitness>;
-using FSPMin = eoInt<eoMinimizingFitness>;
-using FSP = FSPMin;
+using FSP = eoInt<eoMinimizingFitness>;
 using FSPNeighbor = myShiftNeighbor<FSP>;

@@ -12,10 +12,11 @@
 
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 #include "flowshop-solver/problems/FSPData.hpp"
-#include "flowshop-solver/problems/FSPEvalFunc.hpp"
-#include "flowshop-solver/problems/NIFSPEvalFunc.hpp"
-#include "flowshop-solver/problems/NWFSPEvalFunc.hpp"
-#include "flowshop-solver/problems/FastNWNeighborMakespanEval.hpp"
+#include "flowshop-solver/problems/FSPEval.hpp"
+#include "flowshop-solver/problems/PermFSPEval.hpp"
+#include "flowshop-solver/problems/NoIdleFSPEval.hpp"
+#include "flowshop-solver/problems/NoWaitFSPEval.hpp"
+#include "flowshop-solver/problems/NoWaitFSPNeighborMakespanEval.hpp"
 #include "flowshop-solver/FSPProblemFactory.hpp"
 
 #ifdef NDEBUG
@@ -27,21 +28,22 @@ std::string instances_folder = TEST_FIXTURES_FOLDER;
 void testLoadData() {
   using std::cout;
   using std::endl;
-  FSPData fsp_data{instances_folder + "test.txt"};
-  assert(fsp_data.maxCT() == 125);
+  FSPData fspData{instances_folder + "test.txt"};
+  assert(fspData.maxCT() == 125);
   std::array<int, 20> pt = {5, 9, 9,  4, 9, 3, 4, 8, 8, 10,
                             5, 8, 10, 1, 8, 7, 1, 8, 6, 2};
-  const auto& pt_ref = fsp_data.procTimesRef();
+  const auto& pt_ref = fspData.procTimesRef();
   assert(std::equal(std::begin(pt_ref), std::end(pt_ref), std::begin(pt)));
-  assert(fsp_data.machineProcTimesRef()[0] == 27);
-  assert(fsp_data.jobProcTimesRef()[0] == 33);
+  assert(fspData.machineProcTimesRef()[0] == 27);
+  assert(fspData.jobProcTimesRef()[0] == 33);
 }
 
 void testEvalMin() {
   using std::cout;
   using std::endl;
-  PermFSPEvalFunc<FSPMin> fsp_eval{FSPData{instances_folder + "test.txt"}};
-  FSPMin sol(4);
+  FSPData dt{instances_folder + "test.txt"};
+  PermFSPMakespanEval fsp_eval{dt};
+  FSP sol(4);
   sol[0] = 4 - 1;
   sol[1] = 3 - 1;
   sol[2] = 1 - 1;
@@ -50,25 +52,12 @@ void testEvalMin() {
   assert(sol.fitness() == 54);
 }
 
-void testEvalMax() {
-  using std::cout;
-  using std::endl;
-  PermFSPEvalFunc<FSP> fsp_eval{FSPData{instances_folder + "test.txt"}};
-  FSP sol(4);
-  sol[0] = 4 - 1;
-  sol[1] = 3 - 1;
-  sol[2] = 1 - 1;
-  sol[3] = 2 - 1;
-  fsp_eval(sol);
-  assert(sol.fitness() == 125 - 54);
-}
-
 void testEvalFlowtime() {
   using std::cout;
   using std::endl;
-  PermFSPEvalFunc<FSPMin> fsp_eval{FSPData{instances_folder + "test.txt"},
-                                   Objective::FLOWTIME};
-  FSPMin sol(4);
+  FSPData dt{instances_folder + "test.txt"};
+  PermFSPFlowtimeEval fsp_eval{dt};
+  FSP sol(4);
   sol[0] = 4 - 1;
   sol[1] = 3 - 1;
   sol[2] = 1 - 1;
@@ -81,8 +70,9 @@ void testPartialEval() {
   using std::cout;
   using std::endl;
   std::string instances_folder = TEST_FIXTURES_FOLDER;
-  PermFSPEvalFunc<FSPMin> fsp_eval{FSPData{instances_folder + "test.txt"}};
-  FSPMin sol(2);
+  FSPData dt{instances_folder + "test.txt"};
+  PermFSPMakespanEval fsp_eval{dt};
+  FSP sol(2);
   sol[0] = 4 - 1;
   sol[1] = 3 - 1;
   fsp_eval(sol);
@@ -93,9 +83,9 @@ void testNIEval() {
   using std::cout;
   using std::endl;
   FSPData dt(instances_folder + "test.txt");
-  NIFSPEvalFunc<FSPMin> fsp_eval(dt, Objective::MAKESPAN);
-  FSPMin sol(4);
-  FSPMin solp(2);
+  NoIdleFSPMakespanEval fsp_eval(dt);
+  FSP sol(4);
+  FSP solp(2);
   sol[0] = solp[0] = 4 - 1;
   sol[1] = solp[1] = 3 - 1;
   sol[2] = 1 - 1;
@@ -104,9 +94,9 @@ void testNIEval() {
   fsp_eval(solp);
   assert(sol.fitness() == 56);
   assert(solp.fitness() == 42);
-  NIFSPEvalFunc<FSPMin> fsp_evalft(dt, Objective::FLOWTIME);
-  FSPMin solft = sol;
-  FSPMin solftp = solp;
+  NoIdleFSPFlowtimeEval fsp_evalft(dt);
+  FSP solft = sol;
+  FSP solftp = solp;
   fsp_evalft(solft);
   fsp_evalft(solftp);
   assert(solft.fitness() == 192);
@@ -117,10 +107,10 @@ void testNWEval() {
   using std::cout;
   using std::endl;
   FSPData dt(instances_folder + "test.txt");
-  NWFSPEvalFunc<FSPMin> fsp_eval(dt, Objective::MAKESPAN);
+  NoWaitFSPMakespanEval fsp_eval(dt);
   // nwfspEval<FSP> fsp_eval(instances_folder + "test.txt");
-  FSPMin sol(4);
-  FSPMin solp(2);
+  FSP sol(4);
+  FSP solp(2);
   sol[0] = solp[0] = 4 - 1;
   sol[1] = solp[1] = 3 - 1;
   sol[2] = 1 - 1;
@@ -131,10 +121,10 @@ void testNWEval() {
   // cout << solp.fitness() << endl;
   assert(sol.fitness() == 59);
   assert(solp.fitness() == 41);
-  NWFSPEvalFunc<FSPMin> fsp_evalft(dt, Objective::FLOWTIME);
+  NoWaitFSPFlowtimeEval fsp_evalft(dt);
   // nwfspEval<FSP> fsp_evalft(instances_folder + "test.txt", 1);
-  FSPMin solft = sol;
-  FSPMin solftp = solp;
+  FSP solft = sol;
+  FSP solftp = solp;
   fsp_evalft(solft);
   fsp_evalft(solftp);
   // cout << solft.fitness() << endl;
@@ -153,8 +143,8 @@ void testNWEval() {
 //   CompiledSchedule csd(no_jobs, no_machines);
 //   csd.compile(fspData, seq);
 
-//   PermFSPEvalFunc<FSPMin> fsp_eval{fspData};
-//   FSPMin sol(4);
+//   PermFSPEval fsp_eval{fspData};
+//   FSP sol(4);
 //   sol[0] = 3;
 //   sol[1] = 0;
 //   sol[2] = 1;
@@ -192,13 +182,20 @@ auto testMove(std::initializer_list<int> init,
   return std::equal(sol.begin(), sol.end(), result.begin());
 }
 
-TEST(FSPNeighbor, MoveAheadNext) {
+TEST(FSPNeighbor, Moves) {
   ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 0, {1, 2, 3, 4, 5, 6}));
   ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 1, {2, 1, 3, 4, 5, 6}));
   ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 2, {2, 3, 1, 4, 5, 6}));
   ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 3, {2, 3, 4, 1, 5, 6}));
   ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 4, {2, 3, 4, 5, 1, 6}));
   ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 0, 5, {2, 3, 4, 5, 6, 1}));
+
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 5, 0, {6, 1, 2, 3, 4, 5}));
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 5, 1, {1, 6, 2, 3, 4, 5}));
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 5, 2, {1, 2, 6, 3, 4, 5}));
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 5, 3, {1, 2, 3, 6, 4, 5}));
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 5, 4, {1, 2, 3, 4, 6, 5}));
+  ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 5, 5, {1, 2, 3, 4, 5, 6}));
 }
 
 // TEST(FSPTaillardAcelleration, Results) {
@@ -247,33 +244,33 @@ TEST(FSPNeighbor, MoveAheadNext) {
 //   ASSERT_EQ(sol.fitness(), 2737);
 // }
 
-// TEST(FSPTaillardAcelleration, NeighborhoodEval) {
-//   rng.reseed(65465l);
-//   const int no_jobs = 50;
-//   const int no_machines = 10;
-//   FSPData fspData(no_jobs, no_machines, 100);
+TEST(FSPTaillardAcelleration, NeighborhoodEval) {
+  rng.reseed(65465l);
+  const int no_jobs = 50;
+  const int no_machines = 10;
+  FSPData fspData(no_jobs, no_machines, 100);
 
-//   FSP sol(no_jobs);
-//   PermFSPEvalFunc<FSP> fullEval(fspData, Objective::MAKESPAN);
+  FSP sol(no_jobs);
+  PermFSPMakespanEval fullEval(fspData);
 
-//   eoInitPermutation<FSP> randomInit(no_jobs);
-//   randomInit(sol);
+  eoInitPermutation<FSP> randomInit(no_jobs);
+  randomInit(sol);
 
-//   PermNeighborMakespanEval ne(fspData);
-//   moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
+  PermFSPNeighborMakespanEval ne(fspData);
+  moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
 
-//   for (int i = 0; i < (no_jobs - 1) * (no_jobs - 1); i++) {
-//     FSPNeighbor neighbor;
-//     neighbor.index(i);
-//     ne(sol, neighbor);
+  for (int i = 0; i < (no_jobs - 1) * (no_jobs - 1); i++) {
+    FSPNeighbor neighbor;
+    neighbor.index(i);
+    ne(sol, neighbor);
 
-//     FSPNeighbor neighborFullEval;
-//     neighborFullEval.index(i);
-//     fullNe(sol, neighborFullEval);
+    FSPNeighbor neighborFullEval;
+    neighborFullEval.index(i);
+    fullNe(sol, neighborFullEval);
 
-//     ASSERT_EQ(neighbor.fitness(), neighborFullEval.fitness());
-//   }
-// }
+    ASSERT_EQ(neighbor.fitness(), neighborFullEval.fitness());
+  }
+}
 
 #include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
 #include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
@@ -287,13 +284,13 @@ TEST(TaillardAcceleration, BestInsertionNeighborhood) {
   FSPData fspData(no_jobs, no_machines, 100);
 
   FSP sol(no_jobs);
-  PermFSPEvalFunc<FSP> fullEval(fspData, Objective::MAKESPAN);
+  PermFSPMakespanEval fullEval(fspData);
 
   eoInitPermutation<FSP> randomInit(no_jobs);
   randomInit(sol);
   FSP sol2 = sol;
 
-  PermNeighborMakespanEval ne(fspData);
+  PermFSPNeighborMakespanEval ne(fspData);
   moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
 
   moTrueContinuator<FSPNeighbor> tc;
@@ -329,14 +326,14 @@ TEST(TaillardAcceleration, ReCompileEval) {
   FSPData fspData(no_jobs, no_machines, 100);
 
   FSP sol(no_jobs);
-  PermFSPEvalFunc<FSP> fullEval(fspData, Objective::MAKESPAN);
+  PermFSPMakespanEval fullEval(fspData);
 
   eoInitPermutation<FSP> randomInit(no_jobs);
   randomInit(sol);
 
   fullEval(sol);
 
-  PermNeighborMakespanEval ne(fspData);
+  PermFSPNeighborMakespanEval ne(fspData);
 
   FSPNeighbor neighbor;
   // 0 neighbor is compiled
@@ -370,14 +367,14 @@ TEST(TaillardAcceleration, DestructionConstruction) {
   FSPData fspData(no_jobs, no_machines, 100);
 
   FSP sol(no_jobs);
-  PermFSPEvalFunc<FSP> fullEval(fspData, Objective::MAKESPAN);
+  PermFSPMakespanEval fullEval(fspData);
 
   eoInitPermutation<FSP> randomInit(no_jobs);
   randomInit(sol);
   fullEval(sol);
   FSP sol2 = sol;
 
-  PermNeighborMakespanEval ne(fspData);
+  PermFSPNeighborMakespanEval ne(fspData);
   moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
 
   InsertFirstBest<FSPNeighbor> fbf(fullNe);
@@ -475,8 +472,8 @@ TEST(PermFSP, NeighborEvaluationSamples) {
   const int no_machines = 10;
   for (int i = 0; i < 100; i++) {
     FSPData dt{no_jobs, no_machines};
-    PermFSPEvalFunc<FSP> fullEval{dt};
-    PermNeighborMakespanEval neighborEval{dt};
+    PermFSPMakespanEval fullEval{dt};
+    PermFSPNeighborMakespanEval neighborEval{dt};
     FSP sol(no_jobs);
     FSP solMoved(no_jobs);
     eoInitPermutation<FSP> init(no_jobs);
@@ -502,8 +499,8 @@ TEST(NoWaitFSP, NeighborEvaluationExample) {
     30, 20, 25, 25, 28, //
   };
   FSPData dt{pts, 5, true};
-  NWFSPEvalFunc<FSP> nwFspEval{dt};
-  FastNWNeighborMakespanEval fastEval{dt, nwFspEval};
+  NoWaitFSPMakespanEval nwFspEval{dt};
+  NoWaitFSPNeighborMakespanEval fastEval{dt, nwFspEval};
 
   FSP sol;
   sol.assign({0, 1, 2, 3, 4});
@@ -526,8 +523,8 @@ TEST(NoWaitFSP, NeighborEvaluationSamples) {
   const int no_machines = 10;
   for (int i = 0; i < 100; i++) {
     FSPData dt{no_jobs, no_machines};
-    NWFSPEvalFunc<FSP> nwFspEval{dt};
-    FastNWNeighborMakespanEval fastEval{dt, nwFspEval};
+    NoWaitFSPMakespanEval nwFspEval{dt};
+    NoWaitFSPNeighborMakespanEval fastEval{dt, nwFspEval};
     FSP sol(no_jobs);
     FSP solMoved(no_jobs);
     eoInitPermutation<FSP> init(no_jobs);
@@ -555,7 +552,7 @@ TEST(NoIdleFSP, FastNeighborhoodExample) {
     2, 2, 3  //
   };
   FSPData dt{pts, 4, false};
-  NoIdleFSPNeighborEval fastEval{dt, Objective::MAKESPAN};
+  NoIdleFSPNeighborMakespanEval fastEval{dt};
 
   FSP sol;
   sol.assign({0, 1, 2, 3});
@@ -578,8 +575,8 @@ TEST(NoIdleFSP, FastCmaxNeighborhoodRandom) {
   const int no_machines = 10;
   for (int i = 0; i < 1000; i++) {
     FSPData dt{no_jobs, no_machines};
-    NoIdleFSPEvalFunc<FSP> fullEval{dt, Objective::MAKESPAN};
-    NoIdleFSPNeighborEval neighborEval{dt, Objective::MAKESPAN};
+    NoIdleFSPMakespanEval fullEval{dt};
+    NoIdleFSPNeighborMakespanEval neighborEval{dt};
     eoInitPermutation<FSP> init(no_jobs);
     FSP sol(no_jobs);
     init(sol);
@@ -604,8 +601,8 @@ TEST(NoIdleFSP, FastTFTNeighborhoodRandom) {
   const int no_machines = 10;
   for (int i = 0; i < 1000; i++) {
     FSPData dt{no_jobs, no_machines};
-    NoIdleFSPEvalFunc<FSP> fullEval{dt, Objective::FLOWTIME};
-    NoIdleFSPNeighborEval neighborEval{dt, Objective::FLOWTIME};
+    NoIdleFSPFlowtimeEval fullEval{dt};
+    NoIdleFSPNeighborFlowtimeEval neighborEval{dt};
     FSP sol(no_jobs);
     eoInitPermutation<FSP> init(no_jobs);
     init(sol);
@@ -637,14 +634,14 @@ TEST(NoIdleFSP, FastTFTNeighborhoodRandom) {
 //   FSP sol(4);
 //   sol.assign({0, 1, 2, 3});
 
-//   PermFSPEvalFunc<FSP> permCmaxEval(dt, Objective::MAKESPAN);
-//   PermFSPEvalFunc<FSP> permFTEval(dt, Objective::FLOWTIME);
+//   PermFSPEval<FSP> permCmaxEval(dt, Objective::MAKESPAN);
+//   PermFSPEval<FSP> permFTEval(dt, Objective::FLOWTIME);
 
-//   NWFSPEvalFunc<FSP> nwCmaxEval(dt, Objective::MAKESPAN);
-//   NWFSPEvalFunc<FSP> nwFTEval(dt, Objective::FLOWTIME);
+//   NoWaitFSPEval<FSP> nwCmaxEval(dt, Objective::MAKESPAN);
+//   NoWaitFSPEval<FSP> nwFTEval(dt, Objective::FLOWTIME);
 
-//   NoIdleFSPEvalFunc<FSP> niCmaxEval(dt, Objective::MAKESPAN);
-//   NoIdleFSPEvalFunc<FSP> niFTEval(dt, Objective::FLOWTIME);
+//   NoIdleFSPEval<FSP> niCmaxEval(dt, Objective::MAKESPAN);
+//   NoIdleFSPEval<FSP> niFTEval(dt, Objective::FLOWTIME);
 
 //   permCmaxEval(sol);
 //   std::cerr << "permCmaxEval " << sol.fitness() << '\n';
@@ -662,29 +659,6 @@ TEST(NoIdleFSP, FastTFTNeighborhoodRandom) {
 //   std::cerr << "niFTEval " << sol.fitness() << '\n';
 // }
 
-// TEST(NoIdleFSP, FullEval) {
-//   const int no_jobs = 10;
-//   const int no_machines = 10;
-//   for (int i = 0; i < 100; i++) {
-//     FSPData dt{no_jobs, no_machines};
-//     NIFSPEvalFunc<FSP> eval1{dt};
-//     NoIdleFSPEvalFunc<FSP> eval2{dt};
-//     FSP sol(no_jobs);
-//     FSP solMoved(no_jobs);
-//     eoInitPermutation<FSP> init(no_jobs);
-//     for (int j = 0; j < no_jobs; j++) {
-//       for (int k = 0; k < no_jobs; k++) {
-//         if (k != j && k != j - 1) {
-//           init(sol);
-//           solMoved = sol;
-//           eval1(sol);
-//           eval2(solMoved);
-//           ASSERT_EQ(solMoved.fitness(), sol.fitness());
-//         }
-//       }
-//     }
-//   }
-// }
 
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) -> int {
   testing::InitGoogleTest(&argc, argv);

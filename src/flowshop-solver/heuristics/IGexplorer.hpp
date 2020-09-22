@@ -4,7 +4,7 @@
 
 #include "../global.hpp"
 #include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
-#include "flowshop-solver/problems/FSPEvalFunc.hpp"
+#include "flowshop-solver/problems/FSPEval.hpp"
 #include "paradiseo/eo/utils/eoRNG.h"
 #include "paradiseo/mo/comparator/moNeighborComparator.h"
 #include "paradiseo/mo/comparator/moSolComparator.h"
