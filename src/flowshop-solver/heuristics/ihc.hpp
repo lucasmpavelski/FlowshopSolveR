@@ -8,7 +8,6 @@
 
 #include "MHParamsValues.hpp"
 #include "NEHInit.hpp"
-#include "fastnehheuristic.hpp"
 #include "flowshop-solver/heuristics.hpp"
 #include "FSPProblemFactory.hpp"
 #include "op_cooling_schedule.hpp"

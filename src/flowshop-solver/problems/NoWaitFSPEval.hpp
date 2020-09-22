@@ -71,7 +71,7 @@ class NoWaitCompletionTimeCompiler {
   }
 };
 
-class NoWaitFSPEval : public virtual FSPEval {
+class NoWaitFSPEval : virtual public FSPEval {
   NoWaitCompletionTimeCompiler compiler;
 
  public:
@@ -94,18 +94,20 @@ class NoWaitFSPEval : public virtual FSPEval {
     return os;
   }
 
-  protected:
-  void compileCompletionTimes(const FSP &perm, std::vector<int> &ct) override {
+ protected:
+  void compileCompletionTimes(const FSP& perm, std::vector<int>& ct) override {
     compiler.compile(perm, ct);
   }
 };
 
 class NoWaitFSPMakespanEval : public NoWaitFSPEval, public FSPMakespanEval {
  public:
-  NoWaitFSPMakespanEval(const FSPData& fspData) : FSPEval{fspData}, NoWaitFSPEval{fspData} {}
+  NoWaitFSPMakespanEval(const FSPData& fspData)
+      : FSPEval{fspData}, NoWaitFSPEval{fspData} {}
 };
 
 class NoWaitFSPFlowtimeEval : public NoWaitFSPEval, public FSPFlowtimeEval {
  public:
-  NoWaitFSPFlowtimeEval(const FSPData& fspData) : FSPEval{fspData}, NoWaitFSPEval{fspData} {}
+  NoWaitFSPFlowtimeEval(const FSPData& fspData)
+      : FSPEval{fspData}, NoWaitFSPEval{fspData} {}
 };

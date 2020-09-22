@@ -5,7 +5,6 @@
 #include "../heuristics.hpp"
 #include "MHParamsValues.hpp"
 #include "NEHInit.hpp"
-#include "fastnehheuristic.hpp"
 #include "FSPProblemFactory.hpp"
 #include "op_cooling_schedule.hpp"
 #include "MHParamsSpecsFactory.hpp"

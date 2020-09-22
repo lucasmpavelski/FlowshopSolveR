@@ -14,7 +14,8 @@
 #include "../src/flowshop-solver/heuristics/sa.hpp"
 #include "../src/flowshop-solver/heuristics/ts.hpp"
 
-std::vector<int> johnson(const std::vector<int>& a, const std::vector<int>& b) {
+auto johnson(const std::vector<int>& a, const std::vector<int>& b)
+    -> std::vector<int> {
   assert(a.size() == b.size());
   std::vector<int> perm(a.size());
   std::iota(perm.begin(), perm.end(), 0);
@@ -27,9 +28,9 @@ std::vector<int> johnson(const std::vector<int>& a, const std::vector<int>& b) {
   return perm;
 }
 
-std::vector<int> johnsonApproximate(const std::vector<int>& a,
-                                    const std::vector<int>& b,
-                                    const std::vector<int>& c) {
+auto johnsonApproximate(const std::vector<int>& a,
+                        const std::vector<int>& b,
+                        const std::vector<int>& c) -> std::vector<int> {
   assert(a.size() == b.size() && a.size() == c.size());
   std::vector<int> ab(a.size());
   std::vector<int> bc(a.size());
@@ -49,9 +50,9 @@ TEST(LowerBound, JohnsonAlgorithm) {
 #include "../flowshop-solver/problems/FSPData.hpp"
 #include "../flowshop-solver/problems/FSPEval.hpp"
 
-int lowerBound1(const FSPData& fspData) {
+auto lowerBound1(const FSPData& fspData) -> int {
   int no_jobs = fspData.noJobs(), no_machines = fspData.noMachines();
-  PermFSPEval<FSPMin> completionTime(fspData, Objective::MAKESPAN);
+  PermFSPMakespanEval completionTime(fspData);
 
   std::vector<int> scheduled(1);
   std::vector<int> unscheduled;
@@ -87,9 +88,9 @@ int lowerBound1(const FSPData& fspData) {
   auto q_h = [&fspData, &unscheduled](int h) {
     std::cout << "q_" << h << ": ";
     int min_j = 10000;
-    for (unsigned j = 0; j < unscheduled.size(); j++) {
+    for (int j : unscheduled) {
       int atSum = fspData.partialSumOnAdjacentMachines(
-          unscheduled[j], h + 1, fspData.noMachines() - 1);
+          j, h + 1, fspData.noMachines() - 1);
       if (atSum < min_j)
         min_j = atSum;
     }
@@ -99,8 +100,8 @@ int lowerBound1(const FSPData& fspData) {
   int lb1 = 0;
   for (int i = 0; i < no_machines; i++) {
     int s = 0;
-    for (unsigned j = 0; j < unscheduled.size(); j++) {
-      s += fspData.pt(unscheduled[j], i);
+    for (int j : unscheduled) {
+      s += fspData.pt(j, i);
     }
     int val = r_i(i) + s + q_h(i);
     std::cout << "r_" << i << ": " << r_i(i) << '\t';
@@ -148,7 +149,7 @@ TEST(Solve, HC) {
   FSPProblemFactory::init(
       "/home/lucasmp/projects/git/evolutionary_tunners/data");
   MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", 1);
+      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
   prob["problem"] = "FSP";
   prob["type"] = "PERM";
@@ -169,7 +170,7 @@ TEST(Solve, SA) {
   FSPProblemFactory::init(
       "/home/lucasmp/projects/git/evolutionary_tunners/data/");
   MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs/", 1);
+      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs/", true);
   std::unordered_map<string, string> prob;
   prob["problem"] = "FSP";
   prob["type"] = "PERM";
@@ -193,7 +194,7 @@ TEST(FLA, ADAPTIVE) {
   FSPProblemFactory::init(
       "/home/lucasmp/projects/git/evolutionary_tunners/data");
   MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", 1);
+      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
   prob["problem"] = "FSP";
   prob["type"] = "PERM";
@@ -215,7 +216,7 @@ TEST(FLA, ADAPTIVE_WALK) {
   FSPProblemFactory::init(
       "/home/lucasmp/projects/git/evolutionary_tunners/data");
   MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", 1);
+      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
   prob["problem"] = "FSP";
   prob["type"] = "PERM";
@@ -237,7 +238,7 @@ TEST(Solve, TS) {
   FSPProblemFactory::init(
       "/home/lucasmp/projects/git/evolutionary_tunners/data");
   MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", 1);
+      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
   prob["problem"] = "FSP";
   prob["type"] = "PERM";
@@ -260,7 +261,7 @@ TEST(Solve, ILS) {
   FSPProblemFactory::init(
       "/home/lucasmp/projects/git/evolutionary_tunners/data");
   MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", 1);
+      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
   prob["problem"] = "FSP";
   prob["type"] = "PERM";
@@ -281,7 +282,7 @@ TEST(Solve, IHC) {
   FSPProblemFactory::init(
       "/home/lucasmp/projects/git/evolutionary_tunners/data");
   MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", 1);
+      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
   prob["problem"] = "FSP";
   prob["type"] = "PERM";
@@ -302,7 +303,7 @@ TEST(Solve, IG) {
   using std::string;
   RNG::seed(123l);
   FSPProblemFactory::init(DATA_FOLDER);
-  MHParamsSpecsFactory::init(DATA_FOLDER "/specs", 1);
+  MHParamsSpecsFactory::init(DATA_FOLDER "/specs", true);
   std::unordered_map<string, string> prob;
   // prob["problem"] = "FSP";
   // prob["type"] = "PERM";
@@ -331,7 +332,7 @@ TEST(Solve, ISA) {
   FSPProblemFactory::init(
       "/home/lucasmp/projects/git/evolutionary_tunners/data");
   MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", 1);
+      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
 
   std::unordered_map<string, string> prob;
   prob["problem"] = "FSP";
@@ -354,7 +355,7 @@ TEST(Solve, ACO) {
   FSPProblemFactory::init(
       "/home/lucasmp/projects/git/evolutionary_tunners/data");
   MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", 1);
+      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
   prob["problem"] = "FSP";
   prob["type"] = "PERM";
@@ -376,14 +377,14 @@ auto mh_cat_values = {0, 1, 2,
 TEST(Solve, AllParamsInAllMH) {
   MHParamsSpecs allSpecs = MHParamsSpecsFactory::get("all");
   std::vector<ParamSpec> params;
-  for (auto param : allSpecs) {
+  for (const auto& param : allSpecs) {
     params.push_back(*param);
   }
   unsigned count = 0;
-  for (auto mh : all_mh) {
+  for (const auto& mh : all_mh) {
     MHParamsSpecs specs = MHParamsSpecsFactory::get(mh);
     count += specs.noParams();
-    for (auto param : specs) {
+    for (const auto& param : specs) {
       ASSERT_TRUE(std::find(params.begin(), params.end(), *param) !=
                   params.end());
     }
@@ -405,15 +406,16 @@ TEST(Solve, SolveAllMHs) {
   prob["stopping_criterion"] = "EVALS";
   RNG::seed(1234);
 
-  for (std::string mh : all_mh) {
+  for (const std::string& mh : all_mh) {
     params["MH"] = allSpecs.getValue("MH", mh);
     RNG::seed(1234);
     std::cerr << mh << "\n";
     Result mhResult = solveWith(mh, prob, params.toMap());
     RNG::seed(1234);
-    // Result allResult = solveWithAll(prob, params.toMap());
-    // std::cerr << mh << " " << params["MH"] << " " << allResult.fitness <<
-    // "\n"; ASSERT_TRUE(mhResult == allResult);
+    auto paramMap = params.toMap();
+    paramMap["mh"] = mh;
+    Result allResult = solveWith("all", prob, paramMap);
+    ASSERT_TRUE(mhResult == allResult);
   }
 }
 // TEST(Solve, irace) {
@@ -444,7 +446,7 @@ TEST(Solve, SolveAllMHs) {
 //   std::cout << solveWithAny(prob, params);
 // }
 
-int main(int argc, char** argv) {
+auto main(int argc, char** argv) -> int {
   argc = 2;
   // char* argvv[] = {"", "--gtest_filter=FLA.*"};
   // testing::InitGoogleTest(&argc, argvv);

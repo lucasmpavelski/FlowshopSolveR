@@ -71,7 +71,7 @@ class PermFSPCompiler {
   }
 };
 
-class PermFSPEval : virtual public FSPEval {  
+class PermFSPEval : virtual public FSPEval {
   PermFSPCompiler compiler;
 
  public:
@@ -85,14 +85,14 @@ class PermFSPEval : virtual public FSPEval {
   }
 };
 
-class PermFSPMakespanEval : public PermFSPEval,
-                            public FSPMakespanEval {
+class PermFSPMakespanEval : public PermFSPEval, public FSPMakespanEval {
  public:
-  PermFSPMakespanEval(const FSPData& fspData) : FSPEval{fspData}, PermFSPEval{fspData} {}
+  PermFSPMakespanEval(const FSPData& fspData)
+      : FSPEval{fspData}, PermFSPEval{fspData} {}
 };
 
-class PermFSPFlowtimeEval : public PermFSPEval,
-                            public FSPFlowtimeEval {
+class PermFSPFlowtimeEval : public PermFSPEval, public FSPFlowtimeEval {
  public:
-  PermFSPFlowtimeEval(const FSPData& fspData) : FSPEval{fspData}, PermFSPEval{fspData} {}
+  PermFSPFlowtimeEval(const FSPData& fspData)
+      : FSPEval{fspData}, PermFSPEval{fspData} {}
 };

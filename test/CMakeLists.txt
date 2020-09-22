@@ -9,7 +9,6 @@ INCLUDE_DIRECTORIES(${CATCH_INCLUDE_DIR})
 
 # 2) Define targets: executable and dependencies
 ADD_EXECUTABLE(test-fsp test-fsp.cpp)
-ADD_EXECUTABLE(test-heuristic test-heuristic.cpp)
 ADD_EXECUTABLE(test-solve test-solve.cpp)
 ADD_EXECUTABLE(test-fla test-fla.cpp)
 ADD_EXECUTABLE(test-jsp test-jsp.cpp)
@@ -24,7 +23,6 @@ ADD_DEFINITIONS(-DTEST_FIXTURES_FOLDER="${CMAKE_SOURCE_DIR}/test/")
 
 target_link_libraries(test-all flowshop_solver_lib ${GTEST_LIBRARIES} ${PARADISEO_LIBRARIES} pthread)
 TARGET_LINK_LIBRARIES(test-fsp flowshop_solver_lib ${GTEST_LIBRARIES} ${PARADISEO_LIBRARIES})
-TARGET_LINK_LIBRARIES(test-heuristic flowshop_solver_lib ${PARADISEO_LIBRARIES})
 TARGET_LINK_LIBRARIES(test-solve flowshop_solver_lib ${PARADISEO_LIBRARIES})
 TARGET_LINK_LIBRARIES(test-fla flowshop_solver_lib ${GTEST_LIBRARIES} ${PARADISEO_LIBRARIES} pthread)
 TARGET_LINK_LIBRARIES(test-jsp flowshop_solver_lib ${PARADISEO_LIBRARIES})

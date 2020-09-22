@@ -32,7 +32,7 @@ void testSolveWithFactories() {
   }
 }
 
-#include "problems/FastFSPNeighborEval.hpp"
+#include "problems/PermFSPNeighborMakespanEval.hpp"
 
 void testSolve() {
   int seed = 481571373;
@@ -97,7 +97,7 @@ value!"); values[ps->name] = params.at(ps->name);
 
 void testSolve() {}
 
-int main(int, char* []) {
+auto main(int, char* []) -> int {
   // testSolveWithFactories();
   testSolve();
   // testFastSolve();

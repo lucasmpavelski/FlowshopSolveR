@@ -22,7 +22,7 @@
 #include "MHParamsSpecs.hpp"
 #include "MHParamsValues.hpp"
 
-auto main(int argc, char* argv[]) -> int {
+auto main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) -> int {
  /* using std::cout;
   using std::string;
 
