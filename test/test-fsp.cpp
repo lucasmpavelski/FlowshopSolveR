@@ -366,6 +366,26 @@ TEST(Heuristic, FSPOrderHeuristics) {
   }
 }
 
+TEST(Heuristic, LROrderExample) {
+  std::vector<int> pts = { //
+    15, 15, 10,  5, //
+    10,  5, 15,  5, //
+     5, 10, 10, 10, //
+  };
+  FSPData dt{pts, 4, true};
+
+  std::vector<int> ref(dt.noJobs());
+  std::iota(begin(ref), end(ref), 0);
+
+  FSP sol = ref;
+  std::iota(begin(sol), end(sol), 0);
+  auto init = buildPriority(dt, "lr", false, "incr");
+  (*init)(sol);
+
+  ref.assign({3, 1, 2, 0});
+  ASSERT_TRUE(std::equal(begin(sol), end(sol), begin(ref), end(ref)));
+}
+
 TEST(PermFSP, NeighborMakespanEvaluationSamples) {
   const int no_jobs = 10;
   const int no_machines = 10;

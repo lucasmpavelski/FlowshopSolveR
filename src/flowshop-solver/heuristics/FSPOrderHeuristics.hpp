@@ -339,13 +339,14 @@ struct LR : public FSPOrderHeuristic {
     std::vector<int> unscheduled(noJobs);
     std::iota(begin(unscheduled), end(unscheduled), 0);
 
-    std::vector<int> it(noJobs);
-    std::vector<int> at(noJobs);
+    std::vector<double> it(noJobs);
+    std::vector<double> at(noJobs);
 
     while (!unscheduled.empty()) {
       const int k = scheduled.size();
 
       if (k > 0) {
+        // TODO: use cached permutation compiler
         ct[0 * noJobs + 0] = p[0 * noJobs + scheduled[0]];
         for (int i = 1; i < scheduled.size(); i++) {
           ct[0 * noJobs + i] = ct[0 * noJobs + i - 1] + p[0 * noJobs + scheduled[i]];
@@ -353,7 +354,7 @@ struct LR : public FSPOrderHeuristic {
         for (int j = 1; j < noMachines; j++) {
           ct[j * noJobs + 0] = ct[(j - 1) * noJobs + 0] + p[j * noJobs + scheduled[0]];
         }
-        for (int i = 1; i < k; i++) {
+        for (int i = std::max(1, k - 1); i < k; i++) {
           int pt_index = scheduled[i];
           for (int j = 1; j < noMachines; j++) {
             int ct_jm1_m = ct[j * noJobs + i - 1];
@@ -368,13 +369,13 @@ struct LR : public FSPOrderHeuristic {
       for (auto i : unscheduled) {
         // calculate artificial times
         it[i] = 0.0;
-        int cim = k == 0 ? 0 : ct[0 * noJobs + k - 1];
+        int cim = (k == 0 ? 0 : ct[0 * noJobs + k - 1]) + p[0 * noJobs + i];
         double cpm = cim + artificialJobTime(i, 0, unscheduled);
         for (int j = 1; j < noMachines; j++) {
           int ct_k_j = k == 0 ? 0 : ct[j * noJobs + k - 1];
-          int pt_i = p[j * noJobs + i];       
+          int pt_i = p[j * noJobs + i]; 
           it[i] += itWeight(j, k) * std::max(cim - ct_k_j, 0);
-          cim = std::max(ct_k_j, cim) + pt_i; 
+          cim = std::max(ct_k_j, cim) + pt_i;
           cpm = std::max(static_cast<double>(cim), cpm) + artificialJobTime(i, j, unscheduled);
         }
         at[i] = cim + cpm;
