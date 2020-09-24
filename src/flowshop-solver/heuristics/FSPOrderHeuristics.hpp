@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <numeric>
 
 #include <paradiseo/eo/eo>
@@ -325,6 +326,97 @@ struct RA_C3 : public RagendranFOH {
   }
 };
 
+struct LR : public FSPOrderHeuristic {
+  using FSPOrderHeuristic::FSPOrderHeuristic;
+
+  auto sortingOrder() -> std::vector<double> override {
+    const auto& p = fspData.procTimesRef();
+    const int noJobs = fspData.noJobs();
+    const int noMachines = fspData.noMachines();
+
+    std::vector<int> ct(noJobs * noMachines, 0);
+    std::vector<int> scheduled;
+    std::vector<int> unscheduled(noJobs);
+    std::iota(begin(unscheduled), end(unscheduled), 0);
+
+    std::vector<int> it(noJobs);
+    std::vector<int> at(noJobs);
+
+    while (!unscheduled.empty()) {
+      const int k = scheduled.size();
+
+      if (k > 0) {
+        ct[0 * noJobs + 0] = p[0 * noJobs + scheduled[0]];
+        for (int i = 1; i < scheduled.size(); i++) {
+          ct[0 * noJobs + i] = ct[0 * noJobs + i - 1] + p[0 * noJobs + scheduled[i]];
+        }
+        for (int j = 1; j < noMachines; j++) {
+          ct[j * noJobs + 0] = ct[(j - 1) * noJobs + 0] + p[j * noJobs + scheduled[0]];
+        }
+        for (int i = 1; i < k; i++) {
+          int pt_index = scheduled[i];
+          for (int j = 1; j < noMachines; j++) {
+            int ct_jm1_m = ct[j * noJobs + i - 1];
+            int ct_j_mm1 = ct[(j - 1) * noJobs + i];
+            int pt_i = p[j * noJobs + pt_index];
+            ct[j * noJobs + i] = 
+              std::max(ct_jm1_m, ct_j_mm1) + pt_i;
+          }
+        }
+      }
+
+      for (auto i : unscheduled) {
+        // calculate artificial times
+        it[i] = 0.0;
+        int cim = k == 0 ? 0 : ct[0 * noJobs + k - 1];
+        double cpm = cim + artificialJobTime(i, 0, unscheduled);
+        for (int j = 1; j < noMachines; j++) {
+          int ct_k_j = k == 0 ? 0 : ct[j * noJobs + k - 1];
+          int pt_i = p[j * noJobs + i];       
+          it[i] += itWeight(j, k) * std::max(cim - ct_k_j, 0);
+          cim = std::max(ct_k_j, cim) + pt_i; 
+          cpm = std::max(static_cast<double>(cim), cpm) + artificialJobTime(i, j, unscheduled);
+        }
+        at[i] = cim + cpm;
+      }
+
+      auto selected = std::min_element(begin(unscheduled), end(unscheduled), [&](int i, int j) {
+        double indexI = (noJobs - k - 1) * it[i] + at[i];
+        double indexJ = (noJobs - k - 1) * it[j] + at[j];
+        return indexI < indexJ;
+      });
+
+      scheduled.push_back(*selected);
+      unscheduled.erase(selected);
+    }
+
+    std::vector<double> order(noJobs);
+    for (int i = 0; i < noJobs; i++) {
+      order[scheduled[i]] = i;
+    }
+
+    return order;
+  }
+
+  auto artificialJobTime(int i, int j, const std::vector<int>& unscheduled) -> double {
+    double pt = 0;
+    for (int job : unscheduled) {
+      if (job != i) {
+        pt += fspData.pt(job, j);
+      }
+    }  
+    return pt / static_cast<double>(unscheduled.size() - 1);
+  }
+
+  auto itWeight(int j, int k) -> double {
+    j++;
+    k++;
+    const int n = fspData.noJobs();
+    const int m = fspData.noMachines();
+    return m / (j + k * (m - j) / (n - 2));
+  }
+};
+
 /**
  * FSP priority rule orders
  * - sum_pij from the original NEH
@@ -336,6 +428,9 @@ struct RA_C3 : public RagendranFOH {
  * Nawaz, Enscore and Ham to minimize makespan, idletime or flowtime in the
  * static permutation flowshop sequencing problem by
  * Jose M. Framinan, Rainer Leisten and Chandrasekharan Rajendran
+ * - lr by Liu, J., and C. R. Reeves.2001. Constructive and Composite Heuristic 
+ *  Solutions to the P//Ct Scheduling Problem. European Journal of Operational 
+ *  Research 132 (2): 439?452.
  */
 inline auto buildPriority(const FSPData& data,
                           const std::string& name,
@@ -367,5 +462,7 @@ inline auto buildPriority(const FSPData& data,
     return std::make_unique<RA_C2>(data, weighted, order);
   if (name == "ra_c3")
     return std::make_unique<RA_C3>(data, weighted, order);
+  if (name == "lr")
+    return std::make_unique<LR>(data, weighted, order);
   return nullptr;
 };

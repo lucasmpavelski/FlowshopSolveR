@@ -346,7 +346,7 @@ TEST(Heuristic, FSPOrderHeuristics) {
   std::vector<std::string> names = {"sum_pij",    "abs_dif",     "ss_sra",
                                     "ss_srs",     "ss_srn_rcn",  "ss_sra_rcn",
                                     "ss_srs_rcn", "ss_sra_2rcn", "ra_c1",
-                                    "ra_c2",      "ra_c3",       "ra_c3"};
+                                    "ra_c2",      "ra_c3",       "ra_c3", "lr"};
   std::vector<std::string> orders = {"incr",    "decr",    "valley",
                                      "hill",    "hi_hilo", "hi_lohi",
                                      "lo_hilo", "lo_lohi"};
