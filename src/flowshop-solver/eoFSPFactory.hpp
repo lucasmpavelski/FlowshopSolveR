@@ -40,8 +40,8 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   eoFSPFactory(const MHParamsValues& params, FSPProblem& problem)
       : eoFactory<FSPProblem::Ngh>{params, problem}, _problem{problem} {};
 
-  using EOT = FSPProblem::EOT;
-  using Ngh = FSPProblem::Ngh;
+  using EOT = FSP;
+  using Ngh = FSPNeighbor;
 
  protected:
   auto domainAcceptanceCriterion() -> moAcceptanceCriterion<Ngh>* override {
@@ -66,7 +66,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
 
       auto priority = buildPriority(_problem.data(), nehPriority,
                                     nehPriorityWeighted, nehPriorityOrder);
-      storeFunctor(priority);
+      storeFunctor(priority.release());
 
       auto nehInsertion = categoricalName(".Init.NEH.Insertion");
       auto insertion =

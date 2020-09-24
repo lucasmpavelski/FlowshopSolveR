@@ -133,44 +133,6 @@ void testNWEval() {
   assert(solftp.fitness() == 70);
 }
 
-// TEST(FSPTaillardAcelleration, Evaluation) {
-//   rng.reseed(65465l);
-//   const int no_jobs = 4;
-//   const int no_machines = 3;
-//   FSPData fspData(no_jobs, no_machines, 8);
-
-//   ivec seq = {0, 1, 2, 3};
-//   CompiledSchedule csd(no_jobs, no_machines);
-//   csd.compile(fspData, seq);
-
-//   PermFSPEval fsp_eval{fspData};
-//   FSP sol(4);
-//   sol[0] = 3;
-//   sol[1] = 0;
-//   sol[2] = 1;
-//   sol[3] = 2;
-//   fsp_eval(sol);
-//   ASSERT_EQ(sol.fitness(), csd.makespan[0]);
-//   sol[0] = 0;
-//   sol[1] = 3;
-//   sol[2] = 1;
-//   sol[3] = 2;
-//   fsp_eval(sol);
-//   ASSERT_EQ(sol.fitness(), csd.makespan[1]);
-//   sol[0] = 0;
-//   sol[1] = 1;
-//   sol[2] = 3;
-//   sol[3] = 2;
-//   fsp_eval(sol);
-//   ASSERT_EQ(sol.fitness(), csd.makespan[2]);
-//   sol[0] = 0;
-//   sol[1] = 1;
-//   sol[2] = 2;
-//   sol[3] = 3;
-//   fsp_eval(sol);
-//   ASSERT_EQ(sol.fitness(), csd.makespan[3]);
-// }
-
 auto testMove(std::initializer_list<int> init,
               int from,
               int to,
@@ -197,52 +159,6 @@ TEST(FSPNeighbor, Moves) {
   ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 5, 4, {1, 2, 3, 4, 6, 5}));
   ASSERT_TRUE(testMove({1, 2, 3, 4, 5, 6}, 5, 5, {1, 2, 3, 4, 5, 6}));
 }
-
-// TEST(FSPTaillardAcelleration, Results) {
-//   auto res = {
-//       44, 11, 45, 38, 31, 18, 49, 21, 34, 3,  30, 20, 5,  46, 7,  12, 17,
-//       9,  42, 37, 41, 0,  14, 27, 24, 43, 28, 40, 47, 35, 48, 29, 2,  16,
-//       23, 8,  6,  4,  1,  26, 19, 25, 13, 15, 39, 36, 32, 33, 22, 10
-//       // 44, 11, 8, 12, 7, 25, 35, 19, 31, 13, 3, 24, 41, 38, 17, 23, 40, 48,
-//       // 49, 34, 43, 37, 18, 15, 47, 2, 9, 21, 0, 46, 42, 4, 27, 45, 29, 1, 6,
-//       // 5, 26, 14, 28, 20, 39, 30, 32, 36, 16, 33, 22, 10 11, 49, 25, 31, 38,
-//       // 45, 36, 7, 18, 14, 8, 3, 19, 34, 35, 12, 21, 26, 20, 1, 17, 43, 46, 27,
-//       // 28, 41, 13, 44, 2, 29, 24, 9, 5, 42, 32, 30, 0, 47, 40, 37, 23, 16, 15,
-//       // 39, 48, 6, 4, 33, 22, 10};
-//   };
-//   auto res2 = {
-//       11, 44, 45, 38, 31, 18, 49, 21, 34, 3,  30, 20, 5,  46, 7,  12, 17,
-//       9,  42, 37, 41, 0,  14, 27, 24, 43, 28, 40, 47, 35, 48, 29, 2,  16,
-//       23, 8,  6,  4,  1,  26, 19, 25, 13, 15, 39, 36, 32, 33, 22, 10
-//       // 44, 11, 8, 12, 7, 25, 35, 19, 31, 13, 3, 24, 41, 38, 17, 23, 40, 48,
-//       // 49, 34, 43, 37, 18, 15, 47, 2, 9, 21, 0, 46, 42, 4, 27, 45, 29, 1, 6,
-//       // 5, 26, 14, 28, 20, 39, 30, 32, 36, 16, 33, 22, 10 11, 49, 25, 31, 38,
-//       // 45, 36, 7, 18, 14, 8, 3, 19, 34, 35, 12, 21, 26, 20, 1, 17, 43, 46, 27,
-//       // 28, 41, 13, 44, 2, 29, 24, 9, 5, 42, 32, 30, 0, 47, 40, 37, 23, 16, 15,
-//       // 39, 48, 6, 4, 33, 22, 10};
-//   };
-//   FSP sol(50);
-//   sol.assign(res);
-//   FSP sol2(50);
-//   sol.assign(res2);
-//   FSPProblemFactory::init(DATA_FOLDER);
-//   std::unordered_map<std::string, std::string> prob;
-//   prob["problem"] = "FSP";
-//   prob["type"] = "PERM";
-//   prob["objective"] = "MAKESPAN";
-//   prob["budget"] = "med";
-//   prob["instance"] = "taill-like_rand_50_5_01.dat";
-//   prob["stopping_criterion"] = "FIXEDTIME";
-//   // 2720
-//   FSPProblem problem = FSPProblemFactory::get(prob);
-//   problem.eval()(sol);
-
-//   FSPNeighbor neighbor(1, 1, 50);
-//   problem.neighborEval()(sol, neighbor);
-
-//   ASSERT_EQ(sol.fitness(), neighbor.fitness());
-//   ASSERT_EQ(sol.fitness(), 2737);
-// }
 
 TEST(FSPTaillardAcelleration, NeighborhoodEval) {
   rng.reseed(65465l);
@@ -424,23 +340,6 @@ TEST(TaillardAcceleration, RecompileNeighbor) {
   ASSERT_EQ(ng.fitness(), sol2.fitness());
 }
 
-// TEST(TaillardAcceleration, NEH) {
-//   std::vector<int> vec;
-//   vec.assign({
-//       16, 4, 4, 14, 12,  //
-//       14, 3, 4, 14, 10,  //
-//       18, 5, 5, 15, 13,  //
-//       4,  2, 2, 12, 3,   //
-//       4,  2, 2, 12, 2,   //
-//       3,  1, 2, 12, 1,   //
-//       2,  2, 2, 11, 2,   //
-//       5,  3, 4, 12, 4,   //
-//       6,  4, 3, 12, 3,   //
-//       7,  2, 4, 14, 4    //
-//   });
-//   FSPData fspData(vec, 10, false);
-// }
-
 #include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
 
 TEST(Heuristic, FSPOrderHeuristics) {
@@ -467,7 +366,7 @@ TEST(Heuristic, FSPOrderHeuristics) {
   }
 }
 
-TEST(PermFSP, NeighborEvaluationSamples) {
+TEST(PermFSP, NeighborMakespanEvaluationSamples) {
   const int no_jobs = 10;
   const int no_machines = 10;
   for (int i = 0; i < 100; i++) {
@@ -478,8 +377,9 @@ TEST(PermFSP, NeighborEvaluationSamples) {
     FSP solMoved(no_jobs);
     eoInitPermutation<FSP> init(no_jobs);
     init(sol);
-    for (int j = 0; j < no_jobs; j++) {
-      for (int k = 0; k < no_jobs; k++) {
+    sol.resize(1 + rand() % (no_jobs - 1));
+    for (int j = 0; j < sol.size(); j++) {
+      for (int k = 0; k < sol.size(); k++) {
         if (k != j && k != j - 1) {
           FSPNeighbor ngh(j, k, sol.size());
           neighborEval(sol, ngh);
@@ -487,6 +387,36 @@ TEST(PermFSP, NeighborEvaluationSamples) {
           ngh.move(solMoved);
           fullEval(solMoved);
           ASSERT_EQ(solMoved.fitness(), ngh.fitness());
+        }
+      }
+    }
+  }
+}
+
+TEST(PermFSP, NeighborCachedFlowtimeEvaluationSamples) {
+  const int no_jobs = 10;
+  const int no_machines = 10;
+  for (int i = 0; i < 1000; i++) {
+    FSPData dt{no_jobs, no_machines};
+    PermFSPFlowtimeEval cacheEval{dt};
+    PermFSPNeighborMakespanEval neighborEval{dt};
+    FSP sol(no_jobs);
+    FSP solMoved(no_jobs);
+    eoInitPermutation<FSP> init(no_jobs);
+    init(sol);
+    sol.resize(1 + rand() % (no_jobs - 1));
+    for (int j = 0; j < sol.size(); j++) {
+      for (int k = 0; k < sol.size(); k++) {
+        if (k != j && k != j - 1) {
+          PermFSPFlowtimeEval noCacheEval{dt};
+          FSPNeighbor ngh(j, k, sol.size());
+          solMoved = sol;
+          ngh.move(solMoved);
+          noCacheEval(solMoved);
+          auto noCacheFitness = solMoved.fitness();
+          cacheEval(solMoved);
+          auto cacheFitness = solMoved.fitness();
+          ASSERT_EQ(noCacheFitness, cacheFitness);
         }
       }
     }
@@ -529,8 +459,9 @@ TEST(NoWaitFSP, NeighborEvaluationSamples) {
     FSP solMoved(no_jobs);
     eoInitPermutation<FSP> init(no_jobs);
     init(sol);
-    for (int j = 0; j < no_jobs; j++) {
-      for (int k = 0; k < no_jobs; k++) {
+    sol.resize(1 + rand() % (no_jobs - 1));
+    for (int j = 0; j < sol.size(); j++) {
+      for (int k = 0; k < sol.size(); k++) {
         if (k != j && k != j - 1) {
           FSPNeighbor ngh(j, k, sol.size());
           fastEval(sol, ngh);
@@ -573,15 +504,16 @@ TEST(NoIdleFSP, FastNeighborhoodExample) {
 TEST(NoIdleFSP, FastCmaxNeighborhoodRandom) {
   const int no_jobs = 10;
   const int no_machines = 10;
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < 100; i++) {
     FSPData dt{no_jobs, no_machines};
     NoIdleFSPMakespanEval fullEval{dt};
     NoIdleFSPNeighborMakespanEval neighborEval{dt};
     eoInitPermutation<FSP> init(no_jobs);
     FSP sol(no_jobs);
     init(sol);
-    for (int j = 0; j < no_jobs; j++) {
-      for (int k = 0; k < no_jobs; k++) {
+    sol.resize(1 + rand() % (no_jobs - 1));
+    for (int j = 0; j < sol.size(); j++) {
+      for (int k = 0; k < sol.size(); k++) {
         if (k != j && k != j - 1) {
           FSP solMoved(no_jobs);
           FSPNeighbor ngh(j, k, sol.size());
@@ -599,15 +531,16 @@ TEST(NoIdleFSP, FastCmaxNeighborhoodRandom) {
 TEST(NoIdleFSP, FastTFTNeighborhoodRandom) {
   const int no_jobs = 10;
   const int no_machines = 10;
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < 100; i++) {
     FSPData dt{no_jobs, no_machines};
     NoIdleFSPFlowtimeEval fullEval{dt};
     NoIdleFSPNeighborFlowtimeEval neighborEval{dt};
     FSP sol(no_jobs);
     eoInitPermutation<FSP> init(no_jobs);
     init(sol);
-    for (int j = 0; j < no_jobs; j++) {
-      for (int k = 0; k < no_jobs; k++) {
+    sol.resize(1 + rand() % (no_jobs - 1));
+    for (int j = 0; j < sol.size(); j++) {
+      for (int k = 0; k < sol.size(); k++) {
         if (k != j && k != j - 1) {
           FSP solMoved(no_jobs);
           FSPNeighbor ngh(j, k, sol.size());

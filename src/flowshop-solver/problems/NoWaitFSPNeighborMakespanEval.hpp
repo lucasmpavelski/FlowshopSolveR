@@ -45,11 +45,10 @@ class NoWaitFSPNeighborMakespanEval : public moEval<FSPNeighbor> {
   auto neighborMakespan(int partialCmax, FSP& sol, unsigned j, unsigned k)
       -> int {
     int pj = sol[j];
-    int pk = j < k ? sol[k + 1] : sol[k];
     const auto& T = fspData.jobProcTimesRef();
 
     if (k == 0) {
-      return partialCmax + fullEval.delay(pj, pk);
+      return partialCmax + fullEval.delay(pj, sol[0]);
     }
 
     int pk_m1 = j < k ? sol[k] : sol[k - 1];
@@ -57,6 +56,7 @@ class NoWaitFSPNeighborMakespanEval : public moEval<FSPNeighbor> {
       return partialCmax + fullEval.delay(pk_m1, pj) - T[pk_m1] + T[pj];
     }
 
+    int pk = j < k ? sol[k + 1] : sol[k];
     return partialCmax + fullEval.delay(pk_m1, pj) + fullEval.delay(pj, pk) -
            fullEval.delay(pk_m1, pk);
   }

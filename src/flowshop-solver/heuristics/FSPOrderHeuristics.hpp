@@ -340,32 +340,32 @@ struct RA_C3 : public RagendranFOH {
 inline auto buildPriority(const FSPData& data,
                           const std::string& name,
                           bool weighted,
-                          const std::string& order) -> FSPOrderHeuristic* {
+                          const std::string& order) -> std::unique_ptr<FSPOrderHeuristic> {
   if (name == "sum_pij")
-    return new SUM_PIJ(data, weighted, order);
+    return std::make_unique<SUM_PIJ>(data, weighted, order);
   if (name == "dev_pij")
-    return new DEV_PIJ(data, weighted, order);
+    return std::make_unique<DEV_PIJ>(data, weighted, order);
   if (name == "avgdev_pij")
-    return new AVGDEV_PIJ(data, weighted, order);
+    return std::make_unique<AVGDEV_PIJ>(data, weighted, order);
   if (name == "abs_dif")
-    return new ABS_DIF(data, weighted, order);
+    return std::make_unique<ABS_DIF>(data, weighted, order);
   if (name == "ss_sra")
-    return new SS_SRA(data, weighted, order);
+    return std::make_unique<SS_SRA>(data, weighted, order);
   if (name == "ss_srs")
-    return new SS_SRS(data, weighted, order);
+    return std::make_unique<SS_SRS>(data, weighted, order);
   if (name == "ss_srn_rcn")
-    return new SS_SRN_RCN(data, weighted, order);
+    return std::make_unique<SS_SRN_RCN>(data, weighted, order);
   if (name == "ss_sra_rcn")
-    return new SS_SRA_RCN(data, weighted, order);
+    return std::make_unique<SS_SRA_RCN>(data, weighted, order);
   if (name == "ss_srs_rcn")
-    return new SS_SRS_RCN(data, weighted, order);
+    return std::make_unique<SS_SRS_RCN>(data, weighted, order);
   if (name == "ss_sra_2rcn")
-    return new SS_SRA_2RCN(data, weighted, order);
+    return std::make_unique<SS_SRA_2RCN>(data, weighted, order);
   if (name == "ra_c1")
-    return new RA_C1(data, weighted, order);
+    return std::make_unique<RA_C1>(data, weighted, order);
   if (name == "ra_c2")
-    return new RA_C2(data, weighted, order);
+    return std::make_unique<RA_C2>(data, weighted, order);
   if (name == "ra_c3")
-    return new RA_C3(data, weighted, order);
+    return std::make_unique<RA_C3>(data, weighted, order);
   return nullptr;
 };

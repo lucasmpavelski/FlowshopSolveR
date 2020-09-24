@@ -11,16 +11,19 @@
 class PermFSPCompiler {
   const FSPData& fspData;
   std::vector<int> part_ct;
+  std::vector<int> cache;
+  int noJobs;
 
  public:
   PermFSPCompiler(const FSPData& fspData)
-      : fspData{fspData}, part_ct(fspData.noJobs() * fspData.noMachines()) {}
+      : fspData{fspData}, part_ct(fspData.noJobs() * fspData.noMachines()), cache(fspData.noJobs(), -1), noJobs(fspData.noJobs()) {}
 
   void compile(const std::vector<int>& _fsp, std::vector<int>& Ct) {
     const int _N = _fsp.size();
     const int N = fspData.noJobs();
     const int M = fspData.noMachines();
     const auto& p = fspData.procTimesRef();
+
     // std::cout << _fsp << '\n';
 
     /** extra **/
@@ -40,11 +43,26 @@ class PermFSPCompiler {
       part_ct[j * N + 0] = part_ct[(j - 1) * N + 0] + p[j * N + _fsp[0]];
     }
 
-    for (int j = 1; j < M; j++) {
-      for (int i = 1; i < _N; i++) {
-        part_ct[j * N + i] =
-            std::max(part_ct[j * N + i - 1], part_ct[(j - 1) * N + i]) +
-            p[j * N + _fsp[i]];
+    bool cachedJob = cache[0] == _fsp[0];
+    for (int i = 1; i < _N; i++) {
+      int pt_index = _fsp[i];
+      if (cachedJob && cache[i] == pt_index) {
+        continue;
+      } else {
+        cachedJob = false;
+        cache[i] = pt_index;
+      }
+      for (int j = 1; j < M; j++) {
+        int ct_jm1_m = part_ct[j * N + i - 1];
+        int ct_j_mm1 = part_ct[(j - 1) * N + i];
+        int pt_i = p[j * N + pt_index];
+        part_ct[j * N + i] = 
+          std::max(ct_jm1_m, ct_j_mm1) + pt_i;
+      }
+    }
+    cache[0] = _fsp[0];
+
+
 
         /** extra **/
         // idle += std::max(part_ct[(j - 1) * N + i] - part_ct[j * N + i - 1],
@@ -57,17 +75,15 @@ class PermFSPCompiler {
         // 0); std::cout << '(' << i << ',' << j << ')' << std::max(part_ct[(j -
         // 1) * N + i] - part_ct[j * N + i - 1], 0) << ' ';
         /** extra **/
-      }
-    }
 
     /** extra **/
     // std::cout << "final idle " << idle << '\n';
     // std::cout << "final wait " << wait << '\n';
     /** extra **/
 
-    auto from = part_ct.begin() + (M - 1) * N;
-    auto to = from + _N;
-    Ct.assign(from, to);
+    auto fromCt = part_ct.begin() + (M - 1) * N;
+    auto toCt = fromCt + _N;
+    Ct.assign(fromCt, toCt);
   }
 };
 
