@@ -1,8 +1,8 @@
 #pragma once
 
-#include <coolingSchedule/moCoolingSchedule.h>
+#include <paradiseo/mo/mo>
 
-#include "problems/FSPData.hpp"
+#include "flowshop-solver/problems/FSPData.hpp"
 
 template <class EOT>
 class opCoolingSchedule : public moCoolingSchedule<EOT> {

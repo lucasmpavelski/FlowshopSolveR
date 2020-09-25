@@ -32,7 +32,7 @@ void testSolveWithFactories() {
   }
 }
 
-#include "problems/PermFSPNeighborMakespanEval.hpp"
+#include "flowshop-solver/problems/PermFSPNeighborMakespanEval.hpp"
 
 void testSolve() {
   int seed = 481571373;

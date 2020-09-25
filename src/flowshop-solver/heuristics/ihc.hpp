@@ -1,17 +1,16 @@
 #pragma once
 
-#include <paradiseo/mo/acceptCrit/moAlwaysAcceptCrit.h>
-#include <paradiseo/mo/algo/moILS.h>
-#include <paradiseo/mo/perturb/moRestartPerturb.h>
-
 #include <unordered_map>
 
-#include "MHParamsValues.hpp"
-#include "NEHInit.hpp"
+#include <paradiseo/mo/mo>
+
+#include "flowshop-solver/MHParamsValues.hpp"
+#include "flowshop-solver/MHParamsSpecsFactory.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
+
+#include "flowshop-solver/heuristics/NEHInit.hpp"
 #include "flowshop-solver/heuristics.hpp"
-#include "FSPProblemFactory.hpp"
-#include "op_cooling_schedule.hpp"
-#include "MHParamsSpecsFactory.hpp"
+#include "flowshop-solver/heuristics/op_cooling_schedule.hpp"
 
 template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
 auto solveWithIHC(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {

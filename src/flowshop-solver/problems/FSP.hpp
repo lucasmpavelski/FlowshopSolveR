@@ -1,8 +1,9 @@
 #pragma once
 
+#include <paradiseo/mo/mo>
+#include <paradiseo/eo/eo>
+
 #include <paradiseo/eo/eoInt.h>
-#include <paradiseo/eo/eoScalarFitness.h>
-#include <paradiseo/mo/problems/permutation/moShiftNeighbor.h>
 
 template <class EOT, class Fitness = typename EOT::Fitness>
 class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {

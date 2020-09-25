@@ -240,10 +240,10 @@ struct SolutionStatisticsResult {
       slope = 0, lmax = 0, slmax = 0;
 };
 
-SolutionStatisticsResult solutionStatistics(
+auto solutionStatistics(
     const std::unordered_map<std::string, std::string>& prob_params,
     const std::unordered_map<std::string, std::string>& sampling_params,
-    unsigned seed) {
+    unsigned seed) -> SolutionStatisticsResult {
   rng.reseed(seed);
   using ProblemTp = FSPProblem;
   ProblemTp problem = FSPProblemFactory::get(prob_params);
@@ -640,9 +640,6 @@ graph<FSPProblem::EOT> sampleLON(
   // FastIGexplorer igexplorer(evalN, *compNN, *compSN);
   IGexplorer<Ngh> igexplorer(fullEval, N, *compSS);
   moLocalSearch<Ngh> algo3(igexplorer, localCheckpoint, fullEval);
-  // IGexplorerWithRepl<Ngh> igWithReplexplorer(fullEval, N, *compSS); //
-  // iterative greedy improvement with replacement moLocalSearch<Ngh>
-  // algo4(igWithReplexplorer, checkpoint, fullEval);
   moLocalSearch<Ngh>* algo;
   switch (params.categorical("IG.Local.Search")) {
     case 0:
@@ -657,7 +654,6 @@ graph<FSPProblem::EOT> sampleLON(
     case 3:
       algo = &algo3;
       break;
-    // case 4: algo=&algo4; break;
     default:
       assert(false);
       break;

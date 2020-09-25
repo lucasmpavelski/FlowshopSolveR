@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-#include <paradiseo/mo/continuator/moContinuator.h>
+#include <paradiseo/mo/mo>
 
 /**
  * Termination condition until a running time is reached.

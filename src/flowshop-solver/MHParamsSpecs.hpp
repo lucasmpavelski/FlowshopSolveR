@@ -8,10 +8,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "paradiseo/eo/utils/eoRealVectorBounds.h"
+#include <paradiseo/eo/utils/eoRealVectorBounds.h>
 
-#include "ParamSpec.hpp"
-#include "global.hpp"
+#include "flowshop-solver/ParamSpec.hpp"
+#include "flowshop-solver/global.hpp"
 
 class MHParamsSpecs {
  public:
@@ -28,74 +28,74 @@ class MHParamsSpecs {
       addParamToMap(par);
   }
 
-  int noParams() const { return int(params.size()); }
+  auto noParams() const -> int { return int(params.size()); }
 
-  iterator begin() { return params.begin(); }
-  iterator end() { return params.end(); }
+  auto begin() -> iterator { return params.begin(); }
+  auto end() -> iterator { return params.end(); }
 
-  const_iterator begin() const { return params.begin(); }
-  const_iterator end() const { return params.end(); }
+  auto begin() const -> const_iterator { return params.begin(); }
+  auto end() const -> const_iterator { return params.end(); }
 
-  const std::shared_ptr<ParamSpec>& getParam(int i) const { return params[i]; }
+  auto getParam(int i) const -> const std::shared_ptr<ParamSpec>& { return params[i]; }
   void addParam(std::shared_ptr<ParamSpec> ps) {
     addParamToMap(ps);
     params.emplace_back(std::move(ps));
   }
 
-  std::string mhName() const { return mh_name; }
+  auto mhName() const -> std::string { return mh_name; }
   void setMHName(const std::string& mn) { mh_name = mn; }
 
-  int noParams(ParamSpec::Type tp) const { return params_counts.at(char(tp)); }
-  int noCatParams() const { return noParams(ParamSpec::Type::CAT); }
-  int noIntParams() const { return noParams(ParamSpec::Type::INT); }
-  int noRealParams() const { return noParams(ParamSpec::Type::REAL); }
-  int noNumParams() const { return noIntParams() + noRealParams(); }
+  auto noParams(ParamSpec::Type tp) const -> int { return params_counts.at(char(tp)); }
+  auto noCatParams() const -> int { return noParams(ParamSpec::Type::CAT); }
+  auto noIntParams() const -> int { return noParams(ParamSpec::Type::INT); }
+  auto noRealParams() const -> int { return noParams(ParamSpec::Type::REAL); }
+  auto noNumParams() const -> int { return noIntParams() + noRealParams(); }
 
-  int getIdx(const std::string& s) const {
+  auto getIdx(const std::string& s) const -> int {
     if (params_map.find(s) == params_map.end())
       throw std::runtime_error("Unknown parameter " + s + "\n");
     return params_map.at(s);
   }
 
-  bool isType(int i, ParamSpec::Type tp) const { return params[i]->type == tp; }
-  bool isCategoric(int i) const { return isType(i, ParamSpec::Type::CAT); }
-  bool isInteger(int i) const { return isType(i, ParamSpec::Type::INT); }
-  bool isReal(int i) const { return isType(i, ParamSpec::Type::REAL); }
-  bool isNumeric(int i) const { return isInteger(i) || isReal(i); }
+  auto isType(int i, ParamSpec::Type tp) const -> bool { return params[i]->type == tp; }
+  auto isCategoric(int i) const -> bool { return isType(i, ParamSpec::Type::CAT); }
+  auto isInteger(int i) const -> bool { return isType(i, ParamSpec::Type::INT); }
+  auto isReal(int i) const -> bool { return isType(i, ParamSpec::Type::REAL); }
+  auto isNumeric(int i) const -> bool { return isInteger(i) || isReal(i); }
 
-  bool isType(const std::string& s, ParamSpec::Type tp) const {
+  auto isType(const std::string& s, ParamSpec::Type tp) const -> bool {
     return isType(getIdx(s), tp);
   }
-  bool isCategoric(const std::string& s) const {
+  auto isCategoric(const std::string& s) const -> bool {
     return isCategoric(getIdx(s));
   }
-  bool isInteger(const std::string& s) const { return isInteger(getIdx(s)); }
-  bool isReal(const std::string& s) const { return isReal(getIdx(s)); }
-  bool isNumeric(const std::string& s) const { return isNumeric(getIdx(s)); }
+  auto isInteger(const std::string& s) const -> bool { return isInteger(getIdx(s)); }
+  auto isReal(const std::string& s) const -> bool { return isReal(getIdx(s)); }
+  auto isNumeric(const std::string& s) const -> bool { return isNumeric(getIdx(s)); }
 
-  int getValue(const std::string& param, const std::string& value) const {
+  auto getValue(const std::string& param, const std::string& value) const -> int {
     int idx = getIdx(param);
     assert(isCategoric(idx));
     return spec(idx)->fromStrValue(value);
   }
 
-  const std::shared_ptr<ParamSpec>& spec(int idx) const {
+  auto spec(int idx) const -> const std::shared_ptr<ParamSpec>& {
     assert(inBounds(idx, 0, noParams()));
     return params[idx];
   }
 
-  const std::shared_ptr<ParamSpec>& spec(const std::string& s) const {
+  auto spec(const std::string& s) const -> const std::shared_ptr<ParamSpec>& {
     return spec(getIdx(s));
   }
 
-  const std::shared_ptr<ParamSpec>& operator[](unsigned i) const {
+  auto operator[](unsigned i) const -> const std::shared_ptr<ParamSpec>& {
     return spec(i);
   }
-  const std::shared_ptr<ParamSpec>& operator[](const std::string& s) const {
+  auto operator[](const std::string& s) const -> const std::shared_ptr<ParamSpec>& {
     return spec(s);
   }
 
-  std::vector<double> getLowerBounds() const {
+  auto getLowerBounds() const -> std::vector<double> {
     std::vector<double> lbs;
     lbs.reserve(noParams());
     for (auto& param : params)
@@ -103,7 +103,7 @@ class MHParamsSpecs {
     return lbs;
   }
 
-  std::vector<double> getUpperBounds() const {
+  auto getUpperBounds() const -> std::vector<double> {
     std::vector<double> ubs;
     ubs.reserve(noParams());
     for (auto& param : params)
@@ -111,7 +111,7 @@ class MHParamsSpecs {
     return ubs;
   }
 
-  eoRealVectorBounds getBounds() const {
+  auto getBounds() const -> eoRealVectorBounds {
     return eoRealVectorBounds(getLowerBounds(), getUpperBounds());
   }
 
@@ -146,7 +146,7 @@ class MHParamsSpecs {
                             : params_counts[pt] + 1;
   }
 
-  static std::shared_ptr<ParamSpec> str2Param(const std::string& str) {
+  static auto str2Param(const std::string& str) -> std::shared_ptr<ParamSpec> {
     std::vector<std::string> splits = tokenize(str, std::string("\"()|#"));
     // example: ILS.Accept.Temperature  "" r (0.0, 0.5)  | ILS.Accept == 2 #
     // hello split[0] == name split[1] == par_switch (unused) split[2] == type
@@ -186,14 +186,14 @@ class MHParamsSpecs {
     */
   }
 
-  static bool inBounds(int x, int a, int b) { return x >= a && x < b; }
+  static auto inBounds(int x, int a, int b) -> bool { return x >= a && x < b; }
 
-  friend std::ostream& operator<<(std::ostream& o, const MHParamsSpecs& sps) {
+  friend auto operator<<(std::ostream& o, const MHParamsSpecs& sps) -> std::ostream& {
     sps.print(o);
     return o;
   }
 
-  friend std::istream& operator>>(std::istream& i, MHParamsSpecs& sps) {
+  friend auto operator>>(std::istream& i, MHParamsSpecs& sps) -> std::istream& {
     MHParamsSpecs::read(i, sps);
     return i;
   }

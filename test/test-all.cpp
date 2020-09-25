@@ -1,18 +1,19 @@
-#include <gtest/gtest.h>
-
 #include <algorithm>
 #include <cassert>
 #include <numeric>
 #include <vector>
-#include "../src/flowshop-solver/heuristics/aco.hpp"
-#include "../src/flowshop-solver/heuristics/all.hpp"
-#include "../src/flowshop-solver/heuristics/hc.hpp"
-#include "../src/flowshop-solver/heuristics/ig.hpp"
-#include "../src/flowshop-solver/heuristics/ihc.hpp"
-#include "../src/flowshop-solver/heuristics/ils.hpp"
-#include "../src/flowshop-solver/heuristics/isa.hpp"
-#include "../src/flowshop-solver/heuristics/sa.hpp"
-#include "../src/flowshop-solver/heuristics/ts.hpp"
+
+#include <gtest/gtest.h>
+
+#include "flowshop-solver/heuristics/aco.hpp"
+#include "flowshop-solver/heuristics/all.hpp"
+#include "flowshop-solver/heuristics/hc.hpp"
+#include "flowshop-solver/heuristics/ig.hpp"
+#include "flowshop-solver/heuristics/ihc.hpp"
+#include "flowshop-solver/heuristics/ils.hpp"
+#include "flowshop-solver/heuristics/isa.hpp"
+#include "flowshop-solver/heuristics/sa.hpp"
+#include "flowshop-solver/heuristics/ts.hpp"
 
 auto johnson(const std::vector<int>& a, const std::vector<int>& b)
     -> std::vector<int> {
@@ -46,9 +47,9 @@ TEST(LowerBound, JohnsonAlgorithm) {
   ASSERT_TRUE(std::equal(perm.begin(), perm.end(), resp.begin(), resp.end()));
 }
 
-#include "../flowshop-solver/problems/FSP.hpp"
-#include "../flowshop-solver/problems/FSPData.hpp"
-#include "../flowshop-solver/problems/FSPEval.hpp"
+#include "flowshop-solver/problems/FSP.hpp"
+#include "flowshop-solver/problems/FSPData.hpp"
+#include "flowshop-solver/problems/FSPEval.hpp"
 
 auto lowerBound1(const FSPData& fspData) -> int {
   int no_jobs = fspData.noJobs(), no_machines = fspData.noMachines();
@@ -133,7 +134,7 @@ auto lowerBound1(const FSPData& fspData) -> int {
 //}
 
 // TODO: relocate operator files
-// #include "../src/flowshop-solver/heuristics/ilsKickOp.hpp"
+// #include "flowshop-solver/heuristics/ilsKickOp.hpp"
 // TEST(Operator, ilsKick) {
 //   ilsKickOp<std::vector<int>> op(1, 0.0);
 //   // for (int i = 0; i < 1000; i++) {

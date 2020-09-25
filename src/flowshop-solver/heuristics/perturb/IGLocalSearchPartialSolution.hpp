@@ -1,8 +1,5 @@
 #pragma once
 
-#include <algo/moLocalSearch.h>
-#include <eoFunctor.h>
-#include <neighborhood/moIndexNeighborhood.h>
 #include <functional>
 #include <utility>
 #include <vector>

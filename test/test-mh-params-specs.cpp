@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../src/flowshop-solver/MHParamsSpecs.hpp"
+#include "flowshop-solver/MHParamsSpecs.hpp"
 
 TEST(ParamSpec, EqualOperator) {
   ParamSpec paramA("param1", ParamSpec::Type::CAT, 1.1, 2);
@@ -29,7 +29,7 @@ TEST(ParamSpec, NumericalValueFromStr) {
   ASSERT_FLOAT_EQ(numparam.fromStrValue("2.5"), 2.5f);
 }
 
-int main(int argc, char **argv) {
+auto main(int argc, char **argv) -> int {
   argc = 2;
   // char* argvv[] = {"", "--gtest_filter=FLA.*"};
   // testing::InitGoogleTest(&argc, argvv);

@@ -1,4 +1,4 @@
-#include "global.hpp"
+#include "flowshop-solver/global.hpp"
 
 std::mt19937_64 RNG::engine;
 std::random_device RNG::true_rand_engine;

@@ -6,8 +6,8 @@
 
 #include <string>
 
-#include "../heuristics.hpp"
-#include "MHParamsValues.hpp"
+#include "flowshop-solver/heuristics.hpp"
+#include "flowshop-solver/MHParamsValues.hpp"
 #include "flowshop-solver/RunOptions.hpp"
 #include "flowshop-solver/eoFSPFactory.hpp"
 #include "flowshop-solver/FSPProblemFactory.hpp"

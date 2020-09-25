@@ -6,13 +6,13 @@
 #include <algorithm>
 #include <unordered_map>
 
-#include "IGexplorer.hpp"
-#include "MHParamsValues.hpp"
-#include "NEHInit.hpp"
-#include "falseContinuator.hpp"
+#include "flowshop-solver/MHParamsValues.hpp"
+#include "flowshop-solver/heuristics/NEHInit.hpp"
+#include "flowshop-solver/heuristics/IGexplorer.hpp"
+#include "flowshop-solver/heuristics/falseContinuator.hpp"
 #include "flowshop-solver/heuristics.hpp"
-#include "FSPProblemFactory.hpp"
-#include "MHParamsSpecsFactory.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
+#include "flowshop-solver/MHParamsSpecsFactory.hpp"
 
 template <class Ngh>
 class MinMaxAntSystem : public moPerturbation<Ngh> {
@@ -235,10 +235,7 @@ auto solveWithACO(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   // iterative greedy improvement without replacement (IG)
   // FastIGexplorer igexplorer(evalN, *compNN, *compSN);
   IGexplorer<Ngh> igexplorer(fullEval, N, *compSS);
-  // moLocalSearch<Ngh> algo3(igexplorer, checkpoint, fullEval);
-  // IGexplorerWithRepl<Ngh> igWithReplexplorer(fullEval, N, *compSS); //
-  // iterative greedy improvement with replacement moLocalSearch<Ngh>
-  // algo4(igWithReplexplorer, checkpoint, fullEval);
+  moLocalSearch<Ngh> algo3(igexplorer, checkpoint, fullEval);
   moLocalSearch<Ngh>* algo;
   switch (params.categorical("ACO.Local.Search")) {
     case 0:
@@ -250,9 +247,9 @@ auto solveWithACO(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
     case 2:
       algo = &algo2;
       break;
-    // case 3:
-    //  algo = &algo3;
-    //  break;
+    case 3:
+     algo = &algo3;
+     break;
     default:
       assert(false);
       break;

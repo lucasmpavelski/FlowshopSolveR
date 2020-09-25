@@ -1,14 +1,14 @@
 #include <algorithm>
 #include <iostream>
-#include <mo>
+#include <paradiseo/mo/mo>
 #include <numeric>
 #include <random>
 #include <vector>
 
-#include "problems/FSPEval.hpp"
+#include "flowshop-solver/problems/FSPEval.hpp"
 
 /*
-#include "eigen3/Eigen/Dense"
+#include "flowshop-solver/eigen3/Eigen/Dense"
 template<class T>
 void print(T b, T e) {
   std::for_each(b, e, [](const auto& e) {

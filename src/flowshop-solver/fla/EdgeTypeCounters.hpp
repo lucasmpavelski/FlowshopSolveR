@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "paradiseo/mo/comparator/moSolComparator.h"
+#include <paradiseo/mo/mo>
 
 #include "flowshop-solver/heuristics/NeigborhoodStat.hpp"
 

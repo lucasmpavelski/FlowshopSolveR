@@ -5,16 +5,15 @@
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
-#include "IGexplorer.hpp"
-#include "IGexplorerWithRepl.hpp"
-#include "MHParamsValues.hpp"
-#include "NEHInit.hpp"
-#include "acceptCritTemperature.hpp"
-#include "falseContinuator.hpp"
+#include "flowshop-solver/heuristics/IGexplorer.hpp"
+#include "flowshop-solver/MHParamsValues.hpp"
+#include "flowshop-solver/heuristics/NEHInit.hpp"
+#include "flowshop-solver/heuristics/acceptCritTemperature.hpp"
+#include "flowshop-solver/heuristics/falseContinuator.hpp"
 #include "flowshop-solver/heuristics.hpp"
 #include "flowshop-solver/MHParamsSpecsFactory.hpp"
-#include "FSPProblemFactory.hpp"
-#include "op_cooling_schedule.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
+#include "flowshop-solver/heuristics/op_cooling_schedule.hpp"
 
 #include "flowshop-solver/heuristics/perturb/perturb.hpp"
 
@@ -120,9 +119,6 @@ auto solveWithILS(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   // FastIGexplorer igexplorer(evalN, *compNN, *compSN);
   IGexplorer<Ngh> igexplorer(fullEval, N, *compSS);
   moLocalSearch<Ngh> algo3(igexplorer, checkpoint, fullEval);
-  // IGexplorerWithRepl<Ngh> igWithReplexplorer(fullEval, N, *compSS); //
-  // iterative greedy improvement with replacement moLocalSearch<Ngh>
-  // algo4(igWithReplexplorer, checkpoint, fullEval);
   moLocalSearch<Ngh>* algo;
   switch (params.categorical("ILS.Algo")) {
     case 0:
@@ -137,7 +133,6 @@ auto solveWithILS(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
     case 3:
       algo = &algo3;
       break;
-    // case 4: algo=&algo4; break;
     default:
       assert(false);
       break;

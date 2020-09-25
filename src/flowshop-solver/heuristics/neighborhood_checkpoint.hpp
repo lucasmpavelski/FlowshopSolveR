@@ -1,7 +1,6 @@
 #pragma once
 
-#include "paradiseo/mo/continuator/moCheckpoint.h"
-#include "paradiseo/mo/continuator/moTrueContinuator.h"
+#include <paradiseo/mo/mo>
 
 #include "flowshop-solver/heuristics/neighborhood_stat.hpp"
 

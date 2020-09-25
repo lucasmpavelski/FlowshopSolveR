@@ -7,10 +7,10 @@
 #include <utility>
 #include <vector>
 
+#include <paradiseo/mo/mo>
+#include <paradiseo/eo/eo>
+
 #include "flowshop-solver/global.hpp"
-#include "paradiseo/eo/eoEvalFunc.h"
-#include "paradiseo/eo/eoInit.h"
-#include "paradiseo/mo/comparator/moSolComparator.h"
 
 template <class EOT>
 class NEHInit : public eoInit<EOT> {

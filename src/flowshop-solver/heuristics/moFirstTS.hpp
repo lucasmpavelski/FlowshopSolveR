@@ -1,7 +1,7 @@
 #pragma once
 
-#include <mo>
-#include "moFirstTSexplorer.hpp"
+#include <paradiseo/mo/mo>
+#include "flowshop-solver/heuristics/moFirstTSexplorer.hpp"
 
 /**
  * Tabu Search

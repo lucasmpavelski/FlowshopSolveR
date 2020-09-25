@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <vector>
 
-#include "adaptive_operator_selection.hpp"
-#include "global.hpp"
+#include "flowshop-solver/aos/adaptive_operator_selection.hpp"
+#include "flowshop-solver/global.hpp"
 
 template <class T>
 struct SlidingWindow {

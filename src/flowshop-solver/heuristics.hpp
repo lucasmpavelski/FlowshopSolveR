@@ -7,7 +7,7 @@
 #include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/global.hpp"
 #include "flowshop-solver/problems/Problem.hpp"
-#include "heuristics/FitnessReward.hpp"
+#include "flowshop-solver/heuristics/FitnessReward.hpp"
 
 struct Result {
   double fitness = 0, no_evals = 0, time = 0;

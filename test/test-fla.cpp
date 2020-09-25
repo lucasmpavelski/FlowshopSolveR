@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../src/flowshop-solver/fla_methods.hpp"
+#include "flowshop-solver/fla_methods.hpp"
 
 
 TEST(SamplingLON, CanSampleLON) {
@@ -40,7 +40,7 @@ TEST(SamplingLON, CanSampleLON) {
   sampleLON(prob, sampling_params, 123l);
 }
 
-int main(int argc, char **argv) {
+auto main(int argc, char **argv) -> int {
   argc = 2;
   // char* argvv[] = {"", "--gtest_filter=FLA.*"};
   // testing::InitGoogleTest(&argc, argvv);

@@ -1,11 +1,10 @@
 #pragma once
 
-#include <continuator/moStat.h>
-#include <continuator/moStatBase.h>
-#include <eoExceptions.h>
-#include <paradiseo/mo/mo>
 #include <stdexcept>
 #include <utility>
+
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
 
 #include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"

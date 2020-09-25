@@ -8,7 +8,7 @@
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 
-#include "MHParamsSpecs.hpp"
+#include "flowshop-solver/MHParamsSpecs.hpp"
 
 class MHParamsSpecsFactory {
   static std::unordered_map<std::string, MHParamsSpecs> cache;

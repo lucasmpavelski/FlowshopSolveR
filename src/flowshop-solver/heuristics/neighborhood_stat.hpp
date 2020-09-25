@@ -1,7 +1,7 @@
 #pragma once
 
-#include "paradiseo/eo/eoFunctor.h"
-#include "paradiseo/mo/continuator/moStatBase.h"
+#include <paradiseo/mo/mo>
+#include <paradiseo/eo/eo>
 
 template <class Ngh, class EOT = typename Ngh::EOT>
 class NeigborhoodStatBase : public moStatBase<EOT> {

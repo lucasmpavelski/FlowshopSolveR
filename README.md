@@ -1,20 +1,17 @@
-# Evolutionary Solvers
+# FlowshopSolveR
 
-## Pastas
+This is a C++ library and R package providing:
 
-- data: arquivos de dados (não código), instâncias, parâmetros de entrada, etc
-- doc: documentação
-- main: arquivos com executáveis (um para cada executável)
-- src: código das bibliotecas (não executáveis)
-- test: códigos de testes
-- bench: códigos de benchmark
-- scripts: scripts para testes e execuções
-- lib (não comitada): bibliotecas externas
-- runs (não comitada): execuções
-- build (não comitada): arquivos binários
+- evaluation funcions different types of flowshop problems and objectives
+- effiencent algorithms like iterated greedy and iterated local search
+- fitness landscape analysis
+- algorithm recommendation and analysis
 
-## Códigos
+Dependencies:
 
-- src/flowshop-solver: código para avaliação do fsp e metaheurísticas
-- src/hppso: HP-PSO original da prof. Myriam
-- src/pso-tuner: versão nova do HP-PSO (ICs)
+- Cmake, make and build essentials
+- R, Rcpp and packages for data analysis
+- Eigen library
+- Google test
+
+The project is under heavy development. Some functionalities may be splitted into other repositories in the future.

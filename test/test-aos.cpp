@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "aos/adaptive_operator_selection.hpp"
+#include "flowshop-solver/aos/adaptive_operator_selection.hpp"
 #include "flowshop-solver/aos/probability_matching.hpp"
 #include "flowshop-solver/aos/lin_ucb.hpp"
 #include "flowshop-solver/aos/frrmab.hpp"

@@ -5,8 +5,8 @@
 #include <iostream>
 #include <limits>
 
-#include "adaptive_operator_selection.hpp"
-#include "global.hpp"
+#include "flowshop-solver/aos/adaptive_operator_selection.hpp"
+#include "flowshop-solver/global.hpp"
 
 template <typename OpT>
 class ProbabilityMatching : public OperatorSelection<OpT> {

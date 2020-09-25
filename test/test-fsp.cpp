@@ -233,8 +233,6 @@ TEST(TaillardAcceleration, BestInsertionNeighborhood) {
   ASSERT_TRUE(std::equal(sol.begin(), sol.end(), sol2.begin()));
 }
 
-#include "paradiseo/mo/algo/moFirstImprHC.h"
-
 TEST(TaillardAcceleration, ReCompileEval) {
   rng.reseed(65465l);
   const int no_jobs = 100;

@@ -3,7 +3,7 @@
 #include <paradiseo/mo/mo>
 #include <unordered_map>
 
-#include "continuators/myTimeStat.hpp"
+#include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/heuristics.hpp"
 #include "flowshop-solver/heuristics/aco.hpp"
 #include "flowshop-solver/heuristics/hc.hpp"
@@ -18,7 +18,7 @@
 
 #include "flowshop-solver/RunOptions.hpp"
 #include "flowshop-solver/eoFSPFactory.hpp"
-#include "heuristics/FitnessReward.hpp"
+#include "flowshop-solver/heuristics/FitnessReward.hpp"
 
 template <class EOT>
 class RewardPrinter : public moStatBase<EOT> {
@@ -72,7 +72,7 @@ inline auto solveWith(
   if (mh == "NEH")
     return solveWithNEH(prob, factory, runOptions);
   else if (mh == "HC")
-    return solveWithHC(prob, params);
+    return solveWithHC(prob, factory, runOptions);
   else if (mh == "SA")
     return solveWithSA(prob, params);
   else if (mh == "IHC")

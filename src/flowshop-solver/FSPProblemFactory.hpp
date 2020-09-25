@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "problems/FSPProblem.hpp"
+#include "flowshop-solver/problems/FSPProblem.hpp"
 
 class FSPProblemFactory {
   static std::string data_folder;

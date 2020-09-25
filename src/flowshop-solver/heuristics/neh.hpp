@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algo/moDummyLS.h>
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 #include <string>

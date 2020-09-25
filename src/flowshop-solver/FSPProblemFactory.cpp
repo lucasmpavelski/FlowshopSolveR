@@ -1,10 +1,9 @@
-#include "FSPProblemFactory.hpp"
-
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "problems/FSPData.hpp"
+#include "flowshop-solver/problems/FSPData.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
 
 std::unordered_map<std::string, FSPData> FSPProblemFactory::cache;
 std::string FSPProblemFactory::data_folder;

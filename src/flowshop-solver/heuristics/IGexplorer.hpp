@@ -2,15 +2,12 @@
 
 #include <algorithm>
 
-#include "../global.hpp"
+#include <paradiseo/mo/mo>
+#include <paradiseo/eo/eo>
+
+#include "flowshop-solver/global.hpp"
 #include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 #include "flowshop-solver/problems/FSPEval.hpp"
-#include "paradiseo/eo/utils/eoRNG.h"
-#include "paradiseo/mo/comparator/moNeighborComparator.h"
-#include "paradiseo/mo/comparator/moSolComparator.h"
-#include "paradiseo/mo/comparator/moSolNeighborComparator.h"
-#include "paradiseo/mo/explorer/moNeighborhoodExplorer.h"
-#include "paradiseo/mo/neighborhood/moNeighborhood.h"
 
 /**
  * Explorer for a simple Hill-climbing

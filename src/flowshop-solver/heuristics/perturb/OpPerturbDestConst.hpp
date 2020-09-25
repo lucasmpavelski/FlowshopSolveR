@@ -1,9 +1,7 @@
 #pragma once
 
-#include <comparator/moSolComparator.h>
-#include <eoEvalFunc.h>
-#include <eoOp.h>
-#include <utils/eoRNG.h>
+#include <paradiseo/eo/eo>
+#include <paradiseo/mo/mo>
 
 #include <vector>
 

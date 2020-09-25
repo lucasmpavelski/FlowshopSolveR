@@ -2,11 +2,12 @@
 
 #include <iostream>
 #include <stdexcept>
+
 #include "flowshop-solver/aos/adaptive_operator_selection.hpp"
 #include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/heuristics/FitnessReward.hpp"
 #include "flowshop-solver/heuristics/perturb/DestructionConstruction.hpp"
-#include "heuristics/InsertionStrategy.hpp"
+#include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 
 template <class Ngh>
 class AdaptiveDestructionSize : public DestructionSize {

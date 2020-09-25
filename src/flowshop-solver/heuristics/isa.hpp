@@ -2,12 +2,12 @@
 
 #include <unordered_map>
 
-#include "../heuristics.hpp"
-#include "MHParamsValues.hpp"
-#include "NEHInit.hpp"
-#include "FSPProblemFactory.hpp"
-#include "op_cooling_schedule.hpp"
-#include "MHParamsSpecsFactory.hpp"
+#include "flowshop-solver/heuristics.hpp"
+#include "flowshop-solver/MHParamsValues.hpp"
+#include "flowshop-solver/heuristics/NEHInit.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
+#include "flowshop-solver/heuristics/op_cooling_schedule.hpp"
+#include "flowshop-solver/MHParamsSpecsFactory.hpp"
 
 template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
 auto solveWithISA(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {

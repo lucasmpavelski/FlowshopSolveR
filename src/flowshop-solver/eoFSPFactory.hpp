@@ -6,10 +6,10 @@
 #include "flowshop-solver/MHParamsValues.hpp"
 #include "flowshop-solver/eoFactory.hpp"
 
-#include "global.hpp"
-#include "heuristics/perturb/DestructionConstruction.hpp"
-#include "problems/FSP.hpp"
-#include "problems/FSPProblem.hpp"
+#include "flowshop-solver/global.hpp"
+#include "flowshop-solver/heuristics/perturb/DestructionConstruction.hpp"
+#include "flowshop-solver/problems/FSP.hpp"
+#include "flowshop-solver/problems/FSPProblem.hpp"
 
 #include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
 #include "flowshop-solver/heuristics/NEH.hpp"

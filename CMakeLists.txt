@@ -110,18 +110,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 #    add_dependencies(${FIND_PARADISEO_COMPONENT} ParadisEO)
 #endforeach()
 
-
-include_directories(${CMAKE_SOURCE_DIR}/src)
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/module")
 find_package(Paradiseo COMPONENTS moeo eoutils eo)
 include_directories(SYSTEM ${PARADISEO_INCLUDE_DIR})
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-
-#set(PYTHON_EXECUTABLE /home/lucasmp/anaconda3/bin/python)
-#set(PYTHON_EXECUTABLE /usr/bin/python2.7)
-#add_subdirectory(${CMAKE_SOURCE_DIR}/lib/pybind11)
 
 ######################################################################################
 ### 3) Link the libraries for your executable
@@ -141,8 +134,8 @@ set_property(TARGET flowshop_solver_lib_shared PROPERTY POSITION_INDEPENDENT_COD
 target_link_libraries(flowshop_solver_lib stdc++fs Eigen3::Eigen)
 target_link_libraries(flowshop_solver_lib_shared stdc++fs Eigen3::Eigen)
 
-target_include_directories(flowshop_solver_lib PUBLIC ${CMAKE_SOURCE_DIR}/src/flowshop-solver)
-target_include_directories(flowshop_solver_lib_shared PUBLIC ${CMAKE_SOURCE_DIR}/src/flowshop-solver)
+target_include_directories(flowshop_solver_lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(flowshop_solver_lib_shared PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 set_target_properties(
   flowshop_solver_lib PROPERTIES
@@ -179,7 +172,6 @@ set_target_properties(
 ## directory, AND uncomment line bellow.
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/main)
-#add_subdirectory(${CMAKE_SOURCE_DIR}/bench)
 
 ######################################################################################
 # Create tests and docs

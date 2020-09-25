@@ -3,10 +3,10 @@
 #include <iostream>
 #include <string>
 
-#include <es/eoReal.h>
-#include <eo>
+#include <paradiseo/eo/es.h>
+#include <paradiseo/eo/eo>
 
-#include "MHParamsSpecs.hpp"
+#include "flowshop-solver/MHParamsSpecs.hpp"
 
 class MHParamsValues : public eoReal<eoMaximizingFitness> {
  public:

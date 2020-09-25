@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "paradiseo/mo/continuator/moStatBase.h"
+#include <paradiseo/mo/mo>
 
 template <class EOT>
 class FitnessHistory : public moStatBase<EOT> {

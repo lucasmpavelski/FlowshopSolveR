@@ -1,6 +1,6 @@
 #pragma once
 
-#include <paradiseo/mo/continuator/moContinuator.h>
+#include <paradiseo/mo/mo>
 
 template <class Neighbor>
 class falseContinuator : public moContinuator<Neighbor> {

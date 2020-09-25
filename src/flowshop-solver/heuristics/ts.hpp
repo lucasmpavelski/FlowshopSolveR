@@ -1,18 +1,19 @@
 #pragma once
 
+#include <paradiseo/mo/mo>
 #include <paradiseo/mo/continuator/moBestNoImproveContinuator.h>
-#include <paradiseo/mo/continuator/moCombinedContinuator.h>
 
 #include <unordered_map>
 
-#include "MHParamsValues.hpp"
-#include "NEHInit.hpp"
-#include "dummyAspiration.hpp"
+#include "flowshop-solver/MHParamsValues.hpp"
+#include "flowshop-solver/MHParamsSpecsFactory.hpp"
 #include "flowshop-solver/heuristics.hpp"
-#include "FSPProblemFactory.hpp"
-#include "moFirstBestTS.hpp"
-#include "moFirstTS.hpp"
-#include "MHParamsSpecsFactory.hpp"
+#include "flowshop-solver/FSPProblemFactory.hpp"
+
+#include "flowshop-solver/heuristics/NEHInit.hpp"
+#include "flowshop-solver/heuristics/dummyAspiration.hpp"
+#include "flowshop-solver/heuristics/moFirstBestTS.hpp"
+#include "flowshop-solver/heuristics/moFirstTS.hpp"
 
 template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
 auto solveWithTS(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
