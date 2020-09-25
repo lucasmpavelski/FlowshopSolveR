@@ -50,7 +50,10 @@ class eoFactory : public eoFunctorStore {
   using ptr = std::unique_ptr<T>;
 
   eoFactory(const MHParamsValues& params, Problem<Ngh>& problem)
-      : _params{params}, _problem{problem} {};
+      : _params{params}, _problem{problem} {
+
+        std::cout << params;
+      };
 
   [[nodiscard]] auto params() const -> const MHParamsValues& { return _params; }
 

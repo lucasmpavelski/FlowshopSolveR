@@ -40,6 +40,8 @@ class InsertBest : public InsertionStrategy<Ngh> {
   using InsertionStrategy<Ngh>::neighborEval;
 
   auto insert(EOT& sol, int positionToInsert) -> bool override {
+    if (sol.size() == 1)
+      return false;
     Ngh neighbor, bestNeighbor;
     for (unsigned position = 0; position < sol.size(); position++) {
       if (positionToInsert == static_cast<int>(position))
@@ -61,6 +63,40 @@ class InsertBest : public InsertionStrategy<Ngh> {
     }
     return false;
   }
+
+    // auto insert(EOT& sol, int positionToInsert) -> bool override {
+    //   Ngh bestNeighbor;
+    //   bestNeighbor.set(positionToInsert, positionToInsert, sol.size());
+    //   if (sol.isInvalid()) {
+    //     neighborEval(sol, bestNeighbor);
+    //     sol.fitness(bestNeighbor.fitness());
+    //   } else {
+    //     bestNeighbor.fitness(sol.fitness());
+    //   }
+
+    //   Ngh neighbor;    
+    //   for (unsigned position = 0; position < sol.size(); position++) {
+    //     if (positionToInsert == static_cast<int>(position))
+    //       continue;
+    //     neighbor.set(positionToInsert, position, sol.size());
+    //     neighbor.invalidate();
+    //     neighborEval(sol, neighbor);
+    //     if (bestNeighbor.invalid() ||
+    //         neighborComparator(bestNeighbor, neighbor)) {
+    //       bestNeighbor = neighbor;
+    //     }
+    //   }
+
+    //   neighbor.set(positionToInsert, positionToInsert, sol.size());
+    //   neighbor.fitness(sol.fitness());
+
+    //   if (neighborComparator(neighbor, bestNeighbor)) {
+    //     bestNeighbor.move(sol);
+    //     sol.fitness(bestNeighbor.fitness());
+    //     return true;
+    //   }
+    //   return false;
+    // }
 };
 
 template <class Ngh, class EOT = typename Ngh::EOT>

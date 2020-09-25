@@ -33,6 +33,8 @@
 #include "flowshop-solver/fla/FitnessHistory.hpp"
 #include "flowshop-solver/fla/NeutralityFLA.hpp"
 
+#include "flowshop-solver/heuristics/AppendingNEH.hpp"
+
 class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   FSPProblem& _problem;
 
@@ -60,26 +62,40 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   auto domainInit() -> eoInit<EOT>* override {
     const std::string name = categoricalName(".Init");
     if (name == "neh") {
+      auto firstPriority = categoricalName(".Init.NEH.First.Priority");
+      auto firstPriorityWeighted = integer(".Init.NEH.First.PriorityWeighted");
+      auto firstPriorityOrder =
+          categoricalName(".Init.NEH.First.PriorityOrder");
+
+      auto firstPriorityInit =
+          buildPriority(_problem.data(), firstPriority, firstPriorityWeighted,
+                        firstPriorityOrder)
+              .release();
+      storeFunctor(firstPriorityInit);
+
       auto nehPriority = categoricalName(".Init.NEH.Priority");
-      auto nehPriorityOrder = categoricalName(".Init.NEH.PriorityOrder");
       auto nehPriorityWeighted = integer(".Init.NEH.PriorityWeighted");
+      auto nehPriorityOrder = categoricalName(".Init.NEH.PriorityOrder");
 
       auto priority = buildPriority(_problem.data(), nehPriority,
-                                    nehPriorityWeighted, nehPriorityOrder);
-      storeFunctor(priority.release());
+                                    nehPriorityWeighted, nehPriorityOrder)
+                          .release();
+      storeFunctor(priority);
 
       auto nehInsertion = categoricalName(".Init.NEH.Insertion");
       auto insertion =
           buildInsertionStrategy(nehInsertion, _problem.neighborEval());
       storeFunctor(insertion);
 
-      return &pack<NEH<Ngh>>(*priority, *insertion);
+      auto ratio = real(".Init.NEH.Ratio");
+
+      return &pack<AppendingNEH<Ngh>>(*firstPriorityInit, *priority,
+                                      *insertion, ratio);
     }
     return nullptr;
   }
 
-  auto buildLSPSLocalSearch()
-      -> myResizableLocalSearch<Ngh>* {
+  auto buildLSPSLocalSearch() -> myResizableLocalSearch<Ngh>* {
     auto neighborhood = buildNeighborhood(_problem.maxNeighborhoodSize());
     auto compNN = buildNeighborComparator();
     auto compSN = buildSolNeighborComparator();
@@ -115,8 +131,9 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     std::string opts = categoricalName(".AOS.Options");
     std::vector<std::string> opts_strs = tokenize(opts, '_');
     std::vector<int> options(opts_strs.size());
-    std::transform(begin(opts_strs), end(opts_strs), begin(options), [](std::string& s) { return std::stoi(s); });
-    const std::string name    = categoricalName(".AOS.Strategy");
+    std::transform(begin(opts_strs), end(opts_strs), begin(options),
+                   [](std::string& s) { return std::stoi(s); });
+    const std::string name = categoricalName(".AOS.Strategy");
     OperatorSelection<int>* strategy = nullptr;
     if (name == "probability_matching") {
       strategy = &pack<ProbabilityMatching<int>>(
@@ -151,7 +168,8 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
       if (categoricalName(".AOS.TS.Strategy") == "static") {
         strategy = &pack<ThompsonSampling<int>>(options);
       } else if (categoricalName(".AOS.TS.Strategy") == "dynamic") {
-        strategy = &pack<DynamicThompsonSampling<int>>(options, integer(".AOS.TS.C"));
+        strategy =
+            &pack<DynamicThompsonSampling<int>>(options, integer(".AOS.TS.C"));
       }
     } else if (name == "random") {
       strategy = &pack<Random<int>>(options);
@@ -160,7 +178,9 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     auto warmUpProportion = real(".AOS.WarmUp.Proportion");
     auto warmUpStrategy = categoricalName(".AOS.WarmUp.Strategy");
     auto maxTime = _problem.getFixedTime() * warmUpProportion;
-    auto& warmUpContinuator = pack<moHighResTimeContinuator<OperatorSelection<int>::DummyNgh>>(maxTime, false);
+    auto& warmUpContinuator =
+        pack<moHighResTimeContinuator<OperatorSelection<int>::DummyNgh>>(
+            maxTime, false);
     strategy->setWarmUp(warmUpContinuator, warmUpStrategy, 1);
 
     return strategy;

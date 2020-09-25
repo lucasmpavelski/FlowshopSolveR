@@ -68,6 +68,9 @@ auto runExperiment(eoInit<EOT>& init,
   EOT sol;
   double time = Measure<>::execution([&]() {
     init(sol);
+    if (sol.invalid()) {
+      prob.eval()(sol);
+    }
     prob.checkpoint().init(sol);
     prob.checkpointGlobal().init(sol);
     algo(sol);

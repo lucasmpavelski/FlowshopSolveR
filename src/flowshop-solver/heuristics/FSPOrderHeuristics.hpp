@@ -86,6 +86,8 @@ class FSPOrderHeuristic : public eoInit<FSP> {
     FSP tmp = sol;
     for (unsigned i = 0; i < sol.size(); i++)
       sol[i] = tmp[order[i]];
+
+    sol.invalidate();
   }
 
   [[nodiscard]] auto w(int i) const -> int {
