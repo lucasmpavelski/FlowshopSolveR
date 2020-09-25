@@ -17,10 +17,20 @@ class NEH : public eoInit<EOT> {
       : init(init), insert(insert) {}
 
   virtual void operator()(EOT& sol) {
+    EOT tmp = initialOrder(sol);
+    sol.resize(0);
+    construction(tmp, sol);
+  }
+
+ protected:
+  auto initialOrder(const EOT& sol) -> EOT {
     EOT tmp = sol;
     init(tmp);
-    sol.resize(0);
-    for (auto& job : tmp)
+    return tmp;
+  }
+
+  void construction(const EOT& order, EOT& sol) {
+    for (auto& job : order)
       insert.insertJob(sol, job);
   }
 };

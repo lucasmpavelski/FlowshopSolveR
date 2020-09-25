@@ -348,7 +348,7 @@ struct LR : public FSPOrderHeuristic {
       if (k > 0) {
         // TODO: use cached permutation compiler
         ct[0 * noJobs + 0] = p[0 * noJobs + scheduled[0]];
-        for (int i = 1; i < scheduled.size(); i++) {
+        for (std::vector<int>::size_type i = 1; i < scheduled.size(); i++) {
           ct[0 * noJobs + i] = ct[0 * noJobs + i - 1] + p[0 * noJobs + scheduled[i]];
         }
         for (int j = 1; j < noMachines; j++) {
