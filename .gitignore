@@ -34,3 +34,4 @@ packrat/lib*/
 *.o
 _install/*
 aclib2/results/*
+data/instances/*/*

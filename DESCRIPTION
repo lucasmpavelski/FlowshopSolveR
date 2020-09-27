@@ -16,6 +16,7 @@ Depends:
     purrr,
     stringr,
     future,
-    here
+    here,
+    schedulingInstancesGeneratoR
 Imports: Rcpp (>= 1.0.4)
 LinkingTo: Rcpp
