@@ -1,5 +1,0 @@
-FSP,PERM,FLOWTIME,low,FIXEDTIME_15,taill-like_rand_50_10_01.dat
-FSP,PERM,FLOWTIME,low,FIXEDTIME_15,taill-like_rand_50_10_02.dat
-FSP,PERM,FLOWTIME,low,FIXEDTIME_15,taill-like_rand_50_10_03.dat
-FSP,PERM,FLOWTIME,low,FIXEDTIME_15,taill-like_rand_50_10_04.dat
-FSP,PERM,FLOWTIME,low,FIXEDTIME_15,taill-like_rand_50_10_05.dat

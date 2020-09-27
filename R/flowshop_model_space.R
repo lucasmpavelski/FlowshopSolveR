@@ -1,36 +1,23 @@
 
-all_objectives <- function() {
-  c('FLOWTIME', 'MAKESPAN')
-}
+MODELS_ATTRS <- list(
+  objective = c('FLOWTIME', 'MAKESPAN'),
+  type = c('PERM', 'NOWAIT', 'NOIDLE'),
+  stopping_criterium = c('FIXEDTIME_15'),
+  budget = c('med')
+)
 
-all_types <- function() {
-  c('PERM', 'NOWAIT', 'NOIDLE')
-}
-
-all_stopping_criteria <- function() {
-  c('EVALS', 'TIME', 'FIXEDTIME')
-}
-
-all_budgets <- function() {
-  c('low', 'med', 'high')
-}
-
-fixed_time <- function(multiplier) {
+models_attrs_df <- function(attrs = MODELS_ATTRS) {
   crossing(
-    objective = all_objectives(),
-    type = all_types(),
-    stopping_criterion = paste0('FIXEDTIME_', multiplier),
-    budget = all_budgets()[1]
+    objective = attrs$objective,
+    type = attrs$type,
+    stopping_criterion = attrs$stopping_criterium,
+    budget = attrs$budget
   ) %>%
-    mutate(model = str_c(objective, type, stopping_criterion, budget, sep = '_'))
+  mutate(model = str_c(objective, type, stopping_criterion, budget, sep = ','))
 }
 
-all_problem_data <- function() {
-  crossing(
-    objective = all_objectives(),
-    type = all_types(),
-    stopping_criterion = all_stopping_criteria(),
-    budget = all_budgets()
-  ) %>%
-    mutate(model = str_c(objective, type, stopping_criterion, budget, sep = '_'))
+fixed_time_attrs_df <- function(multiplier) {
+  attrs <- MODELS_ATTRS
+  attrs$stopping_criterium <- paste0('FIXEDTIME_', multiplier)
+  models_attrs_df(attrs)
 }

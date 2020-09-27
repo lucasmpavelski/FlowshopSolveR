@@ -46,24 +46,35 @@ save_test_instance <- function(instance_data, path, ...) {
   path
 }
 
-generate_test_instances <- function(no_jobs = c(20, 50, 100, 200),
-                                    no_machines = c(10, 20, 40),
-                                    dist = c('taill-like', 'erlang', 'exp'),
-                                    corr = c('rand', 'jcorr', 'mcorr'),
-                                    corv = 0.95,
-                                    no_samples = 30) {
-  set.seed(6549871)
-  dir.create(here('data', 'instances', 'flowshop'), F)
+TEST_INSTANCES_ATTRS <- list(
+  no_jobs = c(20, 50, 100, 200),
+  no_machines = c(10, 20, 40),
+  dist = c('taill-like', 'erlang', 'exp'),
+  corr = c('rand', 'jcorr', 'mcorr'),
+  corv = 0.95,
+  no_samples = 30
+)
+
+instances_attrs_df <- function(attrs = TEST_INSTANCES_ATTRS) {
   crossing(
-    no_jobs = no_jobs,
-    no_machines = no_machines,
-    dist = dist,
-    corr = corr,
-    corv = corv,
-    inst_n = 1:no_samples
+    no_jobs = attrs$no_jobs,
+    no_machines = attrs$no_machines,
+    dist = attrs$dist,
+    corr = attrs$corr,
+    corv = attrs$corv,
+    inst_n = 1:attrs$no_samples
   ) %>%
     mutate(
-      instance = pmap_chr(., filename_from_instance_data),
+      instance = pmap_chr(., filename_from_instance_data)
+    )
+    
+}
+
+generate_test_instances <- function(attrs = TEST_INSTANCES_ATTRS) {
+  set.seed(6549871)
+  dir.create(here('data', 'instances', 'flowshop'), F)
+  instances_attrs_df(attrs) %>%
+    mutate(
       path = here('data', 'instances', 'flowshop', instance)
     ) %>%
     filter(!file.exists(path)) %>%
