@@ -21,8 +21,8 @@ RUN apt-get update && \
 ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
 RUN export JAVA_HOME
 
-ADD neh_FSP /aclib2/
-COPY run_experiments.sh /
+ADD fsp /aclib2/
+COPY experiments.txt run_experiments.sh /
 
 CMD [ "./run_experiments.sh" ]
 

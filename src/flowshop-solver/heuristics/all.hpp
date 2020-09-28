@@ -52,8 +52,6 @@ inline auto solveWith(
   MHParamsValues params(&specs);
   params.readValues(params_values);
 
-  std::cout << specs;
-
   eoFSPFactory factory{params, prob};
 
   if (mh == "all") {

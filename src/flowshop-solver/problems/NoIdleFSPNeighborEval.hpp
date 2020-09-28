@@ -131,8 +131,6 @@ class NoIdleFSPNeighborEvalCompiler {
         const auto p_h_k = fspData.pt(perm[t], k);
         const auto p_h_kp1 = fspData.pt(perm[t], k + 1);
         const auto F_hm1_k = cache.F(static_cast<int>(h) - 1, k);
-        if (h == 0)
-          std::cout << h;
         FpEh[k] = std::max(F_hm1_k - p_h_k, 0) + p_h_kp1;
       }
     }

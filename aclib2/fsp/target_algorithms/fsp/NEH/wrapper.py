@@ -4,6 +4,7 @@
 import json
 import traceback
 import os
+import sys
 
 from genericWrapper4AC.generic_wrapper import AbstractWrapper
 
@@ -21,7 +22,7 @@ aclib2/neh_FSP/target_algorithms/fsp/neh/wrapper.py \
 -NEH.Init.NEH.PriorityWeighted 1 \
 -NEH.Init.NEH.Insertion first_best
 '''
-class DummyWrapper(AbstractWrapper):
+class MHWrapper(AbstractWrapper):
     '''
         Dummy wrapper for unit testing
     '''
@@ -33,20 +34,20 @@ class DummyWrapper(AbstractWrapper):
         self.mh_name = 'NEH'
     
     def get_command_line_args(self, runargs, config):
-        cmd = "/_install/main/fsp_solver --printLastFitness --data_folder=/data --mh=%s --seed=%d " % (self.mh_name, runargs["seed"])
+        cmd = '/_install/main/fsp_solver --printLastFitness --data_folder=/data --mh=%s --seed=%d ' % (self.mh_name, runargs['seed'])
         inst_splits = runargs['instance'].split('/')[-1].split(',')
         prob_data = {
-            "problem": inst_splits[0],
-            "objective": inst_splits[1],
-            "type": inst_splits[2],
-            "stopping_criterion": inst_splits[3],
-            "budget": inst_splits[4],
-            "instance": inst_splits[5]
+            'problem': inst_splits[0],
+            'objective': inst_splits[1],
+            'type': inst_splits[2],
+            'stopping_criterion': inst_splits[3],
+            'budget': inst_splits[4],
+            'instance': inst_splits[5]
         }
         for key, value in prob_data.items() :
-            cmd += "--%s=%s " %(key, value)
+            cmd += '--%s=%s ' %(key, value)
         for key, value in config.items():
-            cmd += "-%s=%s " %(key.replace('_', '.'), value)
+            cmd += '-%s=%s ' %(key.replace('_', '.'), value)
         print(cmd)
         return cmd
     
@@ -66,7 +67,7 @@ class DummyWrapper(AbstractWrapper):
         output = dict(status='ABORT')
         for line in filepointer:
             try:
-                out = str(line.decode('UTF-8')).replace("\n","").split(',')
+                out = str(line.decode('UTF-8')).replace('\n','').split(',')
                 output = dict(status='SUCCESS', cost=float(out[0]), runtime=float(out[1]))
             except ValueError:
                 traceback.print_exc()
@@ -75,6 +76,6 @@ class DummyWrapper(AbstractWrapper):
         return output
 
         
-if __name__ == "__main__":
-    wrapper = DummyWrapper()
+if __name__ == '__main__':
+    wrapper = MHWrapper()
     wrapper.main()
