@@ -1,6 +1,0 @@
-FSP,MAKESPAN,PERM,FIXEDTIME_15,med,taill-like_jcorr_200_10_25.dat
-FSP,MAKESPAN,PERM,FIXEDTIME_15,med,taill-like_jcorr_200_10_26.dat
-FSP,MAKESPAN,PERM,FIXEDTIME_15,med,taill-like_jcorr_200_10_27.dat
-FSP,MAKESPAN,PERM,FIXEDTIME_15,med,taill-like_jcorr_200_10_28.dat
-FSP,MAKESPAN,PERM,FIXEDTIME_15,med,taill-like_jcorr_200_10_29.dat
-FSP,MAKESPAN,PERM,FIXEDTIME_15,med,taill-like_jcorr_200_10_30.dat

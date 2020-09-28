@@ -1,6 +1,0 @@
-FSP,FLOWTIME,PERM,FIXEDTIME_15,med,taill-like_mcorr_20_10_25.dat
-FSP,FLOWTIME,PERM,FIXEDTIME_15,med,taill-like_mcorr_20_10_26.dat
-FSP,FLOWTIME,PERM,FIXEDTIME_15,med,taill-like_mcorr_20_10_27.dat
-FSP,FLOWTIME,PERM,FIXEDTIME_15,med,taill-like_mcorr_20_10_28.dat
-FSP,FLOWTIME,PERM,FIXEDTIME_15,med,taill-like_mcorr_20_10_29.dat
-FSP,FLOWTIME,PERM,FIXEDTIME_15,med,taill-like_mcorr_20_10_30.dat
