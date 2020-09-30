@@ -20,7 +20,7 @@
                 " --instance=taill-like_rand_50_10_01.dat ",
                 " --mh=NEH ",
                 " --NEH.Init=neh ",
-                " --NEH.Init.NEH.First.Priority=lr ",
+                " --NEH.Init.NEH.First.Priority=lr_it ",
                 " --NEH.Init.NEH.First.PriorityOrder=hi_hilo ",
                 " --NEH.Init.NEH.First.PriorityWeighted=1 ",
                 " --NEH.Init.NEH.Priority=ra_c1 ",
@@ -64,7 +64,7 @@
                 " --IG.AOS.TS.Strategy=NA ",
                 " --IG.AOS.TS.C=NA ",
 
-                " --printBestFitness ",
+                " --printLastFitness ",
             ],
         },                
         {

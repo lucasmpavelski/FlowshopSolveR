@@ -55,6 +55,15 @@ TEST_INSTANCES_ATTRS <- list(
   no_samples = 30
 )
 
+LARGE_INSTANCES_ATTRS <- list(
+  no_jobs = c(50, 100, 200),
+  no_machines = c(20, 40),
+  dist = c('taill-like', 'erlang', 'exp'),
+  corr = c('rand', 'jcorr', 'mcorr'),
+  corv = 0.95,
+  no_samples = 30
+)
+
 instances_attrs_df <- function(attrs = TEST_INSTANCES_ATTRS) {
   crossing(
     no_jobs = attrs$no_jobs,
@@ -93,4 +102,8 @@ update_instances_tars <- function() {
       compression = 'gzip',
       tar = 'tar'
     ))
+}
+
+load_instance <- function(file) {
+  
 }

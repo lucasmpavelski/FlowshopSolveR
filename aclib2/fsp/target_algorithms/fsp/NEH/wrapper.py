@@ -48,7 +48,6 @@ class MHWrapper(AbstractWrapper):
             cmd += '--%s=%s ' %(key, value)
         for key, value in config.items():
             cmd += '-%s=%s ' %(key.replace('_', '.'), value)
-        print(cmd)
         return cmd
     
     def process_results(self, filepointer, exit_code):
@@ -61,14 +60,14 @@ class MHWrapper(AbstractWrapper):
         '''
 
         statuses = ['SUCCESS', 'TIMEOUT', 'CRASHED', 'ABORT']
+
         
         # If something fails, we a serious problem
-        print(filepointer)
         output = dict(status='ABORT')
         for line in filepointer:
             try:
                 out = str(line.decode('UTF-8')).replace('\n','').split(',')
-                output = dict(status='SUCCESS', cost=float(out[0]), runtime=float(out[1]))
+                output = dict(status='SUCCESS', cost=float(out[0]), quality=float(out[0]), runtime=float(out[0]))
             except ValueError:
                 traceback.print_exc()
                 pass

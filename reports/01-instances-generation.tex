@@ -1,0 +1,160 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={01-instances-study.Rmd},
+  pdfauthor={Lucas Marcondes Pavelski},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+
+\title{01-instances-study.Rmd}
+\author{Lucas Marcondes Pavelski}
+\date{9/29/2020}
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{load_instance_data <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(file_path) \{}
+\NormalTok{  info <-}\StringTok{ }\KeywordTok{instance_data_from_filename}\NormalTok{(}\KeywordTok{last}\NormalTok{(}\KeywordTok{str_split}\NormalTok{(file_path, }\StringTok{'/'}\NormalTok{)[[}\DecValTok{1}\NormalTok{]]))}
+\NormalTok{  lines <-}\StringTok{ }\KeywordTok{readLines}\NormalTok{(file_path)}
+\NormalTok{  no_jobs <-}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(lines[}\DecValTok{1}\NormalTok{])}
+\NormalTok{  no_machines <-}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(lines[}\DecValTok{2}\NormalTok{])}
+\NormalTok{  seed <-}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(lines[}\DecValTok{3}\NormalTok{])}
+\NormalTok{  pts <-}\StringTok{ }\NormalTok{lines[}\KeywordTok{seq}\NormalTok{(}\DecValTok{6}\NormalTok{, }\KeywordTok{length}\NormalTok{(lines), }\DecValTok{3}\NormalTok{)] }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{str_split}\NormalTok{(}\StringTok{' '}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{map}\NormalTok{(as.integer) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{unlist}\NormalTok{() }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow =}\NormalTok{ no_machines, }\DataTypeTok{ncol =}\NormalTok{ no_jobs) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{t}\NormalTok{()}
+\NormalTok{\}}
+
+\NormalTok{all_instances <-}\StringTok{ }\KeywordTok{instances_attrs_df}\NormalTok{(LARGE_INSTANCES_ATTRS)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{654}\NormalTok{)}
+\NormalTok{no_samples <-}\StringTok{ }\DecValTok{200}
+\NormalTok{no_samples2 <-}\StringTok{ }\DecValTok{40}
+\KeywordTok{tibble}\NormalTok{(}
+  \DataTypeTok{Distribution =} \KeywordTok{factor}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\KeywordTok{rep}\NormalTok{(}\StringTok{'uniform'}\NormalTok{, no_samples}\OperatorTok{*}\NormalTok{no_samples2), }
+                   \KeywordTok{rep}\NormalTok{(}\StringTok{'erlang'}\NormalTok{, no_samples}\OperatorTok{*}\NormalTok{no_samples2), }
+                   \KeywordTok{rep}\NormalTok{(}\StringTok{'exponential'}\NormalTok{, no_samples}\OperatorTok{*}\NormalTok{no_samples2)), }
+                   \DataTypeTok{levels =} \KeywordTok{c}\NormalTok{(}\StringTok{'uniform'}\NormalTok{, }\StringTok{'exponential'}\NormalTok{, }\StringTok{'erlang'}\NormalTok{)),}
+  \DataTypeTok{dt =} \KeywordTok{c}\NormalTok{(}
+    \KeywordTok{as.integer}\NormalTok{(}\KeywordTok{generate_test_instance}\NormalTok{(no_samples, no_samples2, }\StringTok{'taill-like'}\NormalTok{, }\DataTypeTok{corr =} \StringTok{'rand'}\NormalTok{, }\DataTypeTok{corv =} \DecValTok{0}\NormalTok{)),}
+    \KeywordTok{as.integer}\NormalTok{(}\KeywordTok{generate_test_instance}\NormalTok{(no_samples, no_samples2, }\StringTok{'erlang'}\NormalTok{, }\DataTypeTok{corr =} \StringTok{'rand'}\NormalTok{, }\DataTypeTok{corv =} \DecValTok{0}\NormalTok{)),}
+    \KeywordTok{as.integer}\NormalTok{(}\KeywordTok{generate_test_instance}\NormalTok{(no_samples, no_samples2, }\StringTok{'exponential'}\NormalTok{, }\DataTypeTok{corr =} \StringTok{'rand'}\NormalTok{, }\DataTypeTok{corv =} \DecValTok{0}\NormalTok{))}
+\NormalTok{  )}
+\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }
+\StringTok{  }\KeywordTok{filter}\NormalTok{(dt }\OperatorTok{>}\StringTok{ }\DecValTok{1}\NormalTok{, dt }\OperatorTok{<}\StringTok{ }\DecValTok{200}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{facet_wrap}\NormalTok{(}\OperatorTok{~}\NormalTok{Distribution) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_density}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ dt, }\DataTypeTok{fill =}\NormalTok{ Distribution)) }\OperatorTok{+}
+\StringTok{  }\NormalTok{custom_theme }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{legend.position =} \StringTok{'none'}\NormalTok{, }
+        \DataTypeTok{axis.title.x =} \KeywordTok{element_blank}\NormalTok{(), }
+        \DataTypeTok{axis.title.y =} \KeywordTok{element_blank}\NormalTok{())}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{01-instances-generation_files/figure-latex/instances_distributions-1.pdf}
+
+\end{document}

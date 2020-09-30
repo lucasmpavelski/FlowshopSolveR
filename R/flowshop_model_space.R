@@ -3,7 +3,7 @@ MODELS_ATTRS <- list(
   objective = c('FLOWTIME', 'MAKESPAN'),
   type = c('PERM', 'NOWAIT', 'NOIDLE'),
   stopping_criterium = c('FIXEDTIME_15'),
-  budget = c('med')
+  budget = c('low', 'high')
 )
 
 models_attrs_df <- function(attrs = MODELS_ATTRS) {

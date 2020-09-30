@@ -34,4 +34,6 @@ packrat/lib*/
 *.o
 _install/*
 aclib2/results/*
+aclib2/fsp/instances/*
+aclib2/fsp/scenarios/*
 data/instances/*/*

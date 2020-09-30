@@ -1,0 +1,223 @@
+---
+title: "ACLib2 Flowshop Study"
+author: "Lucas Marcondes Pavelski"
+date: "9/29/2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+library(FlowshopSolveR)
+library(tidyverse)
+library(PMCMRplus)
+
+custom_theme <- theme_bw() +
+  theme(legend.position = 'bottom')
+```
+
+## Build experiments
+
+```{r cars, include=F, cache=T}
+build_aclib2_experiments(
+  base_dir = here('aclib2', 'fsp'),
+  instance_attrs = LARGE_INSTANCES_ATTRS,
+  model_attrs = MODELS_ATTRS,
+  mhs = c('NEH')
+)
+```
+
+
+```{r pressure, include=F, echo=FALSE, warning=F, message=FALSE}
+aclib2_validation_info <- function(path) {
+  folders <- str_split(path, '/', simplify = T)
+  no_folders <- length(folders)
+  scenario <- folders[,no_folders-4]
+  tunner <- folders[,no_folders-3]
+  conf <- ifelse(folders[,no_folders-1] == 'validate-def-test', 'default', 'best')
+  
+  scenario_dt <- str_split(scenario, '_', 2, simplify = T)
+  algo <- scenario_dt[,1]
+  scenario_problem <- scenario_dt[,2]
+  
+  problem_dt <- str_split(scenario_dt[,2], ',', simplify = T)
+  problem <- problem_dt[,1]
+  objective <- problem_dt[,2]
+  type <- problem_dt[,3]
+  stopping_criterion <- problem_dt[,4]
+  budget <- problem_dt[,5]
+  dist <- problem_dt[,6]
+  corr <- problem_dt[,7]
+  no_jobs <- problem_dt[,8]
+  no_machines <- problem_dt[,9]
+  
+  tibble(
+    scenario = scenario,
+    tunner = tunner,
+    conf = conf,
+    algo = algo,
+    scenario_problem = scenario_problem,
+    problem = problem,
+    objective = objective,
+    type = type,
+    stopping_criterion = stopping_criterion,
+    budget = budget,
+    dist = dist,
+    corr = corr,
+    no_jobs = no_jobs,
+    no_machines = no_machines,
+    path = path
+  )
+}
+
+results_dir <- here('aclib2', 'results')
+validation_files <- list.files(
+  results_dir, 
+  recursive = T,
+  full.names = T,
+  pattern = 'validationPerformanceDebug'
+)
+
+validation_dt <- validation_files %>% 
+  map_df(aclib2_validation_info)
+
+```
+
+```{r, include=F,  echo=FALSE, warning=F, message=FALSE}
+aclib2_load_validation_data <- function(path) {
+  read_csv(path) %>%
+    filter(!str_starts(Instance, 'Overall')) %>%
+    select(
+      instance = Instance,
+      fitness = OverallObjective
+    )
+}
+
+tunners <- c(unique(validation_dt$tunner), 'DEFAULT')
+
+validation_results <- validation_dt %>%
+  filter(tunner != 'SMAC2') %>%
+  mutate(tunner = if_else(tunner == tunners[1] & conf == 'default', 'DEFAULT', tunner)) %>%
+  filter(conf == 'best' | tunner == 'DEFAULT') %>%
+  mutate(data = map(path, aclib2_load_validation_data)) %>%
+  unnest(cols = c(data), names_repair = 'universal') %>%
+  group_by(instance) %>%
+  mutate(rel_fitness = 100 * (fitness - min(fitness)) / min(fitness)) %>%
+  ungroup()
+```
+
+Problem space:
+
+- Instance attributes:
+
+  - Number of jobs: `r LARGE_INSTANCES_ATTRS$no_jobs`
+  - Number of machines: `r LARGE_INSTANCES_ATTRS$no_machines`
+  - Processing time distributions: `r LARGE_INSTANCES_ATTRS$dist`
+  - Processing time correlations: `r LARGE_INSTANCES_ATTRS$corr`
+
+- Model attributes:
+
+  - Constraints: `r MODELS_ATTRS$type`
+  - Objectives: `r MODELS_ATTRS$objective`
+  - Budgets: `r MODELS_ATTRS$budget`
+  
+
+```{r echo=FALSE, warning=F, message=FALSE}
+ggplot(validation_results) +
+  geom_violin(aes(x = tunner, fill = conf, y = rel_fitness)) +
+  custom_theme +
+  ggtitle('Violing plot of the relative performance of different tuners on all problems')
+```
+
+```{r echo=FALSE, warning=F, message=FALSE}
+ggplot(validation_results) +
+  geom_violin(aes(x = tunner, fill = conf, y = rel_fitness+1)) +
+  scale_y_log10() +
+  custom_theme +
+  ggtitle('(log) Violing plot of the relative performance of different tuners on all problems')
+```
+
+
+```{r echo=FALSE, warning=F, message=FALSE}
+ggplot(validation_results) +
+  geom_violin(aes(x = tunner, fill = conf, y = rel_fitness+1)) +
+  scale_y_log10() +
+  facet_grid(~corr) +
+  custom_theme +
+  ggtitle('(log) Violing plot of the relative performance of different tuners on all problems - by correlation')
+```
+
+
+```{r echo=FALSE, warning=F, message=FALSE}
+ggplot(validation_results) +
+  geom_violin(aes(x = tunner, fill = conf, y = rel_fitness+1)) +
+  scale_y_log10() +
+  facet_grid(~type) +
+  custom_theme +
+  ggtitle('(log) Violing plot of the relative performance of different tuners on all problems - by constraint')
+```
+
+```{r echo=FALSE, warning=F, message=FALSE}
+validation_results %>%
+  filter(rel_fitness == 0) %>%
+  count(tunner) %>%
+  ggplot() +
+  geom_col(aes(x = tunner, y = n, fill = tunner)) +
+  custom_theme +
+  ggtitle('Number of times a tunner achived the best performance (rel fitness = 0)')
+```
+
+```{r echo=FALSE, warning=F, message=FALSE}
+validation_results %>%
+  filter(rel_fitness == 0) %>%
+  count(tunner, corr) %>%
+  ggplot() +
+  geom_col(aes(x = tunner, y = n, fill = tunner)) +
+  facet_wrap(~corr) +
+  custom_theme +
+  ggtitle('Number of times a tunner achived the best performance (rel fitness = 0) - by correlation')
+```
+
+Comparing all performances with respect to each problem (blocks):
+
+```{r, echo=F, warning=F, message=F}
+friedmanTest(validation_results$rel_fitness,  validation_results$tunner, validation_results$instance)
+```
+
+Comparing the performances with respect to the default NEH:
+
+```{r, echo=F, warning=F, message=F}
+frdManyOneDemsarTest(validation_results$rel_fitness,  validation_results$tunner, validation_results$instance)
+```
+
+Comparing the performance of the different tuners:
+
+```{r, echo=F, warning=F, message=F}
+tunners_results <- validation_results %>%
+  filter(tunner != 'DEFAULT')
+
+friedmanTest(tunners_results$rel_fitness,  tunners_results$tunner, tunners_results$instance)
+```
+
+Statistics of the performances:
+
+```{r, echo=F, warning=F, message=F}
+tunners_results %>%
+  group_by(tunner) %>%
+  summarise(
+    min = min(rel_fitness),
+    q25 = quantile(rel_fitness, 0.25),
+    q50 = quantile(rel_fitness, 0.50),
+    q75 = quantile(rel_fitness, 0.75),
+    max = max(rel_fitness)
+  ) %>%
+  knitr::kable()
+```
+Comparing the performance of the different tuners:
+
+```{r, echo=F, warning=F, message=F}
+rand_tunners_results <- validation_results %>%
+  filter(tunner != 'DEFAULT', corr == 'rand')
+
+friedmanTest(rand_tunners_results$rel_fitness,  rand_tunners_results$tunner, rand_tunners_results$instance)
+```

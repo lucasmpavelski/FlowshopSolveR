@@ -1,0 +1,103 @@
+---
+title: "01-instances-study.Rmd"
+author: "Lucas Marcondes Pavelski"
+date: "9/29/2020"
+output: 
+  pdf_document:
+    keep_tex: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(FlowshopSolveR)
+library(tidyverse)
+library(PMCMRplus)
+
+custom_theme <- theme_bw() +
+  theme(legend.position = 'bottom')
+```
+
+```{r}
+load_instance_data <- function(file_path) {
+  info <- instance_data_from_filename(last(str_split(file_path, '/')[[1]]))
+  lines <- readLines(file_path)
+  no_jobs <- as.integer(lines[1])
+  no_machines <- as.integer(lines[2])
+  seed <- as.integer(lines[3])
+  pts <- lines[seq(6, length(lines), 3)] %>%
+    str_split(' ') %>%
+    map(as.integer) %>%
+    unlist() %>%
+    matrix(nrow = no_machines, ncol = no_jobs) %>%
+    t()
+}
+
+all_instances <- instances_attrs_df(LARGE_INSTANCES_ATTRS)
+```
+
+```{r instances_distributions, cache = T, fig.asp=0.33}
+set.seed(654)
+no_samples <- 200
+no_samples2 <- 40
+tibble(
+  Distribution = factor(c(rep('uniform', no_samples*no_samples2), 
+                   rep('erlang', no_samples*no_samples2), 
+                   rep('exponential', no_samples*no_samples2)), 
+                   levels = c('uniform', 'exponential', 'erlang')),
+  dt = c(
+    as.integer(generate_test_instance(no_samples, no_samples2, 'taill-like', corr = 'rand', corv = 0)),
+    as.integer(generate_test_instance(no_samples, no_samples2, 'erlang', corr = 'rand', corv = 0)),
+    as.integer(generate_test_instance(no_samples, no_samples2, 'exponential', corr = 'rand', corv = 0))
+  )
+) %>%
+  
+  filter(dt > 1, dt < 200) %>%
+  ggplot() +
+  facet_wrap(~Distribution) +
+  geom_density(aes(x = dt, fill = Distribution)) +
+  custom_theme +
+  theme(legend.position = 'none', 
+        axis.title.x = element_blank(), 
+        axis.title.y = element_blank())
+
+```
+
+```{r instances_distributions, cache = T, fig.asp=0.69}
+set.seed(654)
+no_samples <- 2000
+no_samples2 <- 2
+
+corrPts <- function(Distribution, Correlation) {
+  pts <- generate_test_instance(
+    no_samples, 
+    no_samples2,
+        switch(Distribution,
+          'uniform' = 'taill-like',
+          'exponential' = 'exp',
+          Distribution
+      ),
+        switch(Correlation,
+        'random' = 'rand',
+        'job-correlated' = 'jcorr'
+      ),
+      ifelse(Correlation == 'random', 0, 0.95)
+  )
+  tibble(
+    m1 = pts[,1],
+    m2 = pts[,2]
+  )
+}
+
+crossing(
+  Distribution = c('uniform', 'erlang', 'exponential'),
+  Correlation = c('random', 'job-correlated')
+) %>%
+  mutate(data = pmap(., corrPts)) %>%
+  unnest(data) %>%
+  ggplot() +
+  facet_wrap(Correlation~Distribution) +
+  geom_point(aes(x = m1, y = m2))
+
+```
+

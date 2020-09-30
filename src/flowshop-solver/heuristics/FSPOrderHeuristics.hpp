@@ -328,8 +328,13 @@ struct RA_C3 : public RagendranFOH {
   }
 };
 
-struct LR : public FSPOrderHeuristic {
-  using FSPOrderHeuristic::FSPOrderHeuristic;
+class LR : public FSPOrderHeuristic {
+  bool enableIT, enableAJ, enableCT;
+public:
+  LR(const FSPData& fspData, bool weighted, const std::string& orderType,
+    bool enableIT, bool enableAJ, bool enableCT) :
+    FSPOrderHeuristic{fspData, weighted, orderType},
+    enableIT{enableIT}, enableAJ{enableAJ}, enableCT{enableCT} {}
 
   auto sortingOrder() -> std::vector<double> override {
     const auto& p = fspData.procTimesRef();
@@ -380,12 +385,12 @@ struct LR : public FSPOrderHeuristic {
           cim = std::max(ct_k_j, cim) + pt_i;
           cpm = std::max(static_cast<double>(cim), cpm) + artificialJobTime(i, j, unscheduled);
         }
-        at[i] = cim + cpm;
+        at[i] = enableCT * cim + enableAJ * cpm;
       }
 
       auto selected = std::min_element(begin(unscheduled), end(unscheduled), [&](int i, int j) {
-        double indexI = (noJobs - k - 1) * it[i] + at[i];
-        double indexJ = (noJobs - k - 1) * it[j] + at[j];
+        double indexI = enableIT * (noJobs - k - 1) * it[i] + at[i];
+        double indexJ = enableIT * (noJobs - k - 1) * it[j] + at[j];
         return indexI < indexJ;
       });
 
@@ -465,7 +470,15 @@ inline auto buildPriority(const FSPData& data,
     return std::make_unique<RA_C2>(data, weighted, order);
   if (name == "ra_c3")
     return std::make_unique<RA_C3>(data, weighted, order);
-  if (name == "lr")
-    return std::make_unique<LR>(data, weighted, order);
+  if (name == "lr_it_aj_ct")
+    return std::make_unique<LR>(data, weighted, order, true, true, true);
+  if (name == "lr_it_ct")
+    return std::make_unique<LR>(data, weighted, order, true, false, true);
+  if (name == "lr_it")
+    return std::make_unique<LR>(data, weighted, order, true, false, false);
+  if (name == "lr_aj")
+    return std::make_unique<LR>(data, weighted, order, false, true, false);
+  if (name == "lr_ct")
+    return std::make_unique<LR>(data, weighted, order, false, false, true);
   return nullptr;
 };
