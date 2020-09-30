@@ -5,7 +5,7 @@ filename_from_instance_data <-
            corr,
            inst_n,
            ...) {
-    sprintf('%s_%s_%d_%d_%02d.dat',
+    sprintf('%s_%s_%d_%d_%02d.txt',
             dist,
             corr,
             no_jobs,
@@ -15,56 +15,29 @@ filename_from_instance_data <-
 
 generate_test_instance <-
   function(no_jobs, no_machines, dist, corr, corv, ...) {
-    generateFSPInstance(
+    generate_fsp_instance(
       no_jobs = no_jobs,
       no_machines = no_machines,
-      distribution_type = switch(dist,
-                                 'taill-like' = 'uniform',
-                                 'exp' = 'exponential',
-                                 dist),
-      correlation_type = switch(
-        corr,
-        'rand' = 'random',
-        'jcorr' = 'job-correlated',
-        'mcorr' = 'machine-correlated'
-      ),
-      correlation = ifelse(corr == 'rand', 0, corv)
+      distribution_type = dist,
+      correlation_type = corr,
+      correlation = ifelse(corr == 'random', 0, corv)
     )
   }
 
 save_test_instance <- function(instance_data, path, ...) {
-  appendFile <- function(...)
-    write(..., file = path, append = T)
-  appendFile(nrow(instance_data))
-  appendFile(ncol(instance_data))
-  appendFile(instance_data@seed)
-  for (job in 1:nrow(instance_data)) {
-    appendFile(job - 1)
-    appendFile(0)
-    appendFile(instance_data[job, ], ncolumns = ncol(instance_data))
-  }
-  path
+  write_txt(instance_data, path)
 }
 
-TEST_INSTANCES_ATTRS <- list(
-  no_jobs = c(20, 50, 100, 200),
-  no_machines = c(10, 20, 40),
-  dist = c('taill-like', 'erlang', 'exp'),
-  corr = c('rand', 'jcorr', 'mcorr'),
-  corv = 0.95,
-  no_samples = 30
-)
-
-LARGE_INSTANCES_ATTRS <- list(
+GENERATED_INSTANCES_ATTRS <- list(
   no_jobs = c(50, 100, 200),
   no_machines = c(20, 40),
-  dist = c('taill-like', 'erlang', 'exp'),
-  corr = c('rand', 'jcorr', 'mcorr'),
-  corv = 0.95,
-  no_samples = 30
+  dist = c('uniform', 'erlang', 'exponential'),
+  corr = c('random', 'job-correlated', 'machine-correlated'),
+  corv = 0.90,
+  no_samples = 10
 )
 
-instances_attrs_df <- function(attrs = TEST_INSTANCES_ATTRS) {
+instances_attrs_df <- function(attrs = GENERATED_INSTANCES_ATTRS) {
   crossing(
     no_jobs = attrs$no_jobs,
     no_machines = attrs$no_machines,
@@ -73,13 +46,11 @@ instances_attrs_df <- function(attrs = TEST_INSTANCES_ATTRS) {
     corv = attrs$corv,
     inst_n = 1:attrs$no_samples
   ) %>%
-    mutate(
-      instance = pmap_chr(., filename_from_instance_data)
-    )
-    
+    filter(no_jobs != 50 | no_machines == 20) %>%
+    mutate(instance = pmap_chr(., filename_from_instance_data))
 }
 
-generate_test_instances <- function(attrs = TEST_INSTANCES_ATTRS) {
+generate_test_instances <- function(attrs = GENERATED_INSTANCES_ATTRS) {
   set.seed(6549871)
   dir.create(here('data', 'instances', 'flowshop'), F)
   instances_attrs_df(attrs) %>%
@@ -102,8 +73,4 @@ update_instances_tars <- function() {
       compression = 'gzip',
       tar = 'tar'
     ))
-}
-
-load_instance <- function(file) {
-  
 }
