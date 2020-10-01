@@ -19,6 +19,11 @@ custom_theme <- theme_bw() +
 ```
 
 ```{r}
+generate_test_instances()
+update_instances_tars()
+```
+
+```{r}
 load_instance_data <- function(file_path) {
   info <- instance_data_from_filename(last(str_split(file_path, '/')[[1]]))
   lines <- readLines(file_path)

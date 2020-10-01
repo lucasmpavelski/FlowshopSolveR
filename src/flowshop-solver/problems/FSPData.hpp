@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iterator>
 #include <random>
+#include <stdexcept>
 #include <string>
 
 #include "flowshop-solver/global.hpp"
@@ -16,48 +17,17 @@ struct FSPData {
   using ivec = std::vector<int>;
 
   FSPData(const std::string& filename) {
-    std::string buffer;
-    std::string::size_type start, end;
-    // opening of the benchmark file
     std::ifstream inputFile(filename, std::ios::in);
-    auto getline_check = [&inputFile, &filename](std::string& buff) {
-      getline(inputFile, buff, '\n');
-      if (!inputFile) {
-        std::string err =
-            "ERROR: Unable to read the benchmark file " + filename;
-        throw std::runtime_error(err);
-      }
-    };
-    // number of jobs (N)
-    getline_check(buffer);
-    no_jobs = atoi(buffer.data());
-    // number of machines M
-    getline_check(buffer);
-    no_machines = atoi(buffer.data());
-    // initial and current seeds (not used)
-    getline_check(buffer);
-    // processing times and due-dates
-    proc_times.resize(no_jobs * no_machines);
-    total_job_proc_times.resize(no_jobs);
-    total_machine_proc_times.resize(no_machines);
-    // for each job...
-    for (int j = 0; j < no_jobs; j++) {
-      // index of the job (<=> j)
-      getline_check(buffer);
-      // due-date of the job j
-      getline_check(buffer);
-      // processing times of the job j on each machine
-      getline_check(buffer);
-      start = buffer.find_first_not_of(' ');
-      for (int i = 0; i < no_machines; i++) {
-        end = buffer.find_first_of(' ', start);
-        proc_times[i * no_jobs + j] =
-            atoi(buffer.substr(start, end - start).data());
-        start = buffer.find_first_not_of(' ', end);
+    if (!inputFile) {
+      throw std::runtime_error("Instance file " + filename + " not found!");
+    }
+    inputFile >> no_jobs;
+    inputFile >> no_machines;
+    for (int i = 0; i < no_jobs; i++) {
+      for (int j = 0; j < no_machines; j++) {
+        inputFile >> pt(i, j);
       }
     }
-    // closing of the input file
-    inputFile.close();
     init();
   }
 
@@ -129,14 +99,21 @@ struct FSPData {
   [[nodiscard]] auto machineProcTimesRef() const -> const ivec& {
     return total_machine_proc_times;
   }
-  [[nodiscard]] auto machineProcTime(const int m) const { return total_machine_proc_times[m]; }
+  [[nodiscard]] auto machineProcTime(const int m) const {
+    return total_machine_proc_times[m];
+  }
 
   auto jobProcTimesRef() -> ivec& { return total_job_proc_times; }
-  [[nodiscard]] auto jobProcTimesRef() const -> const ivec& { return total_job_proc_times; }
-  [[nodiscard]] auto jobProcTime(const int j) { return total_job_proc_times[j]; }
+  [[nodiscard]] auto jobProcTimesRef() const -> const ivec& {
+    return total_job_proc_times;
+  }
+  [[nodiscard]] auto jobProcTime(const int j) {
+    return total_job_proc_times[j];
+  }
 
   [[nodiscard]] auto procTimesRef() const -> const ivec& { return proc_times; }
-  [[nodiscard]] auto pt(const ivec::size_type j, const ivec::size_type m) const -> int {
+  [[nodiscard]] auto pt(const ivec::size_type j, const ivec::size_type m) const
+      -> int {
     return proc_times[m * no_jobs + j];
   }
 
@@ -145,7 +122,8 @@ struct FSPData {
     return proc_times[m * no_jobs + j];
   }
 
-  [[nodiscard]] auto partialSumOnAdjacentMachines(int job, int i, int h) const -> int {
+  [[nodiscard]] auto partialSumOnAdjacentMachines(int job, int i, int h) const
+      -> int {
     assert(i <= h);
     int sm = 0;
     for (int j = i; j <= h; j++) {

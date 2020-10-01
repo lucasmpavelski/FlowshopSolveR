@@ -10,14 +10,14 @@
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
+#include "flowshop-solver/FSPProblemFactory.hpp"
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 #include "flowshop-solver/problems/FSPData.hpp"
 #include "flowshop-solver/problems/FSPEval.hpp"
-#include "flowshop-solver/problems/PermFSPEval.hpp"
 #include "flowshop-solver/problems/NoIdleFSPEval.hpp"
 #include "flowshop-solver/problems/NoWaitFSPEval.hpp"
 #include "flowshop-solver/problems/NoWaitFSPNeighborMakespanEval.hpp"
-#include "flowshop-solver/FSPProblemFactory.hpp"
+#include "flowshop-solver/problems/PermFSPEval.hpp"
 
 #ifdef NDEBUG
 #undef NDEBUG
@@ -307,15 +307,10 @@ TEST(TaillardAcceleration, DestructionConstruction) {
 
 TEST(TaillardAcceleration, RecompileNeighbor) {
   rng.reseed(65465l);
-  FSPProblemFactory::init(DATA_FOLDER);
-  std::unordered_map<std::string, std::string> prob_dt;
-  prob_dt["problem"] = "FSP";
-  prob_dt["type"] = "PERM";
-  prob_dt["objective"] = "MAKESPAN";
-  prob_dt["budget"] = "med";
-  prob_dt["instance"] = "taillard_rand_20_20_02.dat";
-  prob_dt["stopping_criterion"] = "FIXEDTIME";
-  FSPProblem prob = FSPProblemFactory::get(prob_dt);
+  const int no_jobs = 20;
+  const int no_machines = 20;
+  FSPData dt{no_jobs, no_machines};
+  FSPProblem prob(dt, "PERM", "MAKESPAN", "low", "FIXEDTIME");
 
   eoEvalFunc<FSP>& fullEval = prob.eval();
   moEval<FSPNeighbor>& ne = prob.neighborEval();
@@ -341,10 +336,11 @@ TEST(TaillardAcceleration, RecompileNeighbor) {
 #include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
 
 TEST(Heuristic, FSPOrderHeuristics) {
-  std::vector<std::string> names = {"sum_pij",    "abs_dif",     "ss_sra",
-                                    "ss_srs",     "ss_srn_rcn",  "ss_sra_rcn",
-                                    "ss_srs_rcn", "ss_sra_2rcn", "ra_c1",
-                                    "ra_c2",      "ra_c3",       "ra_c3", "lr"};
+  std::vector<std::string> names = {
+      "sum_pij",    "abs_dif",    "ss_sra",      "ss_srs",   "ss_srn_rcn",
+      "ss_sra_rcn", "ss_srs_rcn", "ss_sra_2rcn", "ra_c1",    "ra_c2",
+      "ra_c3",      "ra_c3",      "lr_it_aj_ct", "lr_it_ct", "lr_it",
+      "lr_aj",      "lr_ct"};
   std::vector<std::string> orders = {"incr",    "decr",    "valley",
                                      "hill",    "hi_hilo", "hi_lohi",
                                      "lo_hilo", "lo_lohi"};
@@ -365,10 +361,11 @@ TEST(Heuristic, FSPOrderHeuristics) {
 }
 
 TEST(Heuristic, LROrderExample) {
-  std::vector<int> pts = { //
-    15, 15, 10,  5, //
-    10,  5, 15,  5, //
-     5, 10, 10, 10, //
+  std::vector<int> pts = {
+      //
+      15, 15, 10, 5,   //
+      10, 5,  15, 5,   //
+      5,  10, 10, 10,  //
   };
   FSPData dt{pts, 4, true};
 
@@ -377,7 +374,7 @@ TEST(Heuristic, LROrderExample) {
 
   FSP sol = ref;
   std::iota(begin(sol), end(sol), 0);
-  auto init = buildPriority(dt, "lr", false, "incr");
+  auto init = buildPriority(dt, "lr_it_aj_ct", false, "incr");
   (*init)(sol);
 
   ref.assign({3, 1, 2, 0});
@@ -442,9 +439,10 @@ TEST(PermFSP, NeighborCachedFlowtimeEvaluationSamples) {
 }
 
 TEST(NoWaitFSP, NeighborEvaluationExample) {
-  std::vector<int> pts = { //
-    20, 25, 25, 10, 17, //
-    30, 20, 25, 25, 28, //
+  std::vector<int> pts = {
+      //
+      20, 25, 25, 10, 17,  //
+      30, 20, 25, 25, 28,  //
   };
   FSPData dt{pts, 5, true};
   NoWaitFSPMakespanEval nwFspEval{dt};
@@ -494,11 +492,12 @@ TEST(NoWaitFSP, NeighborEvaluationSamples) {
 }
 
 TEST(NoIdleFSP, FastNeighborhoodExample) {
-  std::vector<int> pts = { //
-    3, 3, 2, //
-    4, 1, 3, //
-    2, 3, 3, //
-    2, 2, 3  //
+  std::vector<int> pts = {
+      //
+      3, 3, 2,  //
+      4, 1, 3,  //
+      2, 3, 3,  //
+      2, 2, 3   //
   };
   FSPData dt{pts, 4, false};
   NoIdleFSPNeighborMakespanEval fastEval{dt};
@@ -581,7 +580,7 @@ TEST(NEH, AppendingNEH) {
   const int no_machines = 5;
   FSPData dt{no_jobs, no_machines};
   PermFSPNeighborMakespanEval neighborEval{dt};
-  auto init1 = buildPriority(dt, "lr", false, "incr");
+  auto init1 = buildPriority(dt, "lr_it_aj_ct", false, "incr");
   auto init2 = buildPriority(dt, "sum_pij", false, "incr");
   auto insertion = buildInsertionStrategy("first_best", neighborEval);
   AppendingNEH<FSPNeighbor> lrNeh{*init1, *init2, *insertion, 0.5};
@@ -637,7 +636,6 @@ TEST(NEH, AppendingNEH) {
 //   niFTEval(sol);
 //   std::cerr << "niFTEval " << sol.fitness() << '\n';
 // }
-
 
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) -> int {
   testing::InitGoogleTest(&argc, argv);
