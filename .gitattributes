@@ -1,1 +1,4 @@
 data/instances/flowshop.tar.gz filter=lfs diff=lfs merge=lfs -text
+data/instances/vrf-large.tar.gz filter=lfs diff=lfs merge=lfs -text
+data/instances/vrf-small.tar.gz filter=lfs diff=lfs merge=lfs -text
+data/instances/taillard.tar.gz filter=lfs diff=lfs merge=lfs -text

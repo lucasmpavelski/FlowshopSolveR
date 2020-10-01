@@ -1,6 +1,5 @@
 #pragma once
 
-#include <experimental/bits/fs_path.h>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -8,7 +7,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "flowshop-solver/problems/FSPData.hpp"
 #include "flowshop-solver/problems/FSPProblem.hpp"
 
 class FSPProblemFactory {
@@ -24,12 +22,18 @@ class FSPProblemFactory {
   }
 
   static auto names() -> std::vector<std::string> {
-    return {"problem",   "type",   "instance",
-            "objective", "budget", "stopping_criterion"};
+    return {
+      "problem",
+      "type",
+      "instance",
+      "objective",
+      "budget",
+      "stopping_criterion"
+    };
   }
 
-  static auto instPath(const std::string& problem, const std::string& inst) {
-    return data_folder + "/instances/" + problem + "/" + inst;
+  static auto instFolder() -> std::string {
+    return data_folder + "/instances/flowshop/";
   }
 
   static auto lowerBoundsFile() -> std::string {
@@ -59,7 +63,7 @@ class FSPProblemFactory {
   }
 
   static auto getLowerBound(const std::string& instance,
-                            const std::string& objective) -> unsigned {
+                                const std::string& objective) -> unsigned {
     auto l = std::find_if(
         lower_bounds_data.begin(), lower_bounds_data.end(),
         [&](const std::unordered_map<std::string, std::string>& line) {
@@ -71,27 +75,18 @@ class FSPProblemFactory {
     return std::atol(l->at("best_bound").c_str());
   }
 
-  static auto cachedInstance(const std::string& problem,
-                             const std::string& inst) -> const FSPData& {
-    if (cache.find(inst) == cache.end()) {
-      cache.emplace(inst, instPath(problem, inst));
+  static auto get(
+      const std::unordered_map<std::string, std::string>& prob_data) -> FSPProblem {
+    assert(prob_data.at("problem") == "FSP");
+    const auto instance = prob_data.at("instance");
+    if (cache.find(instance) == cache.end()) {
+      cache.emplace(instance, FSPProblemFactory::instFolder() + prob_data.at("instance"));
     }
-    return cache.at(inst);
-  }
-
-  static auto get(const std::unordered_map<std::string, std::string>& prob_data)
-      -> FSPProblem {
-    auto problem = prob_data.at("problem");
-    auto instance = prob_data.at("instance");
-    auto type = prob_data.at("type");
-    auto stoppingCriterion = prob_data.at("stopping_criterion");
-    auto objective = prob_data.at("objective");
-    auto budget = prob_data.at("budget");
-
-    auto inst = cachedInstance(problem, instance);
-    auto lowerBound = getLowerBound(instance, objective);
-
-    return FSPProblem(inst, type, objective, budget, stoppingCriterion,
-                      lowerBound);
+    const std::string type = prob_data.at("type");
+    const std::string objective = prob_data.at("objective");
+    const std::string stopping_criterion = prob_data.at("stopping_criterion");
+    unsigned lower_bound = getLowerBound(prob_data.at("instance"), objective);
+    return FSPProblem(cache.at(instance), type, objective, prob_data.at("budget"),
+                      stopping_criterion, lower_bound);
   }
 };

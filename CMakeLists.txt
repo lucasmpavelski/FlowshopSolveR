@@ -131,8 +131,8 @@ set_property(TARGET flowshop_solver_lib PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_library(flowshop_solver_lib_shared SHARED ${FSP_SOURCES})
 set_property(TARGET flowshop_solver_lib_shared PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-target_link_libraries(flowshop_solver_lib Eigen3::Eigen)
-target_link_libraries(flowshop_solver_lib_shared Eigen3::Eigen)
+target_link_libraries(flowshop_solver_lib stdc++fs Eigen3::Eigen)
+target_link_libraries(flowshop_solver_lib_shared stdc++fs Eigen3::Eigen)
 
 target_include_directories(flowshop_solver_lib PUBLIC ${CMAKE_SOURCE_DIR}/src)
 target_include_directories(flowshop_solver_lib_shared PUBLIC ${CMAKE_SOURCE_DIR}/src)
