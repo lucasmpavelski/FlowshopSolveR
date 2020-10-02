@@ -4,6 +4,7 @@ ARG PROXY
 ENV DEBIAN_FRONTEND noninteractive
 ENV http_proxy $PROXY
 ENV https_proxy $PROXY
+
 # update and install dependencies
 RUN  apt-get update && apt-get -y --no-install-recommends install \
         wget \
@@ -24,6 +25,8 @@ RUN  apt-get update && apt-get -y --no-install-recommends install \
         doxygen \
         graphviz \
         libgnuplot-iostream-dev
+
+
 
 # installing ParadisEO
 RUN git clone --depth 1 -b master https://github.com/nojhan/paradiseo.git \

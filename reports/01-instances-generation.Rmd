@@ -38,7 +38,7 @@ load_instance_data <- function(file_path) {
     t()
 }
 
-all_instances <- instances_attrs_df(LARGE_INSTANCES_ATTRS)
+all_instances <- generated_instances_df(LARGE_INSTANCES_ATTRS)
 ```
 
 ```{r instances_distributions, cache = T, fig.asp=0.33}

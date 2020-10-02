@@ -21,7 +21,7 @@ cd results
 
 for exp in NEH_FSP,FLOWTIME,NOIDLE,FIXEDTIME_15,med,erlang,jcorr,100,40
 do
-  python /aclib2/aclib/run.py -s NEH_FSP,FLOWTIME,NOIDLE,FIXEDTIME_15,med,erlang,jcorr,100,40 -c SMAC2 -n 1 --ac_cores 1 --cores_per_job 1 --env local --aclib_root /aclib2
+  python3 /aclib2/aclib/run.py -s NEH_flowshop,FLOWTIME,NOIDLE,TIME,high,uniform,random,50,20 -c SMAC3 -n 1 --ac_cores 1 --cores_per_job 1 --env local --aclib_root /aclib2
 done
 
 

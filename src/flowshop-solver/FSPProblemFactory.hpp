@@ -83,7 +83,7 @@ class FSPProblemFactory {
     auto problem = prob_data.at("problem");
     auto instance = prob_data.at("instance");
     auto type = prob_data.at("type");
-    auto stoppingCriterion = prob_data.at("stoppiqng_criterion");
+    auto stoppingCriterion = prob_data.at("stopping_criterion");
     auto objective = prob_data.at("objective");
     auto budget = prob_data.at("budget");
 

@@ -67,7 +67,7 @@ class MHWrapper(AbstractWrapper):
         for line in filepointer:
             try:
                 out = str(line.decode('UTF-8')).replace('\n','').split(',')
-                output = dict(status='SUCCESS', cost=float(out[0]), quality=float(out[0]), runtime=float(out[0]))
+                output = dict(status='SUCCESS', quality=float(out[0]))
             except ValueError:
                 traceback.print_exc()
                 pass

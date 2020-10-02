@@ -23,6 +23,7 @@ struct FSPData {
     }
     inputFile >> no_jobs;
     inputFile >> no_machines;
+    proc_times.resize(no_jobs * no_machines);
     for (int i = 0; i < no_jobs; i++) {
       for (int j = 0; j < no_machines; j++) {
         inputFile >> pt(i, j);
