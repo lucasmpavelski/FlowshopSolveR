@@ -84,7 +84,7 @@ auto runExperiment(eoInit<EOT>& init,
   res.time = time;
   res.no_evals = prob.noEvals();
   if (options.printLastFitness) {
-    std::cout << res.fitness << ',' << res.time << ',' << res.no_evals << '\n';
+    std::cout << static_cast<int>(res.fitness) << ',' << res.time << ',' << res.no_evals << '\n';
   }
   return res;
 }

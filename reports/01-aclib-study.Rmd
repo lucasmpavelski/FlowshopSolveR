@@ -21,8 +21,6 @@ custom_theme <- theme_bw() +
 ```{r cars, include=F, cache=T}
 build_aclib2_experiments(
   base_dir = here('aclib2', 'fsp'),
-  instance_attrs = LARGE_INSTANCES_ATTRS,
-  model_attrs = MODELS_ATTRS,
   mhs = c('NEH')
 )
 ```
@@ -93,7 +91,9 @@ aclib2_load_validation_data <- function(path) {
     )
 }
 
-tunners <- c(unique(validation_dt$tunner), 'DEFAULT')
+tunners <- c(unique(validation_dt$tunner), 'DEFAULT', 'IRACE3')
+
+irace_validation_dt <- readRDS(here('aclib2', 'irace_results.rda'))
 
 validation_results <- validation_dt %>%
   filter(tunner != 'SMAC2') %>%
@@ -102,6 +102,7 @@ validation_results <- validation_dt %>%
   mutate(data = map(path, aclib2_load_validation_data)) %>%
   unnest(cols = c(data), names_repair = 'universal') %>%
   group_by(instance) %>%
+  bind_rows(irace_validation_dt) %>%
   mutate(rel_fitness = 100 * (fitness - min(fitness)) / min(fitness)) %>%
   ungroup()
 ```
@@ -110,10 +111,10 @@ Problem space:
 
 - Instance attributes:
 
-  - Number of jobs: `r LARGE_INSTANCES_ATTRS$no_jobs`
-  - Number of machines: `r LARGE_INSTANCES_ATTRS$no_machines`
-  - Processing time distributions: `r LARGE_INSTANCES_ATTRS$dist`
-  - Processing time correlations: `r LARGE_INSTANCES_ATTRS$corr`
+  - Number of jobs: `r GENERATED_INSTANCES_ATTRS$no_jobs`
+  - Number of machines: `r GENERATED_INSTANCES_ATTRS$no_machines`
+  - Processing time distributions: `r GENERATED_INSTANCES_ATTRS$dist`
+  - Processing time correlations: `r GENERATED_INSTANCES_ATTRS$corr`
 
 - Model attributes:
 
@@ -199,6 +200,15 @@ tunners_results <- validation_results %>%
 friedmanTest(tunners_results$rel_fitness,  tunners_results$tunner, tunners_results$instance)
 ```
 
+
+```{r, echo=F, warning=F, message=F}
+tunners_results <- validation_results %>%
+  filter(tunner != 'DEFAULT')
+
+friedmanTest(tunners_results$rel_fitness,  tunners_results$tunner, tunners_results$instance)
+```
+
+
 Statistics of the performances:
 
 ```{r, echo=F, warning=F, message=F}
@@ -213,11 +223,4 @@ tunners_results %>%
   ) %>%
   knitr::kable()
 ```
-Comparing the performance of the different tuners:
 
-```{r, echo=F, warning=F, message=F}
-rand_tunners_results <- validation_results %>%
-  filter(tunner != 'DEFAULT', corr == 'rand')
-
-friedmanTest(rand_tunners_results$rel_fitness,  rand_tunners_results$tunner, rand_tunners_results$instance)
-```

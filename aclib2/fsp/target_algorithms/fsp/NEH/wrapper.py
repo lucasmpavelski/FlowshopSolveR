@@ -22,11 +22,7 @@ aclib2/neh_FSP/target_algorithms/fsp/neh/wrapper.py \
 -NEH.Init.NEH.PriorityWeighted 1 \
 -NEH.Init.NEH.Insertion first_best
 '''
-class MHWrapper(AbstractWrapper):
-    '''
-        Dummy wrapper for unit testing
-    '''
-    
+class MHWrapper(AbstractWrapper):    
     def __init__(self):
         AbstractWrapper.__init__(self)
         self._return_value = None
@@ -51,18 +47,6 @@ class MHWrapper(AbstractWrapper):
         return cmd
     
     def process_results(self, filepointer, exit_code):
-        '''
-        Parse a results file to extract the run's status (SUCCESS/CRASHED/etc) and other optional results.
-    
-        Args:
-            filepointer: a pointer to the file containing the solver execution standard out.
-            exit_code : exit code of target algorithm
-        '''
-
-        statuses = ['SUCCESS', 'TIMEOUT', 'CRASHED', 'ABORT']
-
-        
-        # If something fails, we a serious problem
         output = dict(status='ABORT')
         for line in filepointer:
             try:
@@ -71,7 +55,6 @@ class MHWrapper(AbstractWrapper):
             except ValueError:
                 traceback.print_exc()
                 pass
-
         return output
 
         

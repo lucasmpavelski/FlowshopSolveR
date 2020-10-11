@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 
@@ -80,6 +81,11 @@ class FSPProblemFactory {
 
   static auto get(const std::unordered_map<std::string, std::string>& prob_data)
       -> FSPProblem {
+    for (const auto& name : names()) {
+      if (prob_data.count(name) != 1)
+        throw std::runtime_error("Missing problem attribute " + name);
+    }
+
     auto problem = prob_data.at("problem");
     auto instance = prob_data.at("instance");
     auto type = prob_data.at("type");

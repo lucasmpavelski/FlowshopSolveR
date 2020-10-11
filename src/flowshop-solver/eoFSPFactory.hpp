@@ -62,35 +62,48 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   auto domainInit() -> eoInit<EOT>* override {
     const std::string name = categoricalName(".Init");
     if (name == "neh") {
-      auto firstPriority = categoricalName(".Init.NEH.First.Priority");
-      auto firstPriorityWeighted = integer(".Init.NEH.First.PriorityWeighted");
-      auto firstPriorityOrder =
-          categoricalName(".Init.NEH.First.PriorityOrder");
-
-      auto firstPriorityInit =
-          buildPriority(_problem.data(), firstPriority, firstPriorityWeighted,
-                        firstPriorityOrder)
-              .release();
-      storeFunctor(firstPriorityInit);
-
-      auto nehPriority = categoricalName(".Init.NEH.Priority");
-      auto nehPriorityWeighted = integer(".Init.NEH.PriorityWeighted");
-      auto nehPriorityOrder = categoricalName(".Init.NEH.PriorityOrder");
-
-      auto priority = buildPriority(_problem.data(), nehPriority,
-                                    nehPriorityWeighted, nehPriorityOrder)
-                          .release();
-      storeFunctor(priority);
-
-      auto nehInsertion = categoricalName(".Init.NEH.Insertion");
-      auto insertion =
-          buildInsertionStrategy(nehInsertion, _problem.neighborEval());
-      storeFunctor(insertion);
-
       auto ratio = real(".Init.NEH.Ratio");
 
-      return &pack<AppendingNEH<Ngh>>(*firstPriorityInit, *priority,
-                                      *insertion, ratio);
+      eoInit<EOT>* firstOrder = nullptr;
+      eoInit<EOT>* nehOrder = nullptr;
+      InsertionStrategy<Ngh>* nehInsert = nullptr;
+
+      if (ratio > 0.0) {
+        auto firstPriority = categoricalName(".Init.NEH.First.Priority");
+        auto firstPriorityWeighted =
+            integer(".Init.NEH.First.PriorityWeighted");
+        auto firstPriorityOrder =
+            categoricalName(".Init.NEH.First.PriorityOrder");
+
+        firstOrder = buildPriority(_problem.data(), firstPriority,
+                                   firstPriorityWeighted, firstPriorityOrder)
+                         .release();
+        storeFunctor(firstOrder);
+        if (ratio == 1.0)
+          return firstOrder;
+      }
+
+      if (ratio < 1.0) {
+        auto nehPriority = categoricalName(".Init.NEH.Priority");
+        auto nehPriorityWeighted = integer(".Init.NEH.PriorityWeighted");
+        auto nehPriorityOrder = categoricalName(".Init.NEH.PriorityOrder");
+
+        nehOrder = buildPriority(_problem.data(), nehPriority,
+                                 nehPriorityWeighted, nehPriorityOrder)
+                       .release();
+        storeFunctor(nehOrder);
+
+        auto nehInsertion = categoricalName(".Init.NEH.Insertion");
+        nehInsert =
+            buildInsertionStrategy(nehInsertion, _problem.neighborEval());
+        storeFunctor(nehInsert);
+
+        if (ratio == 0.0)
+          return &pack<NEH<Ngh>>(*nehOrder, *nehInsert);
+      }
+
+      return &pack<AppendingNEH<Ngh>>(*firstOrder, *nehOrder, *nehInsert,
+                                      ratio);
     }
     return nullptr;
   }

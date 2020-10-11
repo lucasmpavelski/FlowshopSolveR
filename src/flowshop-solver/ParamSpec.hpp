@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -111,6 +112,8 @@ class CatParamSpec : public ParamSpec {
   }
 
   [[nodiscard]] auto toStrValue(float num) const -> std::string override {
+    if (num < 0)
+      throw std::runtime_error("Parameter value not found for " + this->name);
     return cats[int(num)];
   }
 

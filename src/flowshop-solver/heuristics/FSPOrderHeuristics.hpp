@@ -425,6 +425,68 @@ public:
   }
 };
 
+class KK1 : public FSPOrderHeuristic {
+public:
+  using FSPOrderHeuristic::FSPOrderHeuristic;
+
+  auto sortingOrder() -> std::vector<double> override {
+    auto noJobs = fspData.noJobs();
+    auto noMachines = fspData.noMachines();
+    std::vector<double> order(noJobs);
+    int mw = (noMachines - 1) * (noMachines - 2) / 2;
+    for (int j = 0; j < noJobs; j++) {
+      int a = 0, b = 0;
+      for (int i = 0; i < noMachines; i++) {
+        int p_ij = fspData.pt(j, i);
+        a += (mw + noMachines - i - 1) * p_ij;
+        b += (mw + i) * p_ij;
+      }
+      order[j] = std::min(a, b);
+    }
+    return order;
+  }
+};
+
+class NaganoMoccellin : public FSPOrderHeuristic {
+public:
+  using FSPOrderHeuristic::FSPOrderHeuristic;
+
+  auto sortingOrder() -> std::vector<double> override {
+    auto noJobs = fspData.noJobs();
+    auto noMachines = fspData.noMachines();
+    std::vector<int> lb(noJobs * noJobs);
+    std::vector<int> ub(noJobs * noJobs);
+
+    int mw = (noMachines - 1) * (noMachines - 2) / 2;
+    for (int j = 0; j < noJobs; j++) {
+      for (int k = 0; k < noJobs; k++) {
+        if (j != k) {
+          lb[j * noJobs + k] = 0;
+          ub[j * noJobs + k] = 0;
+          for (int i = 1; i < noMachines; i++) {
+            int p_ij = fspData.pt(j, i);
+            int p_im1k = fspData.pt(k, i - 1);
+            int ub_jk = ub[j * noJobs + k];
+            lb[j * noJobs + k] += std::max(0, p_ij - p_im1k - ub_jk);
+            ub[j * noJobs + k] = std::max(0, ub[j * noJobs + k] + p_im1k - p_ij);
+          }
+        }
+      }
+    }
+    std::vector<double> order(noJobs);
+    for (int k = 0; k < noJobs; k++) {
+      int max_lb = 0;
+      for (int j = 0; j < noJobs; j++) {
+        if (j != k && lb[j * noJobs + k] > max_lb) {
+          max_lb = lb[j * noJobs + k];
+        }
+      }
+      order[k] = fspData.jobProcTimesRef()[k] - max_lb;
+    }
+    return order;
+  }
+};
+
 /**
  * FSP priority rule orders
  * - sum_pij from the original NEH
@@ -480,5 +542,9 @@ inline auto buildPriority(const FSPData& data,
     return std::make_unique<LR>(data, weighted, order, false, true, false);
   if (name == "lr_ct")
     return std::make_unique<LR>(data, weighted, order, false, false, true);
+  if (name == "kk1")
+    return std::make_unique<KK1>(data, weighted, order);
+  if (name == "nm")
+    return std::make_unique<NaganoMoccellin>(data, weighted, order);
   return nullptr;
 };

@@ -79,6 +79,8 @@ class MHParamsValues : public eoReal<eoMaximizingFitness> {
     for (const auto& ps : *specs) {
       if (values.count(ps->name))
         this->operator[](ps->name) = ps->fromStrValue(values[ps->name]);
+      else
+        this->operator[](ps->name) = -1.0;
     }
   }
 

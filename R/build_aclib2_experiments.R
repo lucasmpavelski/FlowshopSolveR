@@ -49,7 +49,8 @@ write_aclib2_instances <- function(instances, instances_dir) {
 generate_aclib2_instances <- function() {
     set.seed(75768161)
 
-    all_problems <- train_problems_df()
+    all_problems <- train_problems_df()  %>%
+      filter(budget == 'low')
 
     sampled_instances <- all_problems %>%
       sample_frac(0.2) %>%
@@ -90,9 +91,9 @@ write_aclib2_scenario <- function(set, mh, aclib_scenario, scenarios_dir, ...) {
     "deterministic = 1",
     "run_obj = quality",
     "runcount_limit = 5000",
-    "cutoff_time = 1e30",
-    "tuner-timeout = 1e30",
-    "wallclock_limit = 1e30"
+    "cutoff_time = 2147483647",
+    "tuner-timeout = 2147483647",
+    "wallclock_limit = 2147483647"
   ) %>%
     writeLines(file.path(scenario_dir, "scenario.txt"))
 }

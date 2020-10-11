@@ -6,5 +6,5 @@ docker run --network=host \
     -v $abs_project_folder/_install/:/_install/ \
     -v `pwd`/results:/results \
     -v `pwd`/fsp:/fsp \
-   -it lmpavelski/aclib2:20.04 bash
-    # lmpavelski/aclib2:20.04
+    lmpavelski/aclib2:20.04
+#    -it lmpavelski/aclib2:20.04 bash
