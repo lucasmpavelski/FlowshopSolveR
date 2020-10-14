@@ -187,7 +187,7 @@ TEST(Solve, SA) {
   // std::cout << solveWithSA(prob, values.toMap());
 }
 
-#include "fla_methods.hpp"
+#include "flowshop-solver/fla_methods.hpp"
 
 TEST(FLA, ADAPTIVE) {
   using std::string;

@@ -7,6 +7,7 @@
 #include "flowshop-solver/eoFactory.hpp"
 
 #include "flowshop-solver/global.hpp"
+#include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 #include "flowshop-solver/heuristics/perturb/DestructionConstruction.hpp"
 #include "flowshop-solver/problems/FSP.hpp"
 #include "flowshop-solver/problems/FSPProblem.hpp"
@@ -59,14 +60,27 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     return nullptr;
   }
 
+  auto buildInsertion(const std::string name) -> InsertionStrategy<Ngh>* {
+    auto& neval = _problem.neighborEval();
+    auto insertUPtr = buildInsertionStrategy<Ngh>(name, neval);
+    if (insertUPtr.get() == nullptr) {
+      insertUPtr = buildInsertionStrategyFSP(name, neval, _problem.data());
+    }
+    if (insertUPtr.get() == nullptr) {
+      return nullptr;
+    } else {
+      InsertionStrategy<Ngh>* nehInsert = insertUPtr.release();
+      storeFunctor(nehInsert);
+      return nehInsert;
+    }
+  }
+
   auto domainInit() -> eoInit<EOT>* override {
     const std::string name = categoricalName(".Init");
     if (name == "neh") {
       auto ratio = real(".Init.NEH.Ratio");
 
       eoInit<EOT>* firstOrder = nullptr;
-      eoInit<EOT>* nehOrder = nullptr;
-      InsertionStrategy<Ngh>* nehInsert = nullptr;
 
       if (ratio > 0.0) {
         auto firstPriority = categoricalName(".Init.NEH.First.Priority");
@@ -88,22 +102,22 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
         auto nehPriorityWeighted = integer(".Init.NEH.PriorityWeighted");
         auto nehPriorityOrder = categoricalName(".Init.NEH.PriorityOrder");
 
-        nehOrder = buildPriority(_problem.data(), nehPriority,
+        eoInit<EOT>* nehOrder = buildPriority(_problem.data(), nehPriority,
                                  nehPriorityWeighted, nehPriorityOrder)
                        .release();
         storeFunctor(nehOrder);
 
         auto nehInsertion = categoricalName(".Init.NEH.Insertion");
-        nehInsert =
-            buildInsertionStrategy(nehInsertion, _problem.neighborEval());
-        storeFunctor(nehInsert);
+        auto nehInsert = buildInsertion(nehInsertion);
 
-        if (ratio == 0.0)
+        if (ratio == 0.0) {
           return &pack<NEH<Ngh>>(*nehOrder, *nehInsert);
+        } else {
+          return &pack<AppendingNEH<Ngh>>(*firstOrder, *nehOrder, *nehInsert,
+                                          ratio);
+        }
       }
 
-      return &pack<AppendingNEH<Ngh>>(*firstOrder, *nehOrder, *nehInsert,
-                                      ratio);
     }
     return nullptr;
   }
@@ -222,7 +236,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     auto insertionName = categoricalName(".Perturb.Insertion");
     auto insertion =
         buildInsertionStrategy(insertionName, _problem.neighborEval());
-    storeFunctor(insertion);
+    storeFunctor(insertion.release());
     auto destructionSize = buildDestructionSize();
 
     const std::string name = categoricalName(".Perturb");

@@ -91,9 +91,9 @@ write_aclib2_scenario <- function(set, mh, aclib_scenario, scenarios_dir, ...) {
     "deterministic = 1",
     "run_obj = quality",
     "runcount_limit = 5000",
-    "cutoff_time = 2147483647",
-    "tuner-timeout = 2147483647",
-    "wallclock_limit = 2147483647"
+    "cutoff_time = 21474836",
+    "tuner-timeout = 21474836",
+    "wallclock_limit = 21474836"
   ) %>%
     writeLines(file.path(scenario_dir, "scenario.txt"))
 }

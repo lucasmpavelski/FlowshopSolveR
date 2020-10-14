@@ -425,28 +425,6 @@ public:
   }
 };
 
-class KK1 : public FSPOrderHeuristic {
-public:
-  using FSPOrderHeuristic::FSPOrderHeuristic;
-
-  auto sortingOrder() -> std::vector<double> override {
-    auto noJobs = fspData.noJobs();
-    auto noMachines = fspData.noMachines();
-    std::vector<double> order(noJobs);
-    int mw = (noMachines - 1) * (noMachines - 2) / 2;
-    for (int j = 0; j < noJobs; j++) {
-      int a = 0, b = 0;
-      for (int i = 0; i < noMachines; i++) {
-        int p_ij = fspData.pt(j, i);
-        a += (mw + noMachines - i - 1) * p_ij;
-        b += (mw + i) * p_ij;
-      }
-      order[j] = std::min(a, b);
-    }
-    return order;
-  }
-};
-
 class NaganoMoccellin : public FSPOrderHeuristic {
 public:
   using FSPOrderHeuristic::FSPOrderHeuristic;
@@ -456,8 +434,6 @@ public:
     auto noMachines = fspData.noMachines();
     std::vector<int> lb(noJobs * noJobs);
     std::vector<int> ub(noJobs * noJobs);
-
-    int mw = (noMachines - 1) * (noMachines - 2) / 2;
     for (int j = 0; j < noJobs; j++) {
       for (int k = 0; k < noJobs; k++) {
         if (j != k) {
@@ -482,6 +458,56 @@ public:
         }
       }
       order[k] = fspData.jobProcTimesRef()[k] - max_lb;
+    }
+    return order;
+  }
+};
+
+class KK1 : public FSPOrderHeuristic {
+public:
+  using FSPOrderHeuristic::FSPOrderHeuristic;
+
+  auto sortingOrder() -> std::vector<double> override {
+    auto noJobs = fspData.noJobs();
+    auto noMachines = fspData.noMachines();
+    std::vector<double> order(noJobs);
+    int mw = (noMachines - 1) * (noMachines - 2) / 2;
+    for (int j = 0; j < noJobs; j++) {
+      int a = 0, b = 0;
+      for (int i = 0; i < noMachines; i++) {
+        int p_ij = fspData.pt(j, i);
+        a += (mw + noMachines - i - 1) * p_ij;
+        b += (mw + i) * p_ij;
+      }
+      order[j] = std::min(a, b);
+    }
+    return order;
+  }
+};
+
+class KK2 : public FSPOrderHeuristic {
+public:
+  using FSPOrderHeuristic::FSPOrderHeuristic;
+
+  auto sortingOrder() -> std::vector<double> override {
+    auto noJobs = fspData.noJobs();
+    auto noMachines = fspData.noMachines();
+    const int s = std::floor(noMachines / 2.0);
+    const int t = std::ceil(noMachines / 2.0);
+    const double eps = 1e-6;
+    std::vector<double> order(noJobs);
+    for (int j = 0; j < noJobs; j++) {
+      double u = 0.0;
+      for (int h = 1; h <= s; h++) {
+        const int hi = h - 1;
+        const double w = (h - 0.75) / (s - 0.75) - eps;
+        const int p_sp1mh_j = fspData.pt(j, s + 1 - hi);
+        const int p_tph_j = fspData.pt(j, t + hi);
+        u += w * (p_sp1mh_j - p_tph_j);
+      }
+      double a = fspData.jobProcTime(j) + u;
+      double b = fspData.jobProcTime(j) - u;
+      order[j] = std::min(a, b);
     }
     return order;
   }
@@ -542,9 +568,11 @@ inline auto buildPriority(const FSPData& data,
     return std::make_unique<LR>(data, weighted, order, false, true, false);
   if (name == "lr_ct")
     return std::make_unique<LR>(data, weighted, order, false, false, true);
-  if (name == "kk1")
-    return std::make_unique<KK1>(data, weighted, order);
   if (name == "nm")
     return std::make_unique<NaganoMoccellin>(data, weighted, order);
+  if (name == "kk1")
+    return std::make_unique<KK1>(data, weighted, order);
+  if (name == "kk2")
+    return std::make_unique<KK2>(data, weighted, order);
   return nullptr;
 };

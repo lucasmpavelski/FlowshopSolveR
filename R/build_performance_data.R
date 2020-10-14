@@ -4,62 +4,6 @@ library(FlowshopSolveR)
 library(here)
 library(metaOpt)
 
-
-aclib2_problems <- function(path) {
-  folders <- str_split(path, '/', simplify = T)
-  no_folders <- length(folders)
-  scenario <- folders[,no_folders-1]
-  tunner <- 'IRACE3'
-  
-  scenario_dt <- str_split(scenario, '_', 2, simplify = T)
-  algo <- scenario_dt[,1]
-  scenario_problem <- scenario_dt[,2]
-  
-  train_instances_path <- here('aclib2', 'fsp', 'instances', 'fsp', 'sets', scenario_problem, 'training.txt')
-  test_instances_path <- here('aclib2', 'fsp', 'instances', 'fsp', 'sets', scenario_problem, 'test.txt')
-  
-  train_instances <- read_csv(train_instances_path, col_names = F) %>% pull(X6) %>% as.list()
-  test_instances <- read_csv(test_instances_path, col_names = F) %>% pull(X6) %>% as.list()
-  
-  problem_dt <- str_split(scenario_dt[,2], ',', simplify = T)
-  problem <- problem_dt[,1]
-  objective <- problem_dt[,2]
-  type <- problem_dt[,3]
-  stopping_criterion <- problem_dt[,4]
-  budget <- problem_dt[,5]
-  dist <- problem_dt[,6]
-  corr <- problem_dt[,7]
-  no_jobs <- problem_dt[,8]
-  no_machines <- problem_dt[,9]
-  
-  problem_dt <- list(
-    scenario = scenario,
-    tunner = tunner,
-    algo = algo,
-    scenario_problem = scenario_problem,
-    problem = problem,
-    objective = objective,
-    type = type,
-    stopping_criterion = stopping_criterion,
-    budget = budget,
-    dist = dist,
-    corr = corr,
-    no_jobs = no_jobs,
-    no_machines = no_machines,
-    path = path
-  )
-  
-  problem_obj <- Problem(
-    name = scenario_problem,
-    instances = train_instances,
-    data = problem_dt
-  )
-  
-  problem_dt$problem_obj <- list(problem_obj)
-  
-  problem_dt
-}
-
 aclib2_test_problems <- function(path) {
   folders <- str_split(path, '/', simplify = T)
   no_folders <- length(folders)
@@ -154,15 +98,15 @@ solve <- function(algorithm, config, instance, problem, seed, ...) {
 
 # aclib2_params_path <- here('aclib2', 'fsp', 'target_algorithms', 'fsp', 'NEH', 'params.pcs')
 params_txt <- paste('NEH_Init "NEH_Init" c (neh)',
-  'NEH_Init_NEH_Ratio "NEH_Init_NEH_Ratio" o (0, 0.25, 0.5, 0.75, 1)',
-  'NEH_Init_NEH_First_Priority "NEH_Init_NEH_First_Priority" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3,lr_it_ct,lr_it,lr_aj,lr_ct,kk1,kk2,nm) | NEH_Init_NEH_Ratio %in% c("0.25","0.5","0.75","1")',
-  'NEH_Init_NEH_First_PriorityWeighted "NEH_Init_NEH_First_PriorityWeighted" c (0,1) | NEH_Init_NEH_Ratio %in% c("0.25","0.5","0.75","1")',
-  'NEH_Init_NEH_First_PriorityOrder "NEH_Init_NEH_First_PriorityOrder" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | NEH_Init_NEH_Ratio %in% c("0.25","0.5","0.75","1")',
-  'NEH_Init_NEH_Priority "NEH_Init_NEH_Priority" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3,lr_it_ct,lr_it,lr_aj,lr_ct,kk1,kk2,nm) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
-  'NEH_Init_NEH_PriorityOrder "NEH_Init_NEH_PriorityOrder" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
-  'NEH_Init_NEH_PriorityWeighted "NEH_Init_NEH_PriorityWeighted" c (0,1) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
-  'NEH_Init_NEH_Insertion "NEH_Init_NEH_Insertion" c (first_best,last_best,kk1,kk2,nm1) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
-  sep = '\n')
+                    'NEH_Init_NEH_Ratio "NEH_Init_NEH_Ratio" o (0, 0.25, 0.5, 0.75, 1)',
+                    'NEH_Init_NEH_First_Priority "NEH_Init_NEH_First_Priority" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3,lr_it_ct,lr_it,lr_aj,lr_ct,kk1,kk2,nm) | NEH_Init_NEH_Ratio %in% c("0.25","0.5","0.75","1")',
+                    'NEH_Init_NEH_First_PriorityWeighted "NEH_Init_NEH_First_PriorityWeighted" c (0,1) | NEH_Init_NEH_Ratio %in% c("0.25","0.5","0.75","1")',
+                    'NEH_Init_NEH_First_PriorityOrder "NEH_Init_NEH_First_PriorityOrder" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | NEH_Init_NEH_Ratio %in% c("0.25","0.5","0.75","1")',
+                    'NEH_Init_NEH_Priority "NEH_Init_NEH_Priority" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3,lr_it_ct,lr_it,lr_aj,lr_ct,kk1,kk2,nm) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
+                    'NEH_Init_NEH_PriorityOrder "NEH_Init_NEH_PriorityOrder" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
+                    'NEH_Init_NEH_PriorityWeighted "NEH_Init_NEH_PriorityWeighted" c (0,1) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
+                    'NEH_Init_NEH_Insertion "NEH_Init_NEH_Insertion" c (first_best,last_best,kk1,kk2,nm1) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
+                    sep = '\n')
 
 default_neh <- tibble(
   NEH_Init='neh',

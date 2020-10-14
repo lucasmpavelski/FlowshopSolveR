@@ -125,17 +125,10 @@ Problem space:
 
 ```{r echo=FALSE, warning=F, message=FALSE}
 ggplot(validation_results) +
-  geom_violin(aes(x = tunner, fill = conf, y = rel_fitness)) +
-  custom_theme +
-  ggtitle('Violing plot of the relative performance of different tuners on all problems')
-```
-
-```{r echo=FALSE, warning=F, message=FALSE}
-ggplot(validation_results) +
   geom_violin(aes(x = tunner, fill = conf, y = rel_fitness+1)) +
   scale_y_log10() +
   custom_theme +
-  ggtitle('(log) Violing plot of the relative performance of different tuners on all problems')
+  ggtitle('(log) ARP of different tuners on all problems')
 ```
 
 
@@ -145,7 +138,7 @@ ggplot(validation_results) +
   scale_y_log10() +
   facet_grid(~corr) +
   custom_theme +
-  ggtitle('(log) Violing plot of the relative performance of different tuners on all problems - by correlation')
+  ggtitle('ARP of different tuners on all problems - by correlation')
 ```
 
 
@@ -155,7 +148,7 @@ ggplot(validation_results) +
   scale_y_log10() +
   facet_grid(~type) +
   custom_theme +
-  ggtitle('(log) Violing plot of the relative performance of different tuners on all problems - by constraint')
+  ggtitle('ARP for different tuners on all problems - by constraint')
 ```
 
 ```{r echo=FALSE, warning=F, message=FALSE}
@@ -166,6 +159,18 @@ validation_results %>%
   geom_col(aes(x = tunner, y = n, fill = tunner)) +
   custom_theme +
   ggtitle('Number of times a tunner achived the best performance (rel fitness = 0)')
+```
+
+
+```{r echo=FALSE, warning=F, message=FALSE}
+validation_results %>%
+  filter(rel_fitness == 0) %>%
+  count(tunner, dist) %>%
+  ggplot() +
+  geom_col(aes(x = tunner, y = n, fill = tunner)) +
+  facet_wrap(~dist) +
+  custom_theme +
+  ggtitle('Number of times a tunner achived the best performance (rel fitness = 0) - by distribution')
 ```
 
 ```{r echo=FALSE, warning=F, message=FALSE}
@@ -200,13 +205,6 @@ tunners_results <- validation_results %>%
 friedmanTest(tunners_results$rel_fitness,  tunners_results$tunner, tunners_results$instance)
 ```
 
-
-```{r, echo=F, warning=F, message=F}
-tunners_results <- validation_results %>%
-  filter(tunner != 'DEFAULT')
-
-friedmanTest(tunners_results$rel_fitness,  tunners_results$tunner, tunners_results$instance)
-```
 
 
 Statistics of the performances:

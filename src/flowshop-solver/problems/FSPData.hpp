@@ -108,7 +108,7 @@ struct FSPData {
   [[nodiscard]] auto jobProcTimesRef() const -> const ivec& {
     return total_job_proc_times;
   }
-  [[nodiscard]] auto jobProcTime(const int j) {
+  [[nodiscard]] auto jobProcTime(const int j) const {
     return total_job_proc_times[j];
   }
 
