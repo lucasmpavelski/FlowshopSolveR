@@ -127,59 +127,8 @@ problems_dt <- scenarios %>%
 
 problem_space <- ProblemSpace(problems = problems_dt$problem_obj)
 
-dataFrame2Character <- function(dataFrame) {
-  values <- as.character(dataFrame)
-  names(values) <- names(dataFrame)
-  values
-}
-
-solve <- function(algorithm, config, instance, problem, seed, ...) {
-  initFactories(here('data'))
-  cf <- dataFrame2Character(config)
-  names(cf) <- str_replace_all(names(cf), '_', '.')
-  prob <- unlist(problem@data)
-  prob['instance'] <- instance
-  res <- solveFSP(
-    mh = algorithm@name,
-    rproblem = prob,
-    rparams = cf,
-    seed = seed,
-    verbose = F
-  )
-  list(
-    cost = res$fitness,
-    time = res$time
-  )
-}
-
-# aclib2_params_path <- here('aclib2', 'fsp', 'target_algorithms', 'fsp', 'NEH', 'params.pcs')
-params_txt <- paste('NEH_Init "NEH_Init" c (neh)',
-  'NEH_Init_NEH_Ratio "NEH_Init_NEH_Ratio" o (0, 0.25, 0.5, 0.75, 1)',
-  'NEH_Init_NEH_First_Priority "NEH_Init_NEH_First_Priority" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3,lr_it_ct,lr_it,lr_aj,lr_ct,kk1,kk2,nm) | NEH_Init_NEH_Ratio %in% c("0.25","0.5","0.75","1")',
-  'NEH_Init_NEH_First_PriorityWeighted "NEH_Init_NEH_First_PriorityWeighted" c (0,1) | NEH_Init_NEH_Ratio %in% c("0.25","0.5","0.75","1")',
-  'NEH_Init_NEH_First_PriorityOrder "NEH_Init_NEH_First_PriorityOrder" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | NEH_Init_NEH_Ratio %in% c("0.25","0.5","0.75","1")',
-  'NEH_Init_NEH_Priority "NEH_Init_NEH_Priority" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3,lr_it_ct,lr_it,lr_aj,lr_ct,kk1,kk2,nm) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
-  'NEH_Init_NEH_PriorityOrder "NEH_Init_NEH_PriorityOrder" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
-  'NEH_Init_NEH_PriorityWeighted "NEH_Init_NEH_PriorityWeighted" c (0,1) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
-  'NEH_Init_NEH_Insertion "NEH_Init_NEH_Insertion" c (first_best,last_best,kk1,kk2,nm1) | NEH_Init_NEH_Ratio %in% c("0","0.25","0.5","0.75")',
-  sep = '\n')
-
-default_neh <- tibble(
-  NEH_Init='neh',
-  NEH_Init_NEH_Ratio='0',
-  NEH_Init_NEH_First_Priority='sum_pij',
-  NEH_Init_NEH_First_PriorityWeighted='0',
-  NEH_Init_NEH_First_PriorityOrder='decr',
-  NEH_Init_NEH_Priority='sum_pij',
-  NEH_Init_NEH_PriorityOrder='decr',
-  NEH_Init_NEH_PriorityWeighted='0',
-  NEH_Init_NEH_Insertion='first_best'
-)
-
-algorithm <- Algorithm(
-  name = 'NEH',
-  parameters = readParameters(text = params_txt)
-)
+algorithm <- get_algorithm('NEH')
+default_neh <- default_configs('NEH')
 
 algorithm_space <- AlgorithmSpace(algorithms = list(algorithm))
 
@@ -192,7 +141,7 @@ dir.create(cache_folder, showWarnings = F)
 irace_trained <- build_performance_data(
   problem_space = problem_space,
   algorithm_space = algorithm_space,
-  solve_function = solve,
+  solve_function = fsp_solver_performance,
   irace_scenario = defaultScenario(list(
     deterministic = 1,
     maxExperiments = 5000,
