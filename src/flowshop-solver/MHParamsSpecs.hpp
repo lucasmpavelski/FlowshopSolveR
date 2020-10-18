@@ -148,17 +148,12 @@ class MHParamsSpecs {
 
   static auto str2Param(const std::string& str) -> std::shared_ptr<ParamSpec> {
     std::vector<std::string> splits = tokenize(str, std::string("\"()|#"));
-    // example: ILS.Accept.Temperature  "" r (0.0, 0.5)  | ILS.Accept == 2 #
-    // hello split[0] == name split[1] == par_switch (unused) split[2] == type
-    // split[3] == bounds or values
-    // split[4] == conditionals (unused)
-    // split[5] == commentary (unused)
     std::string name = trim(splits[0]);
     ParamSpec::Type type = ParamSpec::Type(trim(splits[2])[0]);
     std::vector<std::string> bounds_strs = tokenize(splits[3], ',');
     std::transform(bounds_strs.begin(), bounds_strs.end(), bounds_strs.begin(),
                    trim);
-    if (type == ParamSpec::Type::CAT) {
+    if (type == ParamSpec::Type::CAT || type == ParamSpec::Type::ORD) {
       assert(bounds_strs.size() >= 1);
       return std::make_shared<CatParamSpec>(name, bounds_strs);
     } else {
@@ -167,23 +162,6 @@ class MHParamsSpecs {
       auto up = std::strtod(bounds_strs[1].c_str(), nullptr);
       return std::make_shared<ParamSpec>(name, type, low, up);
     }
-    /*std::istringstream ss(str);
-    std::string name, par_switch, type_str;
-    std::getline(ss, name, ' ');
-    while (ss.good() && ss.peek() != '\"')
-      ss.get();
-    std::getline(ss, par_switch, '\"'); // unused
-    ss.get();
-    while (ss.good() && ss.peek() == ' ')
-      ss.get();
-    std::getline(ss, type_str, ' ');
-    auto type          = ParamSpec::Type(type_str[0]);
-    std::string bounds = ss.str();
-    auto beg           = bounds.find('(');
-    auto end           = bounds.find(')');
-    bounds             = bounds.substr(beg + 1, end - beg - 1);
-    auto bounds_strs   = tokenize(bounds, ',');
-    */
   }
 
   static auto inBounds(int x, int a, int b) -> bool { return x >= a && x < b; }

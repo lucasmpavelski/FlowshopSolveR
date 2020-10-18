@@ -15,7 +15,7 @@ class ParamSpec {
  public:
   float lower_bound, upper_bound;
   std::string name;
-  enum class Type : char { CAT = 'c', INT = 'i', REAL = 'r' } type;
+  enum class Type : char { CAT = 'c', INT = 'i', REAL = 'r', ORD = 'o' } type;
 
   ParamSpec(std::string _name,
             Type _type,
@@ -63,7 +63,8 @@ class ParamSpec {
         return std::numeric_limits<float>::quiet_NaN();
       return std::stof(s.c_str());
     } catch (std::invalid_argument e) {
-      std::cerr << "Value " << s << " cannot be converted to values for paramater " << name;
+      std::cerr << "Value " << s
+                << " cannot be converted to values for paramater " << name;
       throw std::move(e);
     }
   }
@@ -83,15 +84,6 @@ class ParamSpec {
     return !(a == b);
   }
 };
-
-/// std::ostream &operator<<(std::ostream &o, const ParamSpec::Type &t) {
-///  switch (t) {
-///  case ParamSpec::Type::CAT: o << 'c'; break;
-///  case ParamSpec::Type::INT: o << 'i'; break;
-///  case ParamSpec::Type::REAL: o << 'r'; break;
-///  }
-///  return o;
-///}
 
 class CatParamSpec : public ParamSpec {
  public:

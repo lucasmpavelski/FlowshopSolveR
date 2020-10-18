@@ -78,14 +78,15 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   auto domainInit() -> eoInit<EOT>* override {
     const std::string name = categoricalName(".Init");
     if (name == "neh") {
-      auto ratio = real(".Init.NEH.Ratio");
+      const auto ratioStr = categoricalName(".Init.NEH.Ratio");
+      const auto ratio = std::stod(ratioStr);
 
       eoInit<EOT>* firstOrder = nullptr;
 
       if (ratio > 0.0) {
         auto firstPriority = categoricalName(".Init.NEH.First.Priority");
         auto firstPriorityWeighted =
-            integer(".Init.NEH.First.PriorityWeighted");
+            categoricalName(".Init.NEH.First.PriorityWeighted") == "yes";
         auto firstPriorityOrder =
             categoricalName(".Init.NEH.First.PriorityOrder");
 
@@ -99,7 +100,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
 
       if (ratio < 1.0) {
         auto nehPriority = categoricalName(".Init.NEH.Priority");
-        auto nehPriorityWeighted = integer(".Init.NEH.PriorityWeighted");
+        auto nehPriorityWeighted = categoricalName(".Init.NEH.PriorityWeighted") == "yes";
         auto nehPriorityOrder = categoricalName(".Init.NEH.PriorityOrder");
 
         eoInit<EOT>* nehOrder = buildPriority(_problem.data(), nehPriority,

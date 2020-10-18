@@ -5,7 +5,9 @@ all_problems_df <- function() {
     all_instances_df(),
     models_attrs_df()
   ) %>%
-    group_nest(across(!c("inst_n", "instance")), .key = "instances")
+    group_nest(across(!c("inst_n", "instance")), .key = "instances") %>%
+    mutate(instance_features = paste(problem, dist, corr, no_jobs, no_machines, sep = ',')) %>%
+    mutate(id = row_number())
 }
 
 generate_train_test_sets <- function() {

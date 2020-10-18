@@ -17,6 +17,8 @@ Depends:
     stringr,
     future,
     here,
-    schedulingInstancesGeneratoR
+    readr,
+    schedulingInstancesGeneratoR,
+    metaOpt
 Imports: Rcpp (>= 1.0.4)
 LinkingTo: Rcpp
