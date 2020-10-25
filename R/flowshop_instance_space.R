@@ -105,12 +105,12 @@ taillard_instances_df <- function() {
 #' @examples
 all_instances_df <- function() {
   bind_rows(
-    generated_instances_df(GENERATED_INSTANCES_ATTRS),
-    vrf_small_instances_df() %>%
-      filter(no_jobs == 50 & no_machines == 20),
-    vrf_large_instances_df() %>%
-      filter(no_jobs %in% c(100, 200) & no_machines %in% c(20, 40)),
-    taillard_instances_df() %>%
-      filter(no_jobs %in% c(50, 100, 200) & no_machines %in% c(20))
+    # generated_instances_df(GENERATED_INSTANCES_ATTRS),
+    vrf_small_instances_df(), #%>%
+      # filter(no_jobs == 50 & no_machines == 20),
+    vrf_large_instances_df() #, #%>%
+      # filter(no_jobs %in% c(100, 200) & no_machines %in% c(20, 40)),
+    # taillard_instances_df() %>%
+      # filter(no_jobs %in% c(50, 100, 200) & no_machines %in% c(20))
   )
 }

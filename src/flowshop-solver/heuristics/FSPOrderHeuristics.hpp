@@ -376,14 +376,14 @@ public:
       for (auto i : unscheduled) {
         // calculate artificial times
         it[i] = 0.0;
-        int cim = (k == 0 ? 0 : ct[0 * noJobs + k - 1]) + p[0 * noJobs + i];
-        double cpm = cim + artificialJobTime(i, 0, unscheduled);
+        int cim = w(0) * ((k == 0 ? 0 : ct[0 * noJobs + k - 1]) + p[0 * noJobs + i]);
+        double cpm = w(0) * (cim + artificialJobTime(i, 0, unscheduled));
         for (int j = 1; j < noMachines; j++) {
           int ct_k_j = k == 0 ? 0 : ct[j * noJobs + k - 1];
           int pt_i = p[j * noJobs + i]; 
-          it[i] += itWeight(j, k) * std::max(cim - ct_k_j, 0);
-          cim = std::max(ct_k_j, cim) + pt_i;
-          cpm = std::max(static_cast<double>(cim), cpm) + artificialJobTime(i, j, unscheduled);
+          it[i] += w(j) * itWeight(j, k) * std::max(cim - ct_k_j, 0);
+          cim = w(j) * (std::max(ct_k_j, cim) + pt_i);
+          cpm = w(j) * (std::max(static_cast<double>(cim), cpm) + artificialJobTime(i, j, unscheduled));
         }
         at[i] = enableCT * cim + enableAJ * cpm;
       }
@@ -419,8 +419,8 @@ public:
   auto itWeight(int j, int k) -> double {
     j++;
     k++;
-    const int n = fspData.noJobs();
-    const int m = fspData.noMachines();
+    const double n = fspData.noJobs();
+    const double m = fspData.noMachines();
     return m / (j + k * (m - j) / (n - 2));
   }
 };
@@ -442,9 +442,9 @@ public:
           for (int i = 1; i < noMachines; i++) {
             int p_ij = fspData.pt(j, i);
             int p_im1k = fspData.pt(k, i - 1);
-            int ub_jk = ub[j * noJobs + k];
-            lb[j * noJobs + k] += std::max(0, p_ij - p_im1k - ub_jk);
-            ub[j * noJobs + k] = std::max(0, ub[j * noJobs + k] + p_im1k - p_ij);
+            int ub_jk_m1 = ub[j * noJobs + k - 1];
+            ub[j * noJobs + k] = std::max(0, ub_jk_m1 + p_im1k - p_ij);
+            lb[j * noJobs + k] += w(i) * std::max(0, p_ij - p_im1k - ub[j * noJobs + k]);
           }
         }
       }
@@ -476,8 +476,8 @@ public:
       int a = 0, b = 0;
       for (int i = 0; i < noMachines; i++) {
         int p_ij = fspData.pt(j, i);
-        a += (mw + noMachines - i - 1) * p_ij;
-        b += (mw + i) * p_ij;
+        a += (mw + noMachines - i - 1) * p_ij * w(i);
+        b += (mw + i) * p_ij * w(i);
       }
       order[j] = std::min(a, b);
     }
@@ -500,10 +500,10 @@ public:
       double u = 0.0;
       for (int h = 1; h <= s; h++) {
         const int hi = h - 1;
-        const double w = (h - 0.75) / (s - 0.75) - eps;
+        const double whs = (h - 0.75) / (s - 0.75) - eps;
         const int p_sp1mh_j = fspData.pt(j, s + 1 - hi);
         const int p_tph_j = fspData.pt(j, t + hi);
-        u += w * (p_sp1mh_j - p_tph_j);
+        u += whs * (p_sp1mh_j - p_tph_j) * w(hi);
       }
       double a = fspData.jobProcTime(j) + u;
       double b = fspData.jobProcTime(j) - u;
