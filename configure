@@ -2,7 +2,8 @@
 
 ## TODO: test if system contains: CMake, Ninja, Paradiseo, Eigen etc
 
-mkdir -p _install
-cd _install
+install_dir=_install$INSTALL_POSTFIX
+mkdir -p $install_dir 
+cd $install_dir
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 ninja

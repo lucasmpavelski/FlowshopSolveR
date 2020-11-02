@@ -1,3 +1,0 @@
-name,mh,params
-
-FRRMAB-148,IG,IG.Init=neh IG.Init.NEH.Priority=sum_pij IG.Init.NEH.PriorityOrder=incr IG.Init.NEH.PriorityWeighted=0 IG.Init.NEH.Insertion=first_best IG.Comp.Strat=strict IG.Neighborhood.Size=1 IG.Neighborhood.Strat=random IG.Local.Search=best_insertion IG.LS.Single.Step=1 IG.Accept=temperature IG.Accept.Temperature=0.5 IG.Perturb=adaptive IG.Perturb.DestructionSize=4 IG.Perturb.Insertion=first_best IG.LSPS.Local.Search=best_insertion IG.LSPS.Single.Step=0 IG.AOS.Strategy=frrmab IG.AOS.WarmUp.Strategy=fixed IG.AOS.WarmUp.Proportion=0.4882 IG.AOS.RewardType=2 IG.AOS.FRRMAB.WindowSize=425 IG.AOS.FRRMAB.Scale=56.8155 IG.AOS.FRRMAB.Decay=0.9952 IG.AOS.Options=1_4_8

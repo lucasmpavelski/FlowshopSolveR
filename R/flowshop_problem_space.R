@@ -44,3 +44,15 @@ test_problems_df <- function() {
   read_csv(train_path) %>%
     group_nest(across(!c("inst_n", "instance")), .key = "instances")
 }
+
+as_metaopt_problem <- function(model, instance_features, instances, ...) {
+  Problem(
+    name = paste(model, instance_features, sep = ','),
+    instances = as.list(instances$instance),
+    data = list(...)
+  )
+}
+
+fsp_problem_space <- function(problems_dt = all_problems_df()) {
+  ProblemSpace(problems = pmap(problems_dt, as_metaopt_problem))
+}

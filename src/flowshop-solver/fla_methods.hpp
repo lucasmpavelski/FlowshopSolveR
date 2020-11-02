@@ -145,10 +145,10 @@ double adaptiveWalkLength(
   return sampling->getValues(0).at(0);
 }
 
-std::vector<double> randomWalk(
-    std::unordered_map<std::string, std::string> prob_params,
-    std::unordered_map<std::string, std::string> sampling_params,
-    unsigned seed) {
+auto randomWalk(
+    const std::unordered_map<std::string, std::string>& prob_params,
+    const std::unordered_map<std::string, std::string>& sampling_params,
+    unsigned seed) -> std::vector<double> {
   rng.reseed(seed);
   FSPProblem problem = FSPProblemFactory::get(prob_params);
   using EOT = FSPProblem::EOT;
@@ -159,7 +159,7 @@ std::vector<double> randomWalk(
   auto init_strat = getWithDef(sampling_params, "Init.Strat"s, "RANDOM"s);
   auto sampling_strat =
       getWithDef(sampling_params, "Sampling.Strat"s, "RANDOM"s);
-  auto no_steps = std::stoi(getWithDef(sampling_params, "No.Steps"s, "1000"s));
+  auto no_steps = std::stoi(getWithDef(sampling_params, "No.Steps"s, "10000"s));
  
   EOT order;
   SUM_PIJ(problem.getData(), false, "incr")(order);
@@ -199,10 +199,10 @@ std::vector<double> randomWalk(
   return sampling->getValues(0);
 }
 
-double walkSamplingAutocorr(
+auto walkSamplingAutocorr(
     const std::unordered_map<std::string, std::string>& prob_params,
     const std::unordered_map<std::string, std::string>& sampling_params,
-    unsigned seed) {
+    unsigned seed) -> double {
   auto fits = randomWalk(prob_params, sampling_params, seed);
   double fits_mean = std::accumulate(begin(fits), end(fits), 0.0) / fits.size();
 

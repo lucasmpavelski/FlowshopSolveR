@@ -3,17 +3,43 @@ library(tidyverse)
 library(FlowshopSolveR)
 library(here)
 library(metaOpt)
+library(optparse)
 
-as_metaopt_problem <- function(model, instance_features, instances, ...) {
-  Problem(
-    name = paste(model, instance_features, sep = ','),
-    instances = as.list(instances$instance),
-    data = list(...)
-  )
+option_list <- list( 
+  make_option(c("-d", "--dist"), action="dist", default=NULL, type='character',
+              help="Print extra output [default]"),
+  make_option(c("-c", "--corr"), action="corr", default=NULL, type='character',
+              help="Print extra output [default]"),
+  make_option(c("-p", "--prob"), action="prob", default=NULL, type='character',
+              help="Print extra output [default]")
+)
+opt <- parse_args(OptionParser(option_list=option_list))
+dist_op <- opt$dist
+corr_op <- opt$corr
+prob_op <- opt$prob
+
+problems_dt <- all_problems_df() %>%
+  filter(budget == 'low', no_jobs <= 500)
+
+if (!is.null(prob_op)) {
+  problems_dt <- problems_dt %>%
+    filter(problem == prob_op)
+}
+if (!is.null(dist_op)) {
+  problems_dt <- problems_dt %>%
+    filter(dist == dist_op)
+}
+if (!is.null(corr_op)) {
+  problems_dt <- problems_dt %>%
+    filter(corr == corr_op)
 }
 
-problems_dt <- all_problems_df()
-problem_space <- ProblemSpace(problems = pmap(problems_dt, as_metaopt_problem))
+print(prob_op)
+print(dist_op)
+print(corr_op)
+print(problems_dt %>% select(dist, corr))
+
+problem_space <- fsp_problem_space(problems_dt)
 algorithm <- get_algorithm('NEH')
 default_neh <- default_configs('NEH')
 algorithm_space <- AlgorithmSpace(algorithms = list(algorithm))
@@ -34,5 +60,5 @@ irace_trained <- build_performance_data(
     initConfigurations = default_neh
   )),
   cache_folder = cache_folder,
-  parallel = 7
+  parallel = 16
 )

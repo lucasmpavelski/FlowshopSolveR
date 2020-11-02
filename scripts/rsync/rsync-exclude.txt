@@ -1,0 +1,8 @@
+_install*
+*.so
+build
+.clangd/*
+*.so
+*.o
+.Rproj.user/*
+.git/*

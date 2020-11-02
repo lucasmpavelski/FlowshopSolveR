@@ -32,8 +32,10 @@ packrat/lib*/
 .clangd/*
 *.so
 *.o
-_install/*
+_install*
 aclib2/*results*/*
 aclib2/fsp/instances/*
 aclib2/fsp/scenarios/*
 data/instances/*/*
+data/features/*.rds
+runs/*

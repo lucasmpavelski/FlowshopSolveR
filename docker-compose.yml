@@ -1,0 +1,10 @@
+version: "3.3"
+services:
+  flowshopsolvers:
+    build:
+      context: .
+      dockerfile: scripts/docker/Dockerfile
+    volumes:
+      - .:/src
+    command: bash -c 'cd /src && ./scripts/docker/build.sh && ./scripts/docker/run.sh '
+    network_mode: "host"
