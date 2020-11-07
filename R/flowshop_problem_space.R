@@ -19,7 +19,7 @@ generate_train_test_sets <- function() {
   } else {
     set.seed(7287287)
     problems <- all_problems_df()
-    test_idx <- sample.int(nrow(problems), size = round(nrow(problems) * 0.2))
+    test_idx <- sample.int(nrow(problems), size = round(nrow(problems) * 0.25))
     problems[test_idx, ] %>%
       unnest(instances) %>%
       write_csv(test_path)

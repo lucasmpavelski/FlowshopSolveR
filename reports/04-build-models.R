@@ -2,7 +2,7 @@ library(tidymodels)
 library(FlowshopSolveR)
 
 problems_dt <- all_problems_df() %>%
-  filter(budget == 'low', no_jobs <= 500, dist != 'vrf') %>%
+  filter(budget == 'low', no_jobs <= 500) %>%
   mutate(
     metaopt_problem = pmap(., as_metaopt_problem),
     name = map(metaopt_problem, ~as_tibble(.x@data)),
@@ -10,7 +10,9 @@ problems_dt <- all_problems_df() %>%
                                  ~file.exists(here('runs', 'neh', .x@name, 'NEH', 'result.rds')))
   ) %>%
   filter(performance_exists) %>%
-  mutate(features = map(metaopt_problem, load_problem_features))
+  unnest(instances) %>%
+  mutate(features = map2(metaopt_problem, instance, load_problem_features, 
+                         features_folder = here('data', 'features')))
 
 problem_space <- ProblemSpace(problems = problems_dt$metaopt_problem)
 algorithm <- get_algorithm('NEH')
@@ -45,15 +47,17 @@ output_dt <- irace_trained %>%
   ) %>%
   unnest(results) %>%
   mutate(problems_dt = map(problems, ~as_tibble(.x@data))) %>%
-  unnest(problems_dt) %>%
-  select(name, all_of(params))
+  unnest(problems_dt) #%>%
+  # select(name, all_of(params))
+
 
 input_dt <- problems_dt %>%
   select(type, objective, features) %>%
   unnest(features)
   
-param_idx <- 6
+param_idx <- 3
 param <- params[param_idx]
+print(param)
 param_type <- params_types[[param]]
 param_domain <- params_domains[[param]]
 
@@ -63,6 +67,8 @@ train_dt <- output_dt %>%
   select(name, all_of(param)) %>%
   inner_join(input_dt, by = 'name') %>%
   select(all_of(input_features), all_of(param))
+
+train_dt <- train_dt[!is.na(train_dt[, param]),]
 
 formula <- as.formula(paste(param, '~', paste(input_features, collapse = '+')))
 
@@ -123,6 +129,22 @@ final_tree <-
 dt_pred <- tibble(
   .pred_class = predict(final_tree, param_test)$.pred_class,
   .pred_truth = param_test %>% pull(param)
+)
+
+if (param_type %in% c('c', 'o')) {
+  dt_pred <- dt_pred %>%
+    mutate(
+      .pred_class = factor(.pred_class, levels = param_domain),
+      .pred_truth = factor(.pred_truth, levels = param_domain)
+    )
+}
+
+dt_acc <- accuracy(dt_pred, truth = .pred_truth, estimate = .pred_class)
+print(dt_acc)
+
+dt_pred <- tibble(
+  .pred_class = predict(final_tree, param_train)$.pred_class,
+  .pred_truth = param_train %>% pull(param)
 )
 
 if (param_type %in% c('c', 'o')) {

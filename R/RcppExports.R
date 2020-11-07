@@ -9,3 +9,35 @@ solveFSP <- function(mh, rproblem, seed, rparams, verbose = FALSE) {
     .Call(`_FlowshopSolveR_solveFSP`, mh, rproblem, seed, rparams, verbose)
 }
 
+randomWalk <- function(rproblem, rsampling, seed) {
+    .Call(`_FlowshopSolveR_randomWalk`, rproblem, rsampling, seed)
+}
+
+adaptiveWalk <- function(rproblem, rsampling, seed) {
+    .Call(`_FlowshopSolveR_adaptiveWalk`, rproblem, rsampling, seed)
+}
+
+walkSamplingAutocorrFLA <- function(rproblem, rsampling, seed) {
+    .Call(`_FlowshopSolveR_walkSamplingAutocorrFLA`, rproblem, rsampling, seed)
+}
+
+adaptiveWalkLengthFLA <- function(rproblem, rsampling, seed) {
+    .Call(`_FlowshopSolveR_adaptiveWalkLengthFLA`, rproblem, rsampling, seed)
+}
+
+solutionStatisticsFLA <- function(dataFolder, rproblem, noSamples, seed) {
+    .Call(`_FlowshopSolveR_solutionStatisticsFLA`, dataFolder, rproblem, noSamples, seed)
+}
+
+enumerateAllFitness <- function(rproblem) {
+    .Call(`_FlowshopSolveR_enumerateAllFitness`, rproblem)
+}
+
+enumerateSolutions <- function(fspInstance, fspProblem) {
+    .Call(`_FlowshopSolveR_enumerateSolutions`, fspInstance, fspProblem)
+}
+
+sampleLON <- function(rproblem, rsampling, seed) {
+    .Call(`_FlowshopSolveR_sampleLON`, rproblem, rsampling, seed)
+}
+

@@ -106,11 +106,11 @@ taillard_instances_df <- function() {
 all_instances_df <- function() {
   bind_rows(
     generated_instances_df(),
-    # vrf_small_instances_df()#, #%>%
+    vrf_small_instances_df(), #%>%
       # filter(no_jobs == 50 & no_machines == 20),
-    vrf_large_instances_df() #, #%>%
+    vrf_large_instances_df() #%>%
       # filter(no_jobs %in% c(100, 200) & no_machines %in% c(20, 40)),
-    # taillard_instances_df() %>%
+    # taillard_instances_df() # %>%
       # filter(no_jobs %in% c(50, 100, 200) & no_machines %in% c(20))
   )
 }

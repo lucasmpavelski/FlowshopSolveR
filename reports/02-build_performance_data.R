@@ -11,15 +11,22 @@ option_list <- list(
   make_option(c("-c", "--corr"), action="corr", default=NULL, type='character',
               help="Print extra output [default]"),
   make_option(c("-p", "--prob"), action="prob", default=NULL, type='character',
+              help="Print extra output [default]"),
+  make_option(c("-m", "--no_machines"), action="no_machines", default=NULL, type='integer',
+              help="Print extra output [default]"),
+  make_option(c("-r", "--cores"), action="cores", default=1, type='integer',
               help="Print extra output [default]")
 )
+
 opt <- parse_args(OptionParser(option_list=option_list))
 dist_op <- opt$dist
 corr_op <- opt$corr
 prob_op <- opt$prob
+no_machines_op <- opt$no_machines
+cores_op <- opt$cores
 
 problems_dt <- all_problems_df() %>%
-  filter(budget == 'low', no_jobs <= 500)
+  filter(budget == 'low')
 
 if (!is.null(prob_op)) {
   problems_dt <- problems_dt %>%
@@ -33,11 +40,13 @@ if (!is.null(corr_op)) {
   problems_dt <- problems_dt %>%
     filter(corr == corr_op)
 }
+if (!is.null(no_machines_op)) {
+  problems_dt <- problems_dt %>%
+    filter(no_machines == no_machines_op)
+}
 
-print(prob_op)
-print(dist_op)
-print(corr_op)
-print(problems_dt %>% select(dist, corr))
+print(opt)
+print(nrow(problems_dt))
 
 problem_space <- fsp_problem_space(problems_dt)
 algorithm <- get_algorithm('NEH')
@@ -60,5 +69,5 @@ irace_trained <- build_performance_data(
     initConfigurations = default_neh
   )),
   cache_folder = cache_folder,
-  parallel = 16
+  parallel = cores_op
 )
