@@ -59,5 +59,5 @@ irace_trained <- build_performance_data(
     recoveryFile = recFile
   )),
   cache_folder = cache_folder,
-  parallel = 16
+  parallel = 8
 )

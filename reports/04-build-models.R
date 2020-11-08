@@ -158,7 +158,6 @@ if (param_type %in% c('c', 'o')) {
 dt_acc <- accuracy(dt_pred, truth = .pred_truth, estimate = .pred_class)
 print(dt_acc)
 
-rpart.plot::rpart.plot(final_tree$fit$fit$fit, box.palette="Blues")
 # 
 # rf_model <- rand_forest(
 #   mode = 'classification'

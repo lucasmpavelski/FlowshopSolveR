@@ -14,4 +14,5 @@
 # wait
 
 (sleep 0 && Rscript reports/02-best-solver.R) &
-(sleep 1 && Rscript reports/03-build-features-data.R)
+(sleep 1 && Rscript reports/03-build-features-data.R) &
+wait

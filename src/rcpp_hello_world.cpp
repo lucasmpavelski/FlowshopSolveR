@@ -62,59 +62,10 @@ try {
 }
 
 
-// [[Rcpp::export]]
-std::vector<double> randomWalk(Rcpp::CharacterVector rproblem,
-                               Rcpp::CharacterVector rsampling,
-                               long seed)
-{
-  auto prob_data = rcharVec2map(rproblem);
-  auto samp_data = rcharVec2map(rsampling);
-  return randomWalk(prob_data, samp_data, seed);
-}
-
-// [[Rcpp::export]]
-List adaptiveWalk(Rcpp::CharacterVector rproblem,
-                 Rcpp::CharacterVector rsampling,
-                 long seed)
-{
-  auto prob_data = rcharVec2map(rproblem);
-  auto samp_data = rcharVec2map(rsampling);
-  auto res = adaptiveWalk(prob_data, samp_data, seed);
-  std::vector<double> fitness(res.size(), 0.0d);
-  std::transform(res.begin(), res.end(), fitness.begin(), [](FSPProblem::EOT sol){
-    return sol.fitness();
-  });
-  using namespace Rcpp;
-  return List::create(
-    Named("fitness") = fitness,
-    Named("solutions") = res
-  );
-}
-
-// [[Rcpp::export]]
-double walkSamplingAutocorrFLA(Rcpp::CharacterVector rproblem,
-                               Rcpp::CharacterVector rsampling,
-                               long seed)
-{
-  auto prob_data = rcharVec2map(rproblem);
-  auto samp_data = rcharVec2map(rsampling);
-  return walkSamplingAutocorr(prob_data, samp_data, seed);
-}
-
-// [[Rcpp::export]]
-int adaptiveWalkLengthFLA(Rcpp::CharacterVector rproblem,
-                          Rcpp::CharacterVector rsampling,
-                          long seed)
-{
-  auto prob_data = rcharVec2map(rproblem);
-  auto samp_data = rcharVec2map(rsampling);
-  return adaptiveWalkLength(prob_data, samp_data, seed);
-}
-
 #include "flowshop-solver/fla/SampleSolutionStatistics.hpp"
 
 // [[Rcpp::export]]
-List solutionStatisticsFLA(
+List sampleSolutionStatisticsFLA(
   std::string dataFolder,
   Rcpp::CharacterVector rproblem,
                            long noSamples,
@@ -144,6 +95,67 @@ List solutionStatisticsFLA(
       Named("slmax") = res.slmax
   );
 }
+
+#include "flowshop-solver/fla/SampleRandomWalk.hpp"
+
+// [[Rcpp::export]]
+std::vector<double> sampleRandomWalk(
+  std::string dataFolder,
+  Rcpp::CharacterVector rproblem,
+  int noSamples,
+  std::string samplingStrat,
+  long seed)
+{
+  initFactories(dataFolder);
+  const auto& probData = rcharVec2map(rproblem);
+  auto problem = FSPProblemFactory::get(probData);
+  RNG::seed(seed);
+  SampleRandomWalk<FSPNeighbor> sampleRWFSP(
+    problem.size(),
+    problem.eval(),
+    problem.neighborEval()
+  );
+  return sampleRWFSP.sample(noSamples, samplingStrat);
+}
+
+// [[Rcpp::export]]
+List adaptiveWalk(Rcpp::CharacterVector rproblem,
+                 Rcpp::CharacterVector rsampling,
+                 long seed)
+{
+  auto prob_data = rcharVec2map(rproblem);
+  auto samp_data = rcharVec2map(rsampling);
+  auto res = adaptiveWalk(prob_data, samp_data, seed);
+  std::vector<double> fitness(res.size(), 0.0d);
+  std::transform(res.begin(), res.end(), fitness.begin(), [](FSPProblem::EOT sol){
+    return sol.fitness();
+  });
+  using namespace Rcpp;
+  return List::create(
+    Named("fitness") = fitness,
+    Named("solutions") = res
+  );
+}
+
+// double walkSamplingAutocorrFLA(Rcpp::CharacterVector rproblem,
+//                                Rcpp::CharacterVector rsampling,
+//                                long seed)
+// {
+//   auto prob_data = rcharVec2map(rproblem);
+//   auto samp_data = rcharVec2map(rsampling);
+//   return walkSamplingAutocorr(prob_data, samp_data, seed);
+// }
+
+// [[Rcpp::export]]
+int adaptiveWalkLengthFLA(Rcpp::CharacterVector rproblem,
+                          Rcpp::CharacterVector rsampling,
+                          long seed)
+{
+  auto prob_data = rcharVec2map(rproblem);
+  auto samp_data = rcharVec2map(rsampling);
+  return adaptiveWalkLength(prob_data, samp_data, seed);
+}
+
 
 // [[Rcpp::export]]
 std::vector<double> enumerateAllFitness(Rcpp::CharacterVector rproblem)

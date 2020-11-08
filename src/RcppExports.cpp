@@ -30,16 +30,32 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// randomWalk
-std::vector<double> randomWalk(Rcpp::CharacterVector rproblem, Rcpp::CharacterVector rsampling, long seed);
-RcppExport SEXP _FlowshopSolveR_randomWalk(SEXP rproblemSEXP, SEXP rsamplingSEXP, SEXP seedSEXP) {
+// sampleSolutionStatisticsFLA
+List sampleSolutionStatisticsFLA(std::string dataFolder, Rcpp::CharacterVector rproblem, long noSamples, long seed);
+RcppExport SEXP _FlowshopSolveR_sampleSolutionStatisticsFLA(SEXP dataFolderSEXP, SEXP rproblemSEXP, SEXP noSamplesSEXP, SEXP seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type dataFolder(dataFolderSEXP);
     Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type rproblem(rproblemSEXP);
-    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type rsampling(rsamplingSEXP);
+    Rcpp::traits::input_parameter< long >::type noSamples(noSamplesSEXP);
     Rcpp::traits::input_parameter< long >::type seed(seedSEXP);
-    rcpp_result_gen = Rcpp::wrap(randomWalk(rproblem, rsampling, seed));
+    rcpp_result_gen = Rcpp::wrap(sampleSolutionStatisticsFLA(dataFolder, rproblem, noSamples, seed));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sampleRandomWalk
+std::vector<double> sampleRandomWalk(std::string dataFolder, Rcpp::CharacterVector rproblem, int noSamples, std::string samplingStrat, long seed);
+RcppExport SEXP _FlowshopSolveR_sampleRandomWalk(SEXP dataFolderSEXP, SEXP rproblemSEXP, SEXP noSamplesSEXP, SEXP samplingStratSEXP, SEXP seedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type dataFolder(dataFolderSEXP);
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type rproblem(rproblemSEXP);
+    Rcpp::traits::input_parameter< int >::type noSamples(noSamplesSEXP);
+    Rcpp::traits::input_parameter< std::string >::type samplingStrat(samplingStratSEXP);
+    Rcpp::traits::input_parameter< long >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(sampleRandomWalk(dataFolder, rproblem, noSamples, samplingStrat, seed));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -56,19 +72,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// walkSamplingAutocorrFLA
-double walkSamplingAutocorrFLA(Rcpp::CharacterVector rproblem, Rcpp::CharacterVector rsampling, long seed);
-RcppExport SEXP _FlowshopSolveR_walkSamplingAutocorrFLA(SEXP rproblemSEXP, SEXP rsamplingSEXP, SEXP seedSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type rproblem(rproblemSEXP);
-    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type rsampling(rsamplingSEXP);
-    Rcpp::traits::input_parameter< long >::type seed(seedSEXP);
-    rcpp_result_gen = Rcpp::wrap(walkSamplingAutocorrFLA(rproblem, rsampling, seed));
-    return rcpp_result_gen;
-END_RCPP
-}
 // adaptiveWalkLengthFLA
 int adaptiveWalkLengthFLA(Rcpp::CharacterVector rproblem, Rcpp::CharacterVector rsampling, long seed);
 RcppExport SEXP _FlowshopSolveR_adaptiveWalkLengthFLA(SEXP rproblemSEXP, SEXP rsamplingSEXP, SEXP seedSEXP) {
@@ -79,20 +82,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type rsampling(rsamplingSEXP);
     Rcpp::traits::input_parameter< long >::type seed(seedSEXP);
     rcpp_result_gen = Rcpp::wrap(adaptiveWalkLengthFLA(rproblem, rsampling, seed));
-    return rcpp_result_gen;
-END_RCPP
-}
-// solutionStatisticsFLA
-List solutionStatisticsFLA(std::string dataFolder, Rcpp::CharacterVector rproblem, long noSamples, long seed);
-RcppExport SEXP _FlowshopSolveR_solutionStatisticsFLA(SEXP dataFolderSEXP, SEXP rproblemSEXP, SEXP noSamplesSEXP, SEXP seedSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type dataFolder(dataFolderSEXP);
-    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type rproblem(rproblemSEXP);
-    Rcpp::traits::input_parameter< long >::type noSamples(noSamplesSEXP);
-    Rcpp::traits::input_parameter< long >::type seed(seedSEXP);
-    rcpp_result_gen = Rcpp::wrap(solutionStatisticsFLA(dataFolder, rproblem, noSamples, seed));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -136,11 +125,10 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_FlowshopSolveR_initFactories", (DL_FUNC) &_FlowshopSolveR_initFactories, 1},
     {"_FlowshopSolveR_solveFSP", (DL_FUNC) &_FlowshopSolveR_solveFSP, 5},
-    {"_FlowshopSolveR_randomWalk", (DL_FUNC) &_FlowshopSolveR_randomWalk, 3},
+    {"_FlowshopSolveR_sampleSolutionStatisticsFLA", (DL_FUNC) &_FlowshopSolveR_sampleSolutionStatisticsFLA, 4},
+    {"_FlowshopSolveR_sampleRandomWalk", (DL_FUNC) &_FlowshopSolveR_sampleRandomWalk, 5},
     {"_FlowshopSolveR_adaptiveWalk", (DL_FUNC) &_FlowshopSolveR_adaptiveWalk, 3},
-    {"_FlowshopSolveR_walkSamplingAutocorrFLA", (DL_FUNC) &_FlowshopSolveR_walkSamplingAutocorrFLA, 3},
     {"_FlowshopSolveR_adaptiveWalkLengthFLA", (DL_FUNC) &_FlowshopSolveR_adaptiveWalkLengthFLA, 3},
-    {"_FlowshopSolveR_solutionStatisticsFLA", (DL_FUNC) &_FlowshopSolveR_solutionStatisticsFLA, 4},
     {"_FlowshopSolveR_enumerateAllFitness", (DL_FUNC) &_FlowshopSolveR_enumerateAllFitness, 1},
     {"_FlowshopSolveR_enumerateSolutions", (DL_FUNC) &_FlowshopSolveR_enumerateSolutions, 2},
     {"_FlowshopSolveR_sampleLON", (DL_FUNC) &_FlowshopSolveR_sampleLON, 3},
