@@ -1,190 +1,242 @@
 library(tidymodels)
+library(tidyselect)
+library(tidyverse)
 library(FlowshopSolveR)
+library(here)
+library(future)
 
-problems_dt <- all_problems_df() %>%
-  filter(budget == 'low', no_jobs <= 500) %>%
-  mutate(
-    metaopt_problem = pmap(., as_metaopt_problem),
-    name = map(metaopt_problem, ~as_tibble(.x@data)),
-    performance_exists = map_lgl(metaopt_problem,
-                                 ~file.exists(here('runs', 'neh', .x@name, 'NEH', 'result.rds')))
-  ) %>%
-  filter(performance_exists) %>%
-  unnest(instances) %>%
-  mutate(features = map2(metaopt_problem, instance, load_problem_features, 
-                         features_folder = here('data', 'features')))
+MODEL_FOLDER <- here("data", "models")
+TASK_NAME <- "NEH_recommendation"
+TASK_FOLDER <- file.path(MODEL_FOLDER, TASK_NAME)
 
-problem_space <- ProblemSpace(problems = problems_dt$metaopt_problem)
-algorithm <- get_algorithm('NEH')
-default_neh <- default_configs('NEH')
-algorithm_space <- AlgorithmSpace(algorithms = list(algorithm))
+dir.create(MODEL_FOLDER, showWarnings = F, recursive = T)
+dir.create(TASK_FOLDER, showWarnings = F, recursive = T)
 
-cache_folder <- here('runs', 'neh')
-dir.create(cache_folder, showWarnings = F)
-irace_trained <- build_performance_data(
-  problem_space = problem_space,
-  algorithm_space = algorithm_space,
-  solve_function = fsp_solver_performance,
-  irace_scenario = defaultScenario(list(
-    deterministic = 1,
-    maxExperiments = 5000,
-    initConfigurations = default_neh
-  )),
-  cache_folder = cache_folder,
-  parallel = 7
-)
+compute_features_data <- function(problems_dt, use_cache = T) {
+  path <- file.path(TASK_FOLDER, "features.csv")
+  if (use_cache & file.exists(path)) {
+    return(read_csv(path))
+  }
+  features_dt <- problems_dt %>%
+    unnest(instances) %>%
+    mutate(features = map2(metaopt_problem, instance, load_problem_features,
+      features_folder = here("data", "features")
+    )) %>%
+    select(type, objective, features) %>%
+    unnest(features)
+  if (use_cache) {
+    write_csv(features_dt, path)
+  }
+  features_dt
+}
+
+compute_outputs_data <- function(problems_dt, algorithm, folder, use_cache = T) {
+  path <- file.path(TASK_FOLDER, "outputs.csv")
+  if (use_cache & file.exists(path)) {
+    return(read_csv(path))
+  }
+  problem_space <- ProblemSpace(problems = problems_dt$metaopt_problem)
+  algorithm_space <- AlgorithmSpace(algorithms = list(algorithm))
+  dir.create(cache_folder, showWarnings = F)
+  performance_dt <- read_performance_data(
+    problem_space,
+    algorithm_space,
+    cache_folder = folder,
+    only_best = T
+  )
+  outputs_dt <- performance_dt %>%
+    mutate(name = map_chr(problem, ~ .x@name)) %>%
+    select(name, all_of(algorithm@parameters$names))
+  if (use_cache) {
+    write_csv(outputs_dt, path)
+  }
+  outputs_dt
+}
+
+build_split <- function(features, outputs, problems_dt, param, summ_features = T) {
+  features <- features %>%
+    select(-instance)
+  if (summ_features) {
+    features <- features %>%
+      group_by(across(where(is.character))) %>%
+      summarise(across(everything(), mean)) %>%
+      ungroup()
+  }
+  problem_set <- problems_dt %>%
+    pmap(as_metaopt_problem) %>%
+    map_chr(~ .x@name)
+  outputs %>%
+    filter(!across(all_of(param), is.na)) %>%
+    filter(name %in% problem_set) %>%
+    inner_join(features, by = "name") %>%
+    select(all_of(c(names(features), param)), -name) %>%
+    mutate(across(all_of(param), factor))
+}
+
+collect_perf <- function(dt_pred) {
+  possible_values <- unique(c(
+    as.character(dt_pred$pred_estimate),
+    as.character(dt_pred$pred_truth)
+  ))
+  dt_pred <- dt_pred %>%
+    mutate(
+      pred_estimate = factor(pred_estimate, levels = possible_values),
+      pred_truth = factor(pred_truth, levels = possible_values)
+    )
+  bind_rows(
+    accuracy(dt_pred, pred_truth, pred_estimate),
+    bal_accuracy(dt_pred, pred_truth, pred_estimate),
+    detection_prevalence(dt_pred, pred_truth, pred_estimate),
+    f_meas(dt_pred, pred_truth, pred_estimate),
+    j_index(dt_pred, pred_truth, pred_estimate),
+    kap(dt_pred, pred_truth, pred_estimate),
+    mcc(dt_pred, pred_truth, pred_estimate),
+    npv(dt_pred, pred_truth, pred_estimate),
+    ppv(dt_pred, pred_truth, pred_estimate),
+    precision(dt_pred, pred_truth, pred_estimate),
+    recall(dt_pred, pred_truth, pred_estimate),
+    sensitivity(dt_pred, pred_truth, pred_estimate),
+    specificity(dt_pred, pred_truth, pred_estimate)
+  )
+}
 
 
-params <- algorithm@parameters$names
-params_types <- algorithm@parameters$types
-params_domains <- algorithm@parameters$domain
+get_model_by_name <- function(model_name) {
+  if (model_name == "decision_tree") {
+    list(
+      model = decision_tree(
+          cost_complexity = tune(),
+          tree_depth = tune()
+        ) %>%
+          set_engine("rpart") %>%
+          set_mode("classification"),
+      tune_grid = grid_regular(
+        cost_complexity(),
+        tree_depth(),
+        levels = 5
+      )
+    )
+  } else if (model_name == "rand_forest") {
+    list(
+      model = rand_forest(
+          mtry = tune(),
+          trees = tune(),
+          min_n = tune()
+        ) %>%
+          set_engine("ranger") %>%
+          set_mode("classification"),
+      tune_grid = grid_regular(
+        mtry(c(1, 10)),
+        trees(),
+        min_n(),
+        levels = 3
+      )
+    )
+  }
+}
 
-output_dt <- irace_trained %>% 
-  select(problems, results) %>%
-  mutate(
-    results = map(results, ~.x[1,]),
-    name = map_chr(problems, ~.x@name)
-  ) %>%
-  unnest(results) %>%
-  mutate(problems_dt = map(problems, ~as_tibble(.x@data))) %>%
-  unnest(problems_dt) #%>%
-  # select(name, all_of(params))
 
+decision_tree_param_model_experiment <- function(train_dt, test_dt, param, model_name, exp_name, cache = T) {
+  exp_path <- file.path(TASK_FOLDER, param, paste0(model_name, ",", exp_name))
+  dir.create(exp_path, recursive = T, showWarnings = F)
+  exp_names <- c(
+    "train_dt", "test_dt", "tune_metrics", "test_perf", "train_perf",
+    "train_predict", "test_predict", "model"
+  )
+  if (cache && all(map_lgl(exp_names, ~ file.exists(file.path(exp_path, .x))))) {
+    exp_result <- list()
+    walk(exp_names, function(name) {
+      exp_result[[name]] <- readRDS(file.path(exp_path, name))
+    })
+    return(exp_result)
+  }
 
-input_dt <- problems_dt %>%
-  select(type, objective, features) %>%
-  unnest(features)
+  inputs <- names(train_dt %>% select(-all_of(param)))
+  formula <- as.formula(paste(param, "~", paste(inputs, collapse = " + ")))
+  set.seed(123)
   
-param_idx <- 3
-param <- params[param_idx]
-print(param)
-param_type <- params_types[[param]]
-param_domain <- params_domains[[param]]
+  param_rec <- recipe(formula, data = train_dt) %>%
+    step_zv(all_predictors()) %>% 
+    step_lincomb(all_numeric())
 
-input_features <- names(input_dt %>% select(-name))
+  model_params <- get_model_by_name(model_name)
   
-train_dt <- output_dt %>%
-  select(name, all_of(param)) %>%
-  inner_join(input_dt, by = 'name') %>%
-  select(all_of(input_features), all_of(param))
+  dt_wflow <-
+    workflow() %>%
+    add_model(model_params$model) %>%
+    add_recipe(param_rec)
 
-train_dt <- train_dt[!is.na(train_dt[, param]),]
+  dt_fit <-
+    dt_wflow %>%
+    tune_grid(
+      resamples = vfold_cv(train_dt),
+      grid = model_params$tune_grid
+    )
 
-formula <- as.formula(paste(param, '~', paste(input_features, collapse = '+')))
+  best_dt <- dt_fit %>%
+    select_best("roc_auc")
 
-set.seed(123)
-param_split <- initial_split(train_dt, prop = 3/4)
-param_train <- training(param_split)
-param_test  <- testing(param_split)
+  final_wf <-
+    dt_wflow %>%
+    finalize_workflow(best_dt)
 
-param_rec <- 
-  recipe(formula, data = param_train)
+  final_tree <-
+    final_wf %>%
+    fit(data = train_dt)
 
-dt_model <- decision_tree(
-    cost_complexity = tune(),
-    tree_depth = tune()
-  ) %>%
-    set_engine("rpart") %>% 
-    set_mode("classification")
-
-tree_grid <- grid_regular(cost_complexity(),
-                          tree_depth(),
-                          levels = 5)
-
-train_folds <- vfold_cv(param_train)
-
-dt_wflow <- 
-  workflow() %>% 
-  add_model(dt_model) %>%
-  add_recipe(param_rec)
-
-dt_fit <- 
-  dt_wflow %>% 
-  tune_grid(
-    resamples = train_folds,
-    grid = tree_grid
+  test_dt_pred <- tibble(
+    pred_estimate = predict(final_tree, test_dt)$.pred_class,
+    pred_truth = test_dt %>% pull(param)
   )
 
-dt_fit %>%
-  collect_metrics() %>%
-  mutate(tree_depth = factor(tree_depth)) %>%
-  ggplot(aes(cost_complexity, mean, color = tree_depth)) +
-  geom_line(size = 1.5, alpha = 0.6) +
-  geom_point(size = 2) +
-  facet_wrap(~ .metric, scales = "free", nrow = 2) +
-  scale_x_log10(labels = scales::label_number()) +
-  scale_color_viridis_d(option = "plasma", begin = .9, end = 0)
+  train_dt_pred <- tibble(
+    pred_estimate = predict(final_tree, test_dt)$.pred_class,
+    pred_truth = test_dt %>% pull(param)
+  )
 
-best_dt <- dt_fit %>%
-  select_best("roc_auc")
+  exp_result <- list(
+    train_dt = train_dt,
+    test_dt = test_dt,
+    tune_metrics = collect_metrics(dt_fit),
+    test_perf = collect_perf(test_dt_pred),
+    train_perf = collect_perf(train_dt_pred),
+    train_predict = as.character(train_dt_pred$pred_estimate),
+    test_predict = as.character(test_dt_pred$pred_estimate),
+    model = final_tree
+  )
 
-final_wf <- 
-  dt_wflow %>% 
-  finalize_workflow(best_dt)
-
-final_tree <- 
-  final_wf %>%
-  fit(data = param_train)
-
-dt_pred <- tibble(
-  .pred_class = predict(final_tree, param_test)$.pred_class,
-  .pred_truth = param_test %>% pull(param)
-)
-
-if (param_type %in% c('c', 'o')) {
-  dt_pred <- dt_pred %>%
-    mutate(
-      .pred_class = factor(.pred_class, levels = param_domain),
-      .pred_truth = factor(.pred_truth, levels = param_domain)
-    )
+  if (cache) {
+    walk(exp_names, ~ saveRDS(exp_result[[.x]], file = file.path(exp_path, .x)))
+  }
 }
 
-dt_acc <- accuracy(dt_pred, truth = .pred_truth, estimate = .pred_class)
-print(dt_acc)
 
-dt_pred <- tibble(
-  .pred_class = predict(final_tree, param_train)$.pred_class,
-  .pred_truth = param_train %>% pull(param)
-)
-
-if (param_type %in% c('c', 'o')) {
-  dt_pred <- dt_pred %>%
-    mutate(
-      .pred_class = factor(.pred_class, levels = param_domain),
-      .pred_truth = factor(.pred_truth, levels = param_domain)
+problems_dt <- all_problems_df() %>%
+  filter(budget == "low", no_jobs <= 500) %>%
+  mutate(
+    metaopt_problem = pmap(., as_metaopt_problem),
+    performance_exists = map_lgl(
+      metaopt_problem,
+      ~ file.exists(here("runs", "neh", .x@name, "NEH", "result.rds"))
     )
-}
+  ) %>%
+  filter(performance_exists)
 
-dt_acc <- accuracy(dt_pred, truth = .pred_truth, estimate = .pred_class)
-print(dt_acc)
+features <- compute_features_data(problems_dt, use_cache = T)
+outputs <- compute_outputs_data(problems_dt, algorithm, folder = here("runs", "neh"), use_cache = T)
 
-# 
-# rf_model <- rand_forest(
-#   mode = 'classification'
-# ) %>%
-#   set_engine("ranger")
-# 
-# rf_wflow <- 
-#   workflow() %>% 
-#   add_model(rf_model) %>% 
-#   add_recipe(param_rec)
-# 
-# rf_fit <- fit(rf_wflow, param_train)
-# 
-# rf_pred <- tibble(
-#   .pred_class = predict(rf_fit, param_test)$.pred_class,
-#   .pred_truth = param_test %>% pull(param)
-# )
-# 
-# if (param_type %in% c('c', 'o')) {
-#   rf_pred <- rf_pred %>%
-#     mutate(
-#       .pred_class = factor(.pred_class, levels = param_domain),
-#       .pred_truth = factor(.pred_truth, levels = param_domain)
-#     )
-# }
-# 
-# rf_acc <- accuracy(rf_pred, truth = .pred_truth, estimate = .pred_class)
-# 
-# 
+algorithm <- get_algorithm("NEH")
+params <- algorithm@parameters$names
+exp_name <- "instance-based"
+model_name <- 'rand_forest'
 
+
+walk(params[2:length(params)], function(param) {
+  decision_tree_param_model_experiment(
+    build_split(features, outputs, train_problems_df(), param, summ_features = F),
+    build_split(features, outputs, test_problems_df(), param, summ_features = F),
+    param,
+    model_name,
+    exp_name
+  )
+})

@@ -1,0 +1,111 @@
+---
+title: "NEH recommendation models evaluation"
+author: "Lucas Marcondes Pavelski"
+date: "11/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(FlowshopSolveR)
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+
+MODEL_FOLDER <- here("data", "models")
+TASK_NAME <- "NEH_recommendation"
+TASK_FOLDER <- file.path(MODEL_FOLDER, TASK_NAME)
+
+read_exp_dt <- function(param, model_name, exp_name, dt_name) {
+  path <- file.path(TASK_FOLDER, param, paste0(model_name, ',', exp_name), dt_name)
+  if (file.exists(path)) {
+    readRDS(path)
+  } else {
+    NULL
+  }
+}
+```
+
+```{r, include=FALSE}
+algorithm <- get_algorithm("NEH")
+params <- algorithm@parameters$names[2:length(algorithm@parameters$names)]
+
+
+model_names <- c(
+  'decision_tree',
+  'rand_forest'
+)
+
+exp_names <- c(
+  'train-test-summarized',
+  'train-summarized',
+  'instance-based'
+)
+
+all_exps <- expand.grid(
+  param = params,
+  model_name = model_names,
+  exp_name = exp_names
+)
+
+test_perfs <- all_exps %>%
+  mutate(perf = pmap(., read_exp_dt, dt_name = 'test_perf')) %>%
+  # filter(!map_lgl(perf, is.null)) %>%
+  unnest(perf)
+
+train_perfs <- all_exps %>%
+  mutate(perf = pmap(., read_exp_dt, dt_name = 'train_perf')) %>%
+  # filter(!map_lgl(perf, is.null)) %>%
+  unnest(perf)
+
+all_perfs <- bind_rows(
+  mutate(train_perfs, set = 'train'),
+  mutate(test_perfs, set = 'test')
+) %>%
+  mutate(
+    model_name = case_when(
+      model_name == 'decision_tree' ~ 'DT',
+      model_name == 'rand_forest' ~ 'RF'
+    )
+  )
+
+
+plot_metric <- function(pmetric) {
+  all_perfs %>%
+    filter(.metric == pmetric) %>%
+    ggplot() +
+    facet_wrap(~param, ncol = 2) +
+    geom_col(aes(x = model_name, y = .estimate, fill = exp_name), 
+             position = 'dodge') +
+    ggtitle(pmetric) +
+    theme_bw() +
+    theme(legend.position = 'bottom', axis.title = element_blank())
+}
+```
+
+```{r, fig.asp=2, echo=FALSE}
+plot_metric('accuracy')
+```
+
+
+```{r, fig.asp=2, echo=FALSE}
+plot_metric('kap')
+```
+
+```{r, fig.asp=2, echo=FALSE}
+plot_metric('f_meas')
+```
+
+```{r, fig.asp=1, echo=FALSE, results='asis', warning=F}
+library(rpart.plot)
+
+for (param in params) {
+  model <- read_exp_dt(
+    param = param,
+    model_name = 'decision_tree',
+    exp_name = 'train-test-summarized',
+    dt_name = 'model'
+  )
+  cat('\n\n## ', param, ' decision tree\n')
+  rpart.plot(model$fit$fit$fit)
+}
+```
+
