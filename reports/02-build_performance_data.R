@@ -14,7 +14,7 @@ option_list <- list(
               help="Print extra output [default]"),
   make_option(c("-m", "--no_machines"), action="no_machines", default=NULL, type='integer',
               help="Print extra output [default]"),
-  make_option(c("-r", "--cores"), action="cores", default=1, type='integer',
+  make_option(c("-r", "--cores"), action="cores", default=8, type='integer',
               help="Print extra output [default]")
 )
 
@@ -26,7 +26,7 @@ no_machines_op <- opt$no_machines
 cores_op <- opt$cores
 
 problems_dt <- all_problems_df() %>%
-  filter(budget == 'low')
+  filter(budget == 'low', no_jobs <= 500)
 
 if (!is.null(prob_op)) {
   problems_dt <- problems_dt %>%

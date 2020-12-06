@@ -2,12 +2,17 @@
 title: "NEH recommendation models evaluation"
 author: "Lucas Marcondes Pavelski"
 date: "11/9/2020"
-output: html_document
+output:
+  pdf_document:
+    keep_tex: yes
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
 library(FlowshopSolveR)
 library(tidyverse)
+library(tidymodels)
 knitr::opts_chunk$set(echo = TRUE)
 
 MODEL_FOLDER <- here("data", "models")
@@ -35,9 +40,9 @@ model_names <- c(
 )
 
 exp_names <- c(
-  'train-test-summarized',
-  'train-summarized',
-  'instance-based'
+  'instance-based',
+  'instance-based-c2',
+  'instance-based-dependencies'
 )
 
 all_exps <- expand.grid(
@@ -57,7 +62,7 @@ train_perfs <- all_exps %>%
   unnest(perf)
 
 all_perfs <- bind_rows(
-  mutate(train_perfs, set = 'train'),
+  # mutate(train_perfs, set = 'train'),
   mutate(test_perfs, set = 'test')
 ) %>%
   mutate(
@@ -72,40 +77,179 @@ plot_metric <- function(pmetric) {
   all_perfs %>%
     filter(.metric == pmetric) %>%
     ggplot() +
-    facet_wrap(~param, ncol = 2) +
+    facet_wrap(~param, ncol = 3) +
     geom_col(aes(x = model_name, y = .estimate, fill = exp_name), 
              position = 'dodge') +
-    ggtitle(pmetric) +
+    coord_flip() +
     theme_bw() +
     theme(legend.position = 'bottom', axis.title = element_blank())
 }
 ```
 
-```{r, fig.asp=2, echo=FALSE}
-plot_metric('accuracy')
+```{r, fig.asp=0.61, echo=FALSE}
+ all_perfs %>%
+    filter(.metric == 'accuracy')
+    
+```
+
+```{r ml-results-accuracy, fig.asp=0.45, echo=FALSE}
+# readRDS(here('data/models/NEH_recommendation/NEH.Init.NEH.Insertion/rand_forest,train-summ/tune_metrics')) %>%
+#   filter(.metric == "accuracy") %>%
+#   ggplot(aes(mtry, mean)) +
+#   geom_line(alpha = 0.5, size = 1.5) +
+#   geom_point() +
+#   labs(y = "AUC")
+
+getParamName <- function(param) {
+  case_when(
+    param == "NEH.Init.NEH.Ratio" ~ 'IOR',
+    param == "NEH.Init.NEH.First.Priority" ~ 'IOIA', 
+    param == "NEH.Init.NEH.First.PriorityWeighted" ~ 'IOW', 
+    param == "NEH.Init.NEH.First.PriorityOrder" ~ 'IOS', 
+    param == "NEH.Init.NEH.Priority" ~ 'NOI', 
+    param == "NEH.Init.NEH.PriorityOrder" ~ 'NOS', 
+    param == "NEH.Init.NEH.PriorityWeighted" ~ 'NOW', 
+    param == "NEH.Init.NEH.Insertion" ~ 'NTB'
+  )
+}
+
+
+ all_perfs %>%
+    filter(.metric == 'accuracy') %>%
+    mutate(
+      exp_name = case_when(
+        exp_name == 'instance-based' ~ 'No dependencies',
+        exp_name == 'instance-based-dependencies' ~ 'With dependencies',
+        T ~ as.character(exp_name)
+      ),
+      param = getParamName(param)
+    ) %>%
+    ggplot() +
+    facet_wrap(~param, ncol = 4) +
+    geom_col(aes(x = paste(model_name), y = .estimate, fill = exp_name), 
+             position = 'dodge') +
+    coord_flip() +
+    theme_bw() +
+    theme(legend.position = 'bottom', axis.title = element_blank(), legend.title = element_blank())
 ```
 
 
-```{r, fig.asp=2, echo=FALSE}
-plot_metric('kap')
+```{r ml-results-f-measure, fig.asp=0.45, echo=FALSE}
+ all_perfs %>%
+    filter(.metric == 'f_meas') %>%
+    mutate(
+      exp_name = case_when(
+        exp_name == 'instance-based' ~ 'No dependencies',
+        exp_name == 'instance-based-dependencies' ~ 'With dependencies',
+        T ~ as.character(exp_name)
+      ),
+      param = getParamName(param)
+    ) %>%
+    ggplot() +
+    facet_wrap(~param, ncol = 4) +
+    geom_col(aes(x = paste(model_name), y = .estimate, fill = exp_name), 
+             position = 'dodge') +
+    coord_flip() +
+    theme_bw() +
+    theme(legend.position = 'bottom', axis.title = element_blank(), legend.title = element_blank())
 ```
 
 ```{r, fig.asp=2, echo=FALSE}
-plot_metric('f_meas')
+plot_metric('f_meas') +
+  ggtitle(NULL)
 ```
 
-```{r, fig.asp=1, echo=FALSE, results='asis', warning=F}
+```{r, fig.asp=.5, echo=FALSE, warning=F}
 library(rpart.plot)
 
 for (param in params) {
   model <- read_exp_dt(
     param = param,
     model_name = 'decision_tree',
-    exp_name = 'train-test-summarized',
+    exp_name = 'instance-based',
     dt_name = 'model'
   )
   cat('\n\n## ', param, ' decision tree\n')
-  rpart.plot(model$fit$fit$fit)
+  if (!is.null(model)) {
+    rpart.plot(model$fit$fit$fit, type = 5, extra = 0)
+    
+    print(rpart.rules(model$fit$fit$fit))
+  }
 }
+
+```
+
+```{r, fig.asp=1, echo=FALSE, results='asis', warning=F}
+library(vip)
+
+for (param in params) {
+  model <- read_exp_dt(
+    param = param,
+    model_name = 'decision_tree',
+    exp_name = 'instance-based',
+    dt_name = 'model'
+  )
+  
+  cat("\n\n##", param, '\n\n')
+  
+  model %>% 
+    pull_workflow_fit() %>% 
+    vip() %>%
+    show()
+}
+```
+
+```{r}
+
+best_instance <- readRDS(file.path(TASK_FOLDER, 'results', 'none,instance_best.rda')) %>%
+  unnest(problem) %>%
+  rename(best_fitness = fitness)
+
+test_problems_df()
+
+experiments <- tribble(
+  ~ml_model, ~strat,
+  'decision_tree', 'instance-based',
+  'decision_tree', 'instance-based-dependencies',
+  'rand_forest', 'instance-based',
+  'rand_forest', 'instance-based-dependencies',
+  'none', 'default',
+  'none', 'global_best',
+  'none', 'random',
+) %>%
+  mutate(results = pmap(., function(ml_model, strat) file.path(TASK_FOLDER,
+                                        'results',
+                                        paste0(ml_model, ',', strat, '.rda')))) %>%
+  mutate(results = map(results, readRDS)) %>%
+  unnest(results) %>%
+  unnest(problem) %>%
+  select(-config) %>%
+  left_join(best_instance) %>%
+  mutate(rp = 100 * (fitness - best_fitness) / best_fitness)
+
+
+
+```
+
+```{r results='asis'}
+experiments %>%
+  group_by(strat, ml_model) %>%
+  summarize(
+    q00 = quantile(rp, 0.00),
+    q25 = quantile(rp, 0.25),
+    q50 = quantile(rp, 0.50),
+    q75 = quantile(rp, 0.75),
+    q1  = quantile(rp, 1.00),
+  ) %>% 
+  knitr::kable(format = 'latex')
+```
+
+
+```{r}
+experiments %>%
+  filter(strat != 'random', ml_model != 'decision_tree') %>%
+  mutate(model_strat = paste(ml_model, strat)) %>%
+  ggplot() +
+  geom_violin(aes(x = strat, fill = strat, y = rp))
 ```
 

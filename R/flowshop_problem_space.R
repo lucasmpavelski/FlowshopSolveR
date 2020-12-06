@@ -1,7 +1,7 @@
 
 
 all_problems_df <- function() {
-  crossing(
+  tidyr::crossing(
     all_instances_df(),
     models_attrs_df()
   ) %>%

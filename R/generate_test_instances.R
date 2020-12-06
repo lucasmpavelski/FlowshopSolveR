@@ -68,26 +68,26 @@ GENERATED_INSTANCES_ATTRS <- list(
 
 generated_instances_df <- function() {
   pts <- bind_rows(
-    crossing(
+    tidyr::crossing(
       dist = c("uniform"),
       corr = c("job-correlated", "machine-correlated")
     ),
-    crossing(
+    tidyr::crossing(
       dist = c("erlang", "exponential"),
       corr = c("random")
     )
   )
   sizes <- bind_rows(
-    crossing(
+    tidyr::crossing(
       no_jobs = c(10, 20, 30, 40, 50, 60),
       no_machines = c(5, 10, 15, 20),
     ),
-    crossing(
+    tidyr::crossing(
       no_jobs = c(100, 200, 300, 400, 500, 600, 700, 800),
       no_machines = c(20, 40, 60),
     )
   )
-  crossing(
+  tidyr::crossing(
     pts,
     sizes,
     problem = "flowshop",

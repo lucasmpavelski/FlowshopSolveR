@@ -1,13 +1,15 @@
-library(tidymodels)
-library(tidyselect)
-library(tidyverse)
-library(FlowshopSolveR)
 library(here)
 library(future)
+library(tidymodels)
+library(tidyverse)
+library(FlowshopSolveR)
+
 
 MODEL_FOLDER <- here("data", "models")
 TASK_NAME <- "NEH_recommendation"
 TASK_FOLDER <- file.path(MODEL_FOLDER, TASK_NAME)
+
+
 
 dir.create(MODEL_FOLDER, showWarnings = F, recursive = T)
 dir.create(TASK_FOLDER, showWarnings = F, recursive = T)
@@ -37,7 +39,6 @@ compute_outputs_data <- function(problems_dt, algorithm, folder, use_cache = T) 
   }
   problem_space <- ProblemSpace(problems = problems_dt$metaopt_problem)
   algorithm_space <- AlgorithmSpace(algorithms = list(algorithm))
-  dir.create(cache_folder, showWarnings = F)
   performance_dt <- read_performance_data(
     problem_space,
     algorithm_space,
@@ -53,7 +54,8 @@ compute_outputs_data <- function(problems_dt, algorithm, folder, use_cache = T) 
   outputs_dt
 }
 
-build_split <- function(features, outputs, problems_dt, param, summ_features = T) {
+build_split <- function(features, outputs, problems_dt, param, summ_features = T,
+                        filter_na = T) {
   features <- features %>%
     select(-instance)
   if (summ_features) {
@@ -66,11 +68,11 @@ build_split <- function(features, outputs, problems_dt, param, summ_features = T
     pmap(as_metaopt_problem) %>%
     map_chr(~ .x@name)
   outputs %>%
-    filter(!across(all_of(param), is.na)) %>%
-    filter(name %in% problem_set) %>%
-    inner_join(features, by = "name") %>%
-    select(all_of(c(names(features), param)), -name) %>%
-    mutate(across(all_of(param), factor))
+    dplyr::filter(!filter_na | !across(all_of(param), is.na)) %>%
+    dplyr::filter(name %in% problem_set) %>%
+    dplyr::inner_join(features, by = "name") %>%
+    dplyr::select(all_of(c(names(features), param)), -name) %>%
+    dplyr::mutate(across(all_of(param), factor))
 }
 
 collect_perf <- function(dt_pred) {
@@ -79,7 +81,7 @@ collect_perf <- function(dt_pred) {
     as.character(dt_pred$pred_truth)
   ))
   dt_pred <- dt_pred %>%
-    mutate(
+    dplyr::mutate(
       pred_estimate = factor(pred_estimate, levels = possible_values),
       pred_truth = factor(pred_truth, levels = possible_values)
     )
@@ -105,14 +107,12 @@ get_model_by_name <- function(model_name) {
   if (model_name == "decision_tree") {
     list(
       model = decision_tree(
-          cost_complexity = tune(),
           tree_depth = tune()
         ) %>%
           set_engine("rpart") %>%
           set_mode("classification"),
       tune_grid = grid_regular(
-        cost_complexity(),
-        tree_depth(),
+        tree_depth(range = c(1L, 3L)),
         levels = 5
       )
     )
@@ -120,23 +120,28 @@ get_model_by_name <- function(model_name) {
     list(
       model = rand_forest(
           mtry = tune(),
-          trees = tune(),
-          min_n = tune()
+          trees = 10,
+          min_n = 1
         ) %>%
           set_engine("ranger") %>%
           set_mode("classification"),
       tune_grid = grid_regular(
-        mtry(c(1, 10)),
-        trees(),
-        min_n(),
-        levels = 3
+        mtry(c(6, 6)),
+        levels = 1
       )
     )
   }
 }
 
 
-decision_tree_param_model_experiment <- function(train_dt, test_dt, param, model_name, exp_name, cache = T) {
+decision_tree_param_model_experiment <- function(
+  train_dt, 
+  test_dt, 
+  param, 
+  model_name, 
+  exp_name,
+  dependencies,
+  cache = T) {
   exp_path <- file.path(TASK_FOLDER, param, paste0(model_name, ",", exp_name))
   dir.create(exp_path, recursive = T, showWarnings = F)
   exp_names <- c(
@@ -150,21 +155,47 @@ decision_tree_param_model_experiment <- function(train_dt, test_dt, param, model
     })
     return(exp_result)
   }
+  
+  depends_on <- dependencies %>%
+    filter(from == param) %>%
+    pull(to)
+  
+  predict_dt <- NULL
+  if (length(depends_on) > 0) {
+    extra_train <- depends_on %>% 
+      map(~file.path(TASK_FOLDER, .x, paste0(model_name, ",", exp_name), 'train_dt')) %>%
+      map(readRDS) %>% reduce(left_join)
+    train_dt <- train_dt %>%
+      left_join(extra_train)
+    for (dep_param in depends_on) {
+      pred_path <- file.path(TASK_FOLDER, dep_param, 
+                             paste0(model_name, ",", exp_name), 
+                             'test_predict')
+      pred_dt <- readRDS(pred_path)
+      test_dt[dep_param] <- pred_dt
+    }
+  }
 
   inputs <- names(train_dt %>% select(-all_of(param)))
   formula <- as.formula(paste(param, "~", paste(inputs, collapse = " + ")))
   set.seed(123)
   
-  param_rec <- recipe(formula, data = train_dt) %>%
-    step_zv(all_predictors()) %>% 
-    step_lincomb(all_numeric())
+  param_rec <- recipe(formula, data = train_dt) %>% 
+    step_nzv(all_predictors()) %>%
+    themis::step_downsample(all_of(param)) %>%
+    step_corr(all_numeric())
+  
+  train_dt_preprocessing <- prep(param_rec, training = train_dt)
+  
+  # preprocessed_train_dt <- juice(train_dt_preprocessing)
+  # preprocessed_test_dt <- bake(train_dt_preprocessing, test_dt)
 
   model_params <- get_model_by_name(model_name)
   
   dt_wflow <-
     workflow() %>%
     add_model(model_params$model) %>%
-    add_recipe(param_rec)
+    add_recipe(train_dt_preprocessing)
 
   dt_fit <-
     dt_wflow %>%
@@ -190,8 +221,8 @@ decision_tree_param_model_experiment <- function(train_dt, test_dt, param, model
   )
 
   train_dt_pred <- tibble(
-    pred_estimate = predict(final_tree, test_dt)$.pred_class,
-    pred_truth = test_dt %>% pull(param)
+    pred_estimate = predict(final_tree, train_dt)$.pred_class,
+    pred_truth = train_dt %>% pull(param)
   )
 
   exp_result <- list(
@@ -202,12 +233,17 @@ decision_tree_param_model_experiment <- function(train_dt, test_dt, param, model
     train_perf = collect_perf(train_dt_pred),
     train_predict = as.character(train_dt_pred$pred_estimate),
     test_predict = as.character(test_dt_pred$pred_estimate),
+    depends_on = depends_on,
     model = final_tree
   )
 
-  if (cache) {
-    walk(exp_names, ~ saveRDS(exp_result[[.x]], file = file.path(exp_path, .x)))
-  }
+  # if (cache) {
+    walk(exp_names, function(.x) {
+      saveRDS(exp_result[[.x]], file = file.path(exp_path, .x))
+    })
+  # }
+  
+  rm(list = ls())
 }
 
 
@@ -222,21 +258,101 @@ problems_dt <- all_problems_df() %>%
   ) %>%
   filter(performance_exists)
 
-features <- compute_features_data(problems_dt, use_cache = T)
-outputs <- compute_outputs_data(problems_dt, algorithm, folder = here("runs", "neh"), use_cache = T)
+all_cores <- parallel::detectCores(logical = FALSE)
+library(doFuture)
+registerDoFuture()
+cl <- parallel::makeCluster(all_cores - 6)
+plan(cluster, workers = cl)
 
 algorithm <- get_algorithm("NEH")
 params <- algorithm@parameters$names
-exp_name <- "instance-based"
-model_name <- 'rand_forest'
+exp_name <- "instance-based-c2"
+model_name <- 'decision_tree'
+dependencies <- F
+cache <- F
+
+features <- compute_features_data(problems_dt, use_cache = T)
+outputs <- compute_outputs_data(problems_dt, algorithm, 
+                                folder = here("runs", "neh"), use_cache = T)
 
 
-walk(params[2:length(params)], function(param) {
-  decision_tree_param_model_experiment(
-    build_split(features, outputs, train_problems_df(), param, summ_features = F),
-    build_split(features, outputs, test_problems_df(), param, summ_features = F),
-    param,
-    model_name,
-    exp_name
+# build_split(features, outputs, train_problems_df(), param, summ_features = F)
+
+if (!dependencies) {
+  dependencies <- tribble(~from, ~to)
+  train_order <- params[2:length(params)]
+
+  walk(train_order, function(param) {
+    decision_tree_param_model_experiment(
+      build_split(features, outputs, train_problems_df(), param, summ_features = F),
+      build_split(features, outputs, test_problems_df(), param, summ_features = F, filter_na = F),
+      param,
+      model_name,
+      exp_name,
+      dependencies = tribble(~from, ~to),
+      cache = cache
+    )
+  })
+} else {
+  dependencies <- tribble(
+    ~from, ~to,
+    "NEH.Init.NEH.First.PriorityWeighted", "NEH.Init.NEH.Ratio",
+
+    "NEH.Init.NEH.First.PriorityOrder"   , "NEH.Init.NEH.Ratio",
+    "NEH.Init.NEH.First.PriorityOrder"   , "NEH.Init.NEH.First.PriorityWeighted",
+
+    "NEH.Init.NEH.First.Priority"        , "NEH.Init.NEH.Ratio",
+    "NEH.Init.NEH.First.Priority"        , "NEH.Init.NEH.First.PriorityWeighted",
+    "NEH.Init.NEH.First.Priority"        , "NEH.Init.NEH.First.PriorityOrder",
+
+    "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.Ratio",
+    # "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.First.PriorityWeighted",
+    # "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.First.PriorityOrder",
+    # "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.First.Priority",
+
+    "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.Ratio",
+    # "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.First.PriorityWeighted",
+    # "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.First.PriorityOrder",
+    # "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.First.Priority",
+    "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.PriorityWeighted",
+
+    "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.Ratio",
+    # "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.First.PriorityWeighted",
+    # "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.First.PriorityOrder",
+    # "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.First.Priority",
+    "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.PriorityWeighted",
+    "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.PriorityOrder",
+
+    "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.Ratio",
+    # "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.First.PriorityWeighted",
+    # "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.First.PriorityOrder",
+    # "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.First.Priority",
+    "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.PriorityWeighted",
+    "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.PriorityOrder",
+    "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.Priority",
   )
-})
+
+  train_order <- dependencies %>%
+    as.matrix() %>%
+    igraph::graph_from_edgelist() %>%
+    igraph::topo_sort("in") %>%
+    names()
+
+  walk(train_order, function(param) {
+    train_dt <- build_split(features, outputs, train_problems_df(), param, summ_features = F)
+    test_dt <- build_split(features, outputs, test_problems_df(), param, summ_features = F, filter_na = F)
+    decision_tree_param_model_experiment(
+      train_dt,
+      test_dt,
+      param,
+      model_name,
+      paste0(exp_name, '-', 'dependencies'),
+      dependencies = dependencies,
+      cache = cache
+    )
+  })
+
+}
+
+
+

@@ -7,7 +7,7 @@ MODELS_ATTRS <- list(
 )
 
 models_attrs_df <- function(attrs = MODELS_ATTRS) {
-  crossing(
+  tidyr::crossing(
     objective = attrs$objective,
     type = attrs$type,
     stopping_criterion = attrs$stopping_criterium,

@@ -1,0 +1,426 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={NEH recommendation models evaluation},
+  pdfauthor={Lucas Marcondes Pavelski},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+
+\title{NEH recommendation models evaluation}
+\author{Lucas Marcondes Pavelski}
+\date{11/9/2020}
+
+\begin{document}
+\maketitle
+
+\begin{verbatim}
+## # A tibble: 48 x 7
+##    param               model_name exp_name    .metric .estimator .estimate set  
+##    <fct>               <chr>      <fct>       <chr>   <chr>          <dbl> <chr>
+##  1 NEH.Init.NEH.Ratio  DT         instance-b~ accura~ multiclass     0.944 test 
+##  2 NEH.Init.NEH.First~ DT         instance-b~ accura~ multiclass     0.222 test 
+##  3 NEH.Init.NEH.First~ DT         instance-b~ accura~ binary         0.844 test 
+##  4 NEH.Init.NEH.First~ DT         instance-b~ accura~ multiclass     0.7   test 
+##  5 NEH.Init.NEH.Prior~ DT         instance-b~ accura~ multiclass     0.161 test 
+##  6 NEH.Init.NEH.Prior~ DT         instance-b~ accura~ multiclass     0.583 test 
+##  7 NEH.Init.NEH.Prior~ DT         instance-b~ accura~ binary         0.583 test 
+##  8 NEH.Init.NEH.Inser~ DT         instance-b~ accura~ multiclass     0.193 test 
+##  9 NEH.Init.NEH.Ratio  RF         instance-b~ accura~ multiclass     0.949 test 
+## 10 NEH.Init.NEH.First~ RF         instance-b~ accura~ multiclass     0.417 test 
+## # ... with 38 more rows
+\end{verbatim}
+
+\includegraphics{05-evaluate-models_files/figure-latex/ml-results-accuracy-1.pdf}
+
+\includegraphics{05-evaluate-models_files/figure-latex/ml-results-f-measure-1.pdf}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-3-1.pdf}
+
+\begin{verbatim}
+## Loading required package: rpart
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'rpart'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:dials':
+## 
+##     prune
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## 
+## ##  NEH.Init.NEH.Ratio  decision tree
+\end{verbatim}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\begin{verbatim}
+##   ..y     0 0.25  0.5 0.75                                                                                                                  
+##     0 [ .80  .20  .00  .00] when partial_inf <  0.28 & type is         NOIDLE & ratio <  5.5                                 & no_jobs <  55
+##     0 [ .91  .09  .00  .00] when partial_inf <  0.28 & type is         NOIDLE & ratio is 5.5 to 16.3                                        
+##     0 [ .95  .03  .01  .01] when partial_inf >= 0.28                                                                                        
+##     0 [ .95  .05  .00  .00] when partial_inf <  0.28 & type is NOWAIT or PERM & ratio <  9.0                                                
+##     0 [1.00  .00  .00  .00] when partial_inf <  0.28 & type is NOWAIT or PERM & ratio >=        11.0                                        
+##  0.25 [ .09  .91  .00  .00] when partial_inf <  0.28 & type is NOWAIT or PERM & ratio is 9.0 to 11.0 & rw_autocorr_1 <  0.98                
+##  0.25 [ .00 1.00  .00  .00] when partial_inf <  0.28 & type is         NOIDLE & ratio >=        16.3                                        
+##  0.25 [ .00 1.00  .00  .00] when partial_inf <  0.28 & type is         NOIDLE & ratio <  5.5                                 & no_jobs >= 55
+##   0.5 [ .00  .00 1.00  .00] when partial_inf <  0.28 & type is NOWAIT or PERM & ratio is 9.0 to 11.0 & rw_autocorr_1 >= 0.98                
+## 
+## 
+## ##  NEH.Init.NEH.First.Priority  decision tree
+\end{verbatim}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-4-2.pdf}
+
+\begin{verbatim}
+##          ..y  abs_ dev_ lr_a lr_i lr_i lr_i   nm ra_c ra_c ra_c ss_s ss_s ss_s sum_                                                                                                                                                                                                               
+##      abs_dif [1.00  .00  .00  .00  .00  .00  .00  .00  .00  .00  .00  .00  .00  .00] when ratio <  3.2                                  & mean_sd_per_machine <  15                                                                   & no_jobs <  80 & no_machines <  13                         
+##        lr_aj [ .00  .00  .75  .00  .00  .00  .00  .00  .00  .25  .00  .00  .00  .00] when ratio <  3.2                                  & mean_sd_per_machine <  15                                                                   & no_jobs <  80 & no_machines >= 13                         
+##        lr_it [ .00  .00  .00  .95  .00  .00  .00  .00  .00  .00  .00  .00  .00  .05] when ratio >=        5.5                                                       & rw_autocorr_1 <  0.99 & slope <  0.005 & type is           PERM & no_jobs >= 45                                             
+##  lr_it_aj_ct [ .00  .00  .00  .14  .41  .30  .00  .00  .00  .00  .00  .00  .00  .14] when ratio >=        5.5                           & mean_sd_per_machine >= 25 & rw_autocorr_1 >= 0.99 & slope <  0.005                                          & no_machines <  30                         
+##  lr_it_aj_ct [ .00  .00  .00  .00  .67  .00  .00  .33  .00  .00  .00  .00  .00  .00] when ratio is 1.8 to 3.2 & mean_sd_per_job >= 15.3 & mean_sd_per_machine >= 15                                                                                                                               
+##  lr_it_aj_ct [ .00  .00  .00  .00  .78  .22  .00  .00  .00  .00  .00  .00  .00  .00] when ratio >=        5.5 & mean_sd_per_job >= 14.9                                                     & slope >= 0.005                                                                                      
+##     lr_it_ct [ .00  .00  .00  .00  .00 1.00  .00  .00  .00  .00  .00  .00  .00  .00] when ratio >=        5.5                           & mean_sd_per_machine <  25 & rw_autocorr_1 >= 0.99 & slope <  0.005 & type is           PERM                                                             
+##           nm [ .00  .00  .00  .00  .00  .00 1.00  .00  .00  .00  .00  .00  .00  .00] when ratio >=        5.5                           & mean_sd_per_machine <  25 & rw_autocorr_1 >= 0.99 & slope <  0.005 & type is         NOIDLE                                                             
+##           nm [ .00  .00  .00  .00  .00  .00 1.00  .00  .00  .00  .00  .00  .00  .00] when ratio is 3.2 to 3.7 & mean_sd_per_job >=  9.6                                                                                                                                   & inf_stability <  18848
+##        ra_c1 [ .00  .00  .00  .00  .00  .20  .00  .80  .00  .00  .00  .00  .00  .00] when ratio <  3.2        & mean_sd_per_job <  15.3 & mean_sd_per_machine >= 15                                          & type is NOIDLE or PERM                                                             
+##        ra_c1 [ .00  .00  .00  .00  .00  .00  .00 1.00  .00  .00  .00  .00  .00  .00] when ratio >=        5.5 & mean_sd_per_job <  14.9                                                     & slope >= 0.005                                                                                      
+##        ra_c2 [ .00  .00  .00  .00  .00  .00  .00  .00 1.00  .00  .00  .00  .00  .00] when ratio is 3.2 to 5.5 & mean_sd_per_job <   9.6                             & rw_autocorr_1 >= 0.97                                                                                                       
+##        ra_c3 [ .00  .00  .00  .00  .00  .00  .00  .00  .00  .53  .00  .00  .00  .47] when ratio >=        5.5                           & mean_sd_per_machine >= 25 & rw_autocorr_1 >= 0.99 & slope <  0.005                                          & no_machines >= 30                         
+##        ra_c3 [ .00  .00  .00  .00  .00  .00  .00  .00  .00 1.00  .00  .00  .00  .00] when ratio is 3.2 to 5.5 & mean_sd_per_job >=  9.6                                                                                                                                   & inf_stability >= 18848
+##       ss_sra [ .00  .00  .00  .00  .00  .00  .00  .00  .00  .00 1.00  .00  .00  .00] when ratio <  3.2                                  & mean_sd_per_machine <  15                                                                   & no_jobs >= 80                                             
+##   ss_srn_rcn [ .09  .09  .00  .00  .09  .00  .00  .09  .00  .00  .09  .27  .09  .18] when ratio <  1.8        & mean_sd_per_job >= 15.3 & mean_sd_per_machine >= 15                                                                                                                               
+##   ss_srn_rcn [ .00  .00  .00  .00  .09  .00  .00  .00  .00  .00  .00  .91  .00  .00] when ratio >=        5.5                                                       & rw_autocorr_1 <  0.99 & slope <  0.005 & type is         NOIDLE                                                             
+##   ss_srs_rcn [ .00  .00  .00  .00  .00  .00  .00  .00  .00  .00  .00  .00 1.00  .00] when ratio is 3.2 to 5.5 & mean_sd_per_job <   9.6                             & rw_autocorr_1 <  0.97                                                                                                       
+##      sum_pij [ .00  .00  .00  .25  .00  .25  .00  .00  .00  .00  .00  .00  .00  .50] when ratio <  3.2        & mean_sd_per_job <  15.3 & mean_sd_per_machine >= 15                                          & type is         NOWAIT                                                             
+##      sum_pij [ .00  .00  .00  .00  .09  .09  .09  .09  .09  .00  .00  .00  .00  .55] when ratio is 3.7 to 5.5 & mean_sd_per_job >=  9.6                                                                                                                                   & inf_stability <  18848
+##      sum_pij [ .00  .00  .00  .00  .00  .00  .00  .00  .00  .00  .00  .00  .00 1.00] when ratio >=        5.5                                                       & rw_autocorr_1 <  0.99 & slope <  0.005 & type is           PERM & no_jobs <  45                                             
+## 
+## 
+## ##  NEH.Init.NEH.First.PriorityWeighted  decision tree
+\end{verbatim}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-4-3.pdf}
+
+\begin{verbatim}
+##   ..y                                                                                                                                                           
+##  0.00 when rw_autocorr_1 >=         0.84 & mean_sd_per_job >= 20 & ratio <  2.8        & up <  0.26                                                             
+##  0.00 when rw_autocorr_1 >=         0.84 & mean_sd_per_job <  20 & ratio <  2.8                                                                                 
+##  0.00 when rw_autocorr_1 <  0.84         & mean_sd_per_job <  27                                                                     & mean_skew_per_job <  0.24
+##  0.00 when rw_autocorr_1 <  0.84         & mean_sd_per_job >= 27                                    & side >= 0.021 & type is   PERM                            
+##  0.01 when rw_autocorr_1 >=         0.84 & mean_sd_per_job >= 20                       & up >= 0.26                                                             
+##  0.14 when rw_autocorr_1 >=         0.84 & mean_sd_per_job >= 20 & ratio >=        3.7 & up <  0.26                                                             
+##  0.14 when rw_autocorr_1 is 0.84 to 0.93 & mean_sd_per_job <  20 & ratio >=        2.8                                                                          
+##  0.77 when rw_autocorr_1 <  0.84         & mean_sd_per_job >= 27                                    & side >= 0.021 & type is NOIDLE                            
+##  0.86 when rw_autocorr_1 <  0.84         & mean_sd_per_job <  27                                                                     & mean_skew_per_job >= 0.24
+##  0.94 when rw_autocorr_1 <  0.84         & mean_sd_per_job >= 27                                    & side <  0.021                                             
+##  0.96 when rw_autocorr_1 >=         0.93 & mean_sd_per_job <  20 & ratio >=        2.8                                                                          
+##  1.00 when rw_autocorr_1 >=         0.84 & mean_sd_per_job >= 20 & ratio is 2.8 to 3.7 & up <  0.26                                                             
+## 
+## 
+## ##  NEH.Init.NEH.First.PriorityOrder  decision tree
+\end{verbatim}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-4-4.pdf}
+
+\begin{verbatim}
+##      ..y  decr hi_l hill incr lo_h lo_l vall                                                                                                                                                                                                                              
+##     decr [ .47  .00  .06  .20  .15  .12  .00] when mean_sd_per_job >= 9.6 & type is NOIDLE or NOWAIT & rw_autocorr_1 >= 0.89                                               & pt_sd <  35                                                                                  
+##     decr [ .53  .00  .00  .47  .00  .00  .00] when mean_sd_per_job <  9.6                                                                            & ratio <  1.2                                                                                                       
+##     decr [ .71  .00  .00  .14  .00  .14  .00] when mean_sd_per_job >= 9.6 & type is             PERM & rw_autocorr_1 <  0.99 & objective is MAKESPAN                                                                                                                      
+##     hill [ .16  .00  .40  .00  .04  .40  .00] when mean_sd_per_job >= 9.6 & type is NOIDLE or NOWAIT & rw_autocorr_1 <  0.89                                                             & mean_skew_per_job <  0.93                 & entropy >= 0.62                    
+##     hill [ .00  .00  .86  .00  .14  .00  .00] when mean_sd_per_job >= 9.6 & type is NOIDLE or NOWAIT & rw_autocorr_1 <  0.89                                                             & mean_skew_per_job >= 0.93                                                      
+##     hill [ .00  .00 1.00  .00  .00  .00  .00] when mean_sd_per_job <  9.6                                                                            & ratio is 1.2 to 3.2                                                                                                
+##     hill [ .00  .00 1.00  .00  .00  .00  .00] when mean_sd_per_job <  9.6                                                                            & ratio >=        3.2                                           & no_jobs >= 55                                      
+##     incr [ .00  .00  .00 1.00  .00  .00  .00] when mean_sd_per_job >= 9.6 & type is             PERM                         & objective is FLOWTIME                                                                                                   & no_machines <  30
+##  lo_hilo [ .02  .18  .05  .00  .75  .00  .00] when mean_sd_per_job >= 9.6 & type is NOIDLE or NOWAIT & rw_autocorr_1 <  0.89                                                             & mean_skew_per_job <  0.93                 & entropy <  0.62                    
+##  lo_hilo [ .00  .00  .00  .00 1.00  .00  .00] when mean_sd_per_job >= 9.6 & type is NOIDLE or NOWAIT & rw_autocorr_1 >= 0.89 & objective is MAKESPAN                       & pt_sd >= 35                                                                                  
+##  lo_hilo [ .00  .00  .00  .00 1.00  .00  .00] when mean_sd_per_job >= 9.6 & type is             PERM & rw_autocorr_1 >= 0.99 & objective is MAKESPAN                                                                                                                      
+##   valley [ .00  .00  .00  .00  .00  .00 1.00] when mean_sd_per_job <  9.6                                                                            & ratio >=        3.2                                           & no_jobs <  55                                      
+##   valley [ .00  .00  .00  .00  .00  .00 1.00] when mean_sd_per_job >= 9.6 & type is NOIDLE or NOWAIT & rw_autocorr_1 >= 0.89 & objective is FLOWTIME                       & pt_sd >= 35                                                                                  
+##   valley [ .00  .00  .00  .00  .00  .00 1.00] when mean_sd_per_job >= 9.6 & type is             PERM                         & objective is FLOWTIME                                                                                                   & no_machines >= 30
+## 
+## 
+## ##  NEH.Init.NEH.Priority  decision tree
+\end{verbatim}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-4-5.pdf}
+
+\begin{verbatim}
+##         ..y  abs avg dev kk1 kk2 lr_ lr_ lr_ lr_  nm ra_ ra_ ra_ ss_ ss_ ss_ ss_ ss_ ss_ sum                                                                 
+##     abs_dif [.27 .01 .11 .04 .01 .03 .04 .01 .04 .01 .01 .01 .02 .11 .05 .04 .04 .10 .03 .02] when side <  0.028 & mean_sd_per_job >= 9.8 & no_machines >= 30
+##  avgdev_pij [.06 .31 .09 .05 .00 .05 .05 .04 .02 .05 .04 .02 .06 .01 .01 .01 .03 .01 .01 .08] when side <  0.028 & mean_sd_per_job <  9.8                    
+##       lr_aj [.09 .02 .06 .06 .04 .12 .04 .04 .05 .04 .05 .04 .02 .05 .03 .06 .04 .06 .05 .07] when side <  0.028 & mean_sd_per_job >= 9.8 & no_machines <  30
+##     sum_pij [.04 .02 .04 .07 .09 .04 .04 .06 .07 .10 .05 .04 .05 .04 .01 .02 .04 .02 .01 .14] when side >= 0.028                                             
+## 
+## 
+## ##  NEH.Init.NEH.PriorityOrder  decision tree
+\end{verbatim}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-4-6.pdf}
+
+\begin{verbatim}
+##   ..y  dec hi_ hi_ hil inc lo_ lo_ val                                                                                              
+##  decr [.55 .06 .05 .09 .11 .04 .03 .06] when objective is MAKESPAN                                                                  
+##  decr [.64 .04 .03 .05 .19 .01 .01 .04] when objective is FLOWTIME & type is         NOIDLE                                         
+##  hill [.08 .16 .10 .28 .02 .10 .06 .18] when objective is FLOWTIME & type is NOWAIT or PERM & mean_sd_per_job <  10 & slope >= 0.005
+##  incr [.00 .16 .00 .00 .47 .00 .06 .31] when objective is FLOWTIME & type is NOWAIT or PERM & mean_sd_per_job <  10 & slope <  0.005
+##  incr [.06 .02 .02 .11 .55 .09 .10 .04] when objective is FLOWTIME & type is NOWAIT or PERM & mean_sd_per_job >= 10                 
+## 
+## 
+## ##  NEH.Init.NEH.PriorityWeighted  decision tree
+\end{verbatim}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-4-7.pdf}
+
+\begin{verbatim}
+##   ..y                           
+##  0.36 when mean_sd_per_job >= 10
+##  0.53 when mean_sd_per_job <  10
+## 
+## 
+## ##  NEH.Init.NEH.Insertion  decision tree
+\end{verbatim}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-4-8.pdf}
+
+\begin{verbatim}
+##         ..y  fir kk1 kk2 las nm1                            
+##  first_best [.27 .16 .16 .19 .21] when rw_autocorr_1 <  0.97
+##   last_best [.21 .14 .14 .32 .19] when rw_autocorr_1 >= 0.97
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'vip'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:utils':
+## 
+##     vi
+\end{verbatim}
+
+\hypertarget{neh.init.neh.ratio}{%
+\subsection{NEH.Init.NEH.Ratio}\label{neh.init.neh.ratio}}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+\hypertarget{neh.init.neh.first.priority}{%
+\subsection{NEH.Init.NEH.First.Priority}\label{neh.init.neh.first.priority}}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-5-2.pdf}
+
+\hypertarget{neh.init.neh.first.priorityweighted}{%
+\subsection{NEH.Init.NEH.First.PriorityWeighted}\label{neh.init.neh.first.priorityweighted}}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-5-3.pdf}
+
+\hypertarget{neh.init.neh.first.priorityorder}{%
+\subsection{NEH.Init.NEH.First.PriorityOrder}\label{neh.init.neh.first.priorityorder}}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-5-4.pdf}
+
+\hypertarget{neh.init.neh.priority}{%
+\subsection{NEH.Init.NEH.Priority}\label{neh.init.neh.priority}}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-5-5.pdf}
+
+\hypertarget{neh.init.neh.priorityorder}{%
+\subsection{NEH.Init.NEH.PriorityOrder}\label{neh.init.neh.priorityorder}}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-5-6.pdf}
+
+\hypertarget{neh.init.neh.priorityweighted}{%
+\subsection{NEH.Init.NEH.PriorityWeighted}\label{neh.init.neh.priorityweighted}}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-5-7.pdf}
+
+\hypertarget{neh.init.neh.insertion}{%
+\subsection{NEH.Init.NEH.Insertion}\label{neh.init.neh.insertion}}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-5-8.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{best_instance <-}\StringTok{ }\KeywordTok{readRDS}\NormalTok{(}\KeywordTok{file.path}\NormalTok{(TASK_FOLDER, }\StringTok{'results'}\NormalTok{, }\StringTok{'none,instance_best.rda'}\NormalTok{)) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{unnest}\NormalTok{(problem) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{rename}\NormalTok{(}\DataTypeTok{best_fitness =}\NormalTok{ fitness)}
+
+\NormalTok{experiments <-}\StringTok{ }\KeywordTok{tribble}\NormalTok{(}
+  \OperatorTok{~}\NormalTok{ml_model, }\OperatorTok{~}\NormalTok{strat,}
+  \StringTok{'decision_tree'}\NormalTok{, }\StringTok{'instance-based'}\NormalTok{,}
+  \StringTok{'decision_tree'}\NormalTok{, }\StringTok{'instance-based-dependencies'}\NormalTok{,}
+  \StringTok{'rand_forest'}\NormalTok{, }\StringTok{'instance-based'}\NormalTok{,}
+  \StringTok{'rand_forest'}\NormalTok{, }\StringTok{'instance-based-dependencies'}\NormalTok{,}
+  \StringTok{'none'}\NormalTok{, }\StringTok{'default'}\NormalTok{,}
+  \StringTok{'none'}\NormalTok{, }\StringTok{'global_best'}\NormalTok{,}
+  \StringTok{'none'}\NormalTok{, }\StringTok{'random'}\NormalTok{,}
+\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{results =} \KeywordTok{pmap}\NormalTok{(., }\ControlFlowTok{function}\NormalTok{(ml_model, strat) }\KeywordTok{file.path}\NormalTok{(TASK_FOLDER,}
+                                        \StringTok{'results'}\NormalTok{,}
+                                        \KeywordTok{paste0}\NormalTok{(ml_model, }\StringTok{','}\NormalTok{, strat, }\StringTok{'.rda'}\NormalTok{)))) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{results =} \KeywordTok{map}\NormalTok{(results, readRDS)) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{unnest}\NormalTok{(results) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{unnest}\NormalTok{(problem) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\NormalTok{config) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{left_join}\NormalTok{(best_instance) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{rp =} \DecValTok{100} \OperatorTok{*}\StringTok{ }\NormalTok{(fitness }\OperatorTok{-}\StringTok{ }\NormalTok{best_fitness) }\OperatorTok{/}\StringTok{ }\NormalTok{best_fitness)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Joining, by = c("row_number()", "dist", "corr", "no_jobs", "no_machines", "problem", "corv", "objective", "type", "stopping_criterion", "budget", "model", "instance_features", "id", "inst_n", "instance")
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{experiments }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{group_by}\NormalTok{(strat, ml_model) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{summarize}\NormalTok{(}
+    \DataTypeTok{q00 =} \KeywordTok{quantile}\NormalTok{(rp, }\FloatTok{0.00}\NormalTok{),}
+    \DataTypeTok{q25 =} \KeywordTok{quantile}\NormalTok{(rp, }\FloatTok{0.25}\NormalTok{),}
+    \DataTypeTok{q50 =} \KeywordTok{quantile}\NormalTok{(rp, }\FloatTok{0.50}\NormalTok{),}
+    \DataTypeTok{q75 =} \KeywordTok{quantile}\NormalTok{(rp, }\FloatTok{0.75}\NormalTok{),}
+    \DataTypeTok{q1  =} \KeywordTok{quantile}\NormalTok{(rp, }\FloatTok{1.00}\NormalTok{),}
+\NormalTok{  ) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\NormalTok{knitr}\OperatorTok{::}\KeywordTok{kable}\NormalTok{(}\DataTypeTok{format =} \StringTok{'latex'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `summarise()` regrouping output by 'strat' (override with `.groups` argument)
+\end{verbatim}
+
+\begin{tabular}{l|l|r|r|r|r|r}
+\hline
+strat & ml\_model & q00 & q25 & q50 & q75 & q1\\
+\hline
+default & none & -8.489846 & 0.0000000 & 0.4352138 & 1.6293360 & 28.46078\\
+\hline
+global\_best & none & -9.913169 & 0.0000000 & 0.4488229 & 1.4098469 & 14.31729\\
+\hline
+instance-based & decision\_tree & -8.911596 & 0.0000000 & 0.1750807 & 0.8874725 & 13.32882\\
+\hline
+instance-based & rand\_forest & -8.489846 & 0.0000000 & 0.1549657 & 0.8165678 & 24.01786\\
+\hline
+instance-based-dependencies & decision\_tree & -8.565194 & 0.0000000 & 0.1765974 & 0.8709982 & 10.72643\\
+\hline
+instance-based-dependencies & rand\_forest & -8.367690 & -0.0083383 & 0.0975155 & 0.6451000 & 16.71320\\
+\hline
+random & none & -9.319826 & 1.0872599 & 4.5165265 & 15.9898617 & 2137.01230\\
+\hline
+\end{tabular}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{experiments }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{filter}\NormalTok{(strat }\OperatorTok{!=}\StringTok{ 'random'}\NormalTok{, ml_model }\OperatorTok{!=}\StringTok{ 'decision_tree'}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{model_strat =} \KeywordTok{paste}\NormalTok{(ml_model, strat)) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_violin}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ strat, }\DataTypeTok{fill =}\NormalTok{ strat, }\DataTypeTok{y =}\NormalTok{ rp))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+\end{document}

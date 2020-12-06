@@ -48,7 +48,7 @@ instance_data_from_filename <- function(instance_name) {
 }
 
 vrf_small_instances_df <- function() {
-  crossing(
+  tidyr::crossing(
     problem = "vrf-small",
     dist = "vrf",
     corr = "hard",
@@ -60,7 +60,7 @@ vrf_small_instances_df <- function() {
 }
 
 vrf_large_instances_df <- function() {
-  crossing(
+  tidyr::crossing(
     problem = "vrf-large",
     dist = "vrf",
     corr = "hard",
@@ -74,11 +74,11 @@ vrf_large_instances_df <- function() {
 taillard_instances_df <- function() {
   crossing(
     bind_rows(
-      crossing(
+      tidyr::crossing(
         no_jobs = c(20, 50, 100),
         no_machines = c(5, 10, 20)
       ),
-      crossing(
+      tidyr::crossing(
         no_jobs = 200,
         no_machines = c(10, 20)
       ),
