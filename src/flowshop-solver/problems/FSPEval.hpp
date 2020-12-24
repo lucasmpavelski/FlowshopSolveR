@@ -42,7 +42,7 @@ class FSPEval : public eoEvalFunc<FSP> {
 
 class FSPMakespanEval : virtual public FSPEval {
  public:
-  FSPMakespanEval() = default;
+  FSPMakespanEval() {};
 
   void operator()(FSP& perm) override {
     compile(perm);
@@ -56,7 +56,7 @@ class FSPMakespanEval : virtual public FSPEval {
 
 class FSPFlowtimeEval : virtual public FSPEval {
  public:
-  FSPFlowtimeEval() = default;
+  FSPFlowtimeEval() {};
   
   void operator()(FSP& perm) override {
     compile(perm);

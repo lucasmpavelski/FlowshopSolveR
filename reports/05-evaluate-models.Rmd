@@ -13,6 +13,7 @@ output:
 library(FlowshopSolveR)
 library(tidyverse)
 library(tidymodels)
+library(metaOpt)
 knitr::opts_chunk$set(echo = TRUE)
 
 MODEL_FOLDER <- here("data", "models")
@@ -41,8 +42,9 @@ model_names <- c(
 
 exp_names <- c(
   'instance-based',
-  'instance-based-c2',
-  'instance-based-dependencies'
+  # 'instance-based-c2',
+  'instance-based-dependencies',
+  'ablation'
 )
 
 all_exps <- expand.grid(
@@ -166,7 +168,7 @@ for (param in params) {
   model <- read_exp_dt(
     param = param,
     model_name = 'decision_tree',
-    exp_name = 'instance-based',
+    exp_name = 'ablation',
     dt_name = 'model'
   )
   cat('\n\n## ', param, ' decision tree\n')
@@ -205,7 +207,7 @@ best_instance <- readRDS(file.path(TASK_FOLDER, 'results', 'none,instance_best.r
   unnest(problem) %>%
   rename(best_fitness = fitness)
 
-test_problems_df()
+# test_problems_df()
 
 experiments <- tribble(
   ~ml_model, ~strat,
@@ -213,6 +215,8 @@ experiments <- tribble(
   'decision_tree', 'instance-based-dependencies',
   'rand_forest', 'instance-based',
   'rand_forest', 'instance-based-dependencies',
+  'decision_tree', 'ablation',
+  'rand_forest', 'ablation',
   'none', 'default',
   'none', 'global_best',
   'none', 'random',
@@ -220,10 +224,13 @@ experiments <- tribble(
   mutate(results = pmap(., function(ml_model, strat) file.path(TASK_FOLDER,
                                         'results',
                                         paste0(ml_model, ',', strat, '.rda')))) %>%
-  mutate(results = map(results, readRDS)) %>%
+  mutate(results = map(results, function(res) {
+    print(res)
+    readRDS(res)
+  })) %>%
   unnest(results) %>%
   unnest(problem) %>%
-  select(-config) %>%
+  select(-config, -metaopt_problem) %>%
   left_join(best_instance) %>%
   mutate(rp = 100 * (fitness - best_fitness) / best_fitness)
 

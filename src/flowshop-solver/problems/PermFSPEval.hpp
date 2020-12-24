@@ -101,13 +101,13 @@ class PermFSPEval : virtual public FSPEval {
   }
 };
 
-class PermFSPMakespanEval : public PermFSPEval, public FSPMakespanEval {
+class PermFSPMakespanEval : public PermFSPEval, public virtual FSPMakespanEval {
  public:
   PermFSPMakespanEval(const FSPData& fspData)
       : FSPEval{fspData}, PermFSPEval{fspData} {}
 };
 
-class PermFSPFlowtimeEval : public PermFSPEval, public FSPFlowtimeEval {
+class PermFSPFlowtimeEval : public PermFSPEval, public virtual FSPFlowtimeEval {
  public:
   PermFSPFlowtimeEval(const FSPData& fspData)
       : FSPEval{fspData}, PermFSPEval{fspData} {}

@@ -32,25 +32,24 @@ compute_features_data <- function(problems_dt, use_cache = T) {
   features_dt
 }
 
-compute_outputs_data <- function(problems_dt, algorithm, folder, use_cache = T) {
-  path <- file.path(TASK_FOLDER, "outputs.csv")
+
+compute_outputs_data_cache <- function(scenario) {
+  path <- file.path(TASK_FOLDER, ifelse(scenario@ablation, 'outputs-ablation.csv', 'outputs.csv'))
   if (use_cache & file.exists(path)) {
     return(read_csv(path))
   }
-  problem_space <- ProblemSpace(problems = problems_dt$metaopt_problem)
-  algorithm_space <- AlgorithmSpace(algorithms = list(algorithm))
-  performance_dt <- read_performance_data(
-    problem_space,
-    algorithm_space,
-    cache_folder = folder,
-    only_best = T
-  )
-  outputs_dt <- performance_dt %>%
-    mutate(name = map_chr(problem, ~ .x@name)) %>%
-    select(name, all_of(algorithm@parameters$names))
+  outputs_dt <- compute_outputs_data(scenario)
   if (use_cache) {
     write_csv(outputs_dt, path)
   }
+  outputs_dt
+}
+
+compute_outputs_data <- function(scenario) {
+  performance_dt <- performance_data(scenario)
+  outputs_dt <- performance_dt %>%
+    mutate(name = map_chr(problem, ~ .x@name)) %>%
+    select(name, all_of(algorithm@parameters$names))
   outputs_dt
 }
 
@@ -119,15 +118,17 @@ get_model_by_name <- function(model_name) {
   } else if (model_name == "rand_forest") {
     list(
       model = rand_forest(
-          mtry = tune(),
-          trees = 10,
-          min_n = 1
-        ) %>%
-          set_engine("ranger") %>%
-          set_mode("classification"),
+        mtry = tune(),
+        trees = tune(),
+        min_n = tune()
+      ) %>%
+        set_engine("ranger") %>%
+        set_mode("classification"),
       tune_grid = grid_regular(
-        mtry(c(6, 6)),
-        levels = 1
+        mtry(c(1, 10)),
+        trees(),
+        min_n(),
+        levels = 3
       )
     )
   }
@@ -181,9 +182,10 @@ decision_tree_param_model_experiment <- function(
   set.seed(123)
   
   param_rec <- recipe(formula, data = train_dt) %>% 
-    step_nzv(all_predictors()) %>%
-    themis::step_downsample(all_of(param)) %>%
+    step_zv(all_predictors()) %>%
+    step_lincomb(all_numeric()) %>%
     step_corr(all_numeric())
+  # themis::step_downsample(all_of(param)) %>%
   
   train_dt_preprocessing <- prep(param_rec, training = train_dt)
   
@@ -253,32 +255,38 @@ problems_dt <- all_problems_df() %>%
     metaopt_problem = pmap(., as_metaopt_problem),
     performance_exists = map_lgl(
       metaopt_problem,
-      ~ file.exists(here("runs", "neh", .x@name, "NEH", "result.rds"))
+      ~ file.exists(here("data", "performances", .x@name, "NEH", "ablation_best.rds"))
     )
   ) %>%
   filter(performance_exists)
 
-all_cores <- parallel::detectCores(logical = FALSE)
-library(doFuture)
-registerDoFuture()
-cl <- parallel::makeCluster(all_cores - 6)
-plan(cluster, workers = cl)
+
+
+# all_cores <- parallel::detectCores(logical = FALSE)
+# library(doFuture)
+# registerDoFuture()
+# cl <- parallel::makeCluster(all_cores - 6)
+# plan(cluster, workers = cl)
 
 algorithm <- get_algorithm("NEH")
 params <- algorithm@parameters$names
-exp_name <- "instance-based-c2"
-model_name <- 'decision_tree'
+model_name <- 'rand_forest'
 dependencies <- F
-cache <- F
+cache <- T
+exp_name <- "ablation"
+
+scenario <- Scenario(
+  problem_space = ProblemSpace(problems = problems_dt$metaopt_problem),
+  algorithm_space = AlgorithmSpace(algorithms = list(algorithm)),
+  folder = here('data'),
+  only_best = T,
+  ablation = T
+)
 
 features <- compute_features_data(problems_dt, use_cache = T)
-outputs <- compute_outputs_data(problems_dt, algorithm, 
-                                folder = here("runs", "neh"), use_cache = T)
+outputs <- compute_outputs_data(scenario)
 
-
-# build_split(features, outputs, train_problems_df(), param, summ_features = F)
-
-if (!dependencies) {
+# if (!dependencies) {
   dependencies <- tribble(~from, ~to)
   train_order <- params[2:length(params)]
 
@@ -293,66 +301,66 @@ if (!dependencies) {
       cache = cache
     )
   })
-} else {
-  dependencies <- tribble(
-    ~from, ~to,
-    "NEH.Init.NEH.First.PriorityWeighted", "NEH.Init.NEH.Ratio",
-
-    "NEH.Init.NEH.First.PriorityOrder"   , "NEH.Init.NEH.Ratio",
-    "NEH.Init.NEH.First.PriorityOrder"   , "NEH.Init.NEH.First.PriorityWeighted",
-
-    "NEH.Init.NEH.First.Priority"        , "NEH.Init.NEH.Ratio",
-    "NEH.Init.NEH.First.Priority"        , "NEH.Init.NEH.First.PriorityWeighted",
-    "NEH.Init.NEH.First.Priority"        , "NEH.Init.NEH.First.PriorityOrder",
-
-    "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.Ratio",
-    # "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.First.PriorityWeighted",
-    # "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.First.PriorityOrder",
-    # "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.First.Priority",
-
-    "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.Ratio",
-    # "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.First.PriorityWeighted",
-    # "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.First.PriorityOrder",
-    # "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.First.Priority",
-    "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.PriorityWeighted",
-
-    "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.Ratio",
-    # "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.First.PriorityWeighted",
-    # "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.First.PriorityOrder",
-    # "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.First.Priority",
-    "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.PriorityWeighted",
-    "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.PriorityOrder",
-
-    "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.Ratio",
-    # "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.First.PriorityWeighted",
-    # "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.First.PriorityOrder",
-    # "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.First.Priority",
-    "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.PriorityWeighted",
-    "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.PriorityOrder",
-    "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.Priority",
-  )
-
-  train_order <- dependencies %>%
-    as.matrix() %>%
-    igraph::graph_from_edgelist() %>%
-    igraph::topo_sort("in") %>%
-    names()
-
-  walk(train_order, function(param) {
-    train_dt <- build_split(features, outputs, train_problems_df(), param, summ_features = F)
-    test_dt <- build_split(features, outputs, test_problems_df(), param, summ_features = F, filter_na = F)
-    decision_tree_param_model_experiment(
-      train_dt,
-      test_dt,
-      param,
-      model_name,
-      paste0(exp_name, '-', 'dependencies'),
-      dependencies = dependencies,
-      cache = cache
-    )
-  })
-
-}
+# } else {
+#   dependencies <- tribble(
+#     ~from, ~to,
+#     "NEH.Init.NEH.First.PriorityWeighted", "NEH.Init.NEH.Ratio",
+# 
+#     "NEH.Init.NEH.First.PriorityOrder"   , "NEH.Init.NEH.Ratio",
+#     "NEH.Init.NEH.First.PriorityOrder"   , "NEH.Init.NEH.First.PriorityWeighted",
+# 
+#     "NEH.Init.NEH.First.Priority"        , "NEH.Init.NEH.Ratio",
+#     "NEH.Init.NEH.First.Priority"        , "NEH.Init.NEH.First.PriorityWeighted",
+#     "NEH.Init.NEH.First.Priority"        , "NEH.Init.NEH.First.PriorityOrder",
+# 
+#     "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.Ratio",
+#     # "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.First.PriorityWeighted",
+#     # "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.First.PriorityOrder",
+#     # "NEH.Init.NEH.PriorityWeighted"      , "NEH.Init.NEH.First.Priority",
+# 
+#     "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.Ratio",
+#     # "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.First.PriorityWeighted",
+#     # "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.First.PriorityOrder",
+#     # "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.First.Priority",
+#     "NEH.Init.NEH.PriorityOrder"         , "NEH.Init.NEH.PriorityWeighted",
+# 
+#     "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.Ratio",
+#     # "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.First.PriorityWeighted",
+#     # "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.First.PriorityOrder",
+#     # "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.First.Priority",
+#     "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.PriorityWeighted",
+#     "NEH.Init.NEH.Priority"              , "NEH.Init.NEH.PriorityOrder",
+# 
+#     "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.Ratio",
+#     # "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.First.PriorityWeighted",
+#     # "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.First.PriorityOrder",
+#     # "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.First.Priority",
+#     "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.PriorityWeighted",
+#     "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.PriorityOrder",
+#     "NEH.Init.NEH.Insertion"             , "NEH.Init.NEH.Priority",
+#   )
+# 
+#   train_order <- dependencies %>%
+#     as.matrix() %>%
+#     igraph::graph_from_edgelist() %>%
+#     igraph::topo_sort("in") %>%
+#     names()
+# 
+#   walk(train_order, function(param) {
+#     train_dt <- build_split(features, outputs, train_problems_df(), param, summ_features = F)
+#     test_dt <- build_split(features, outputs, test_problems_df(), param, summ_features = F, filter_na = F)
+#     decision_tree_param_model_experiment(
+#       train_dt,
+#       test_dt,
+#       param,
+#       model_name,
+#       paste0(exp_name, '-', 'dependencies'),
+#       dependencies = dependencies,
+#       cache = cache
+#     )
+#   })
+# 
+# }
 
 
 

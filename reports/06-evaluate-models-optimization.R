@@ -133,18 +133,19 @@ test_problems <- test_problems_df() %>%
 library(future)
 plan(multisession)
 
-global_best <- readRDS(here('runs/neh_best_solver/all/NEH/result.rds'))[1,]
+# global_best <- readRDS(here('runs/neh_best_solver/all/NEH/result.rds'))[1,]
 
-inst_perfs <- read_performance_data(
-  problem_space = ProblemSpace(problems = test_problems$metaopt_problem),
-  algorithm_space = AlgorithmSpace(algorithms = list(algorithm)),
-  cache_folder = here('runs/neh')
-)
+# inst_perfs <- read_performance_data(
+#   problem_space = ProblemSpace(problems = test_problems$metaopt_problem),
+#   algorithm_space = AlgorithmSpace(algorithms = list(algorithm)),
+#   cache_folder = here('runs/neh')
+# )
 
-write_result(algorithm, test_problems, 'none', 'instance_best', instance_performances = inst_perfs)
+# write_result(algorithm, test_problems, 'none', 'instance_best', instance_performances = inst_perfs)
+# write_result(algorithm, test_problems, 'rand_forest', 'ablation', instance_performances = inst_perfs)
 
 # 
-# value(c(
+value(c(
   # future({write_result(algorithm, test_problems, 'none', 'global_best', global_best)}),
   # future({write_result(algorithm, test_problems, 'none', 'random', global_best)})
 #   future({write_result(algorithm, test_problems, 'none', 'default')}),
@@ -152,5 +153,7 @@ write_result(algorithm, test_problems, 'none', 'instance_best', instance_perform
 #   future({write_result(algorithm, test_problems, 'decision_tree', 'instance-based-dependencies')}),
 #   future({write_result(algorithm, test_problems, 'rand_forest', 'instance-based')}),
     # future({write_result(algorithm, test_problems, 'rand_forest', 'instance-based-dependencies')})
-# ))
+  future({write_result(algorithm, test_problems, 'decision_tree', 'ablation')}),
+  future({write_result(algorithm, test_problems, 'rand_forest', 'ablation')})
+))
 

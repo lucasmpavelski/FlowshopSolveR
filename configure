@@ -5,5 +5,7 @@
 install_dir=_install$INSTALL_POSTFIX
 mkdir -p $install_dir 
 cd $install_dir
+export CC=clang-10
+export CCX=clang++-10
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 ninja

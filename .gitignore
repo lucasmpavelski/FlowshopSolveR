@@ -38,4 +38,5 @@ aclib2/fsp/instances/*
 aclib2/fsp/scenarios/*
 data/instances/*/*
 data/features/*.rds
+data/performances/*/*
 runs/*
