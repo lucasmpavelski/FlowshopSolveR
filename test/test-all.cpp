@@ -147,16 +147,12 @@ auto lowerBound1(const FSPData& fspData) -> int {
 TEST(Solve, HC) {
   using std::string;
   RNG::seed(123l);
-  FSPProblemFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data");
-  MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
-  prob["instance"] = "binom_rand_30_20_01.dat";
+  prob["instance"] = "uniform_machine-correlated_100_60_01.txt";
   prob["stopping_criterion"] = "EVALS";
 
   MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("HC");
@@ -168,12 +164,8 @@ TEST(Solve, HC) {
 TEST(Solve, SA) {
   using std::string;
   RNG::seed(123l);
-  FSPProblemFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/");
-  MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs/", true);
   std::unordered_map<string, string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
@@ -192,17 +184,13 @@ TEST(Solve, SA) {
 TEST(FLA, ADAPTIVE) {
   using std::string;
   RNG::seed(123l);
-  FSPProblemFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data");
-  MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
-  prob["instance"] = "exp_rand_30_20_01.dat";
-  prob["stopping_criterion"] = "EVALS";
+  prob["instance"] = "uniform_machine-correlated_100_60_01.txt";
+  prob["stopping_criterion"] = "FITNESS";
 
   std::unordered_map<string, string> sampling;
   sampling["Init.Strat"] = "RANDOM";
@@ -214,17 +202,13 @@ TEST(FLA, ADAPTIVE) {
 TEST(FLA, ADAPTIVE_WALK) {
   using std::string;
   RNG::seed(123l);
-  FSPProblemFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data");
-  MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
-  prob["instance"] = "exp_rand_30_20_01.dat";
-  prob["stopping_criterion"] = "EVALS";
+  prob["instance"] = "uniform_machine-correlated_100_60_01.txt";
+  prob["stopping_criterion"] = "FITNESS";
 
   std::unordered_map<string, string> sampling;
   sampling["Init.Strat"] = "RANDOM";
@@ -236,17 +220,13 @@ TEST(FLA, ADAPTIVE_WALK) {
 TEST(Solve, TS) {
   using std::string;
   RNG::seed(123l);
-  FSPProblemFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data");
-  MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
-  prob["budget"] = "med";
-  prob["instance"] = "binom_rand_30_20_01.dat";
-  prob["stopping_criterion"] = "EVALS";
+  prob["budget"] = "low";
+  prob["instance"] = "y";
+  prob["stopping_criterion"] = "FITNESS";
 
   for (int i = 0; i < 10; i++) {
     MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("TS");
@@ -259,16 +239,12 @@ TEST(Solve, TS) {
 TEST(Solve, ILS) {
   using std::string;
   RNG::seed(123l);
-  FSPProblemFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data");
-  MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
-  prob["instance"] = "binom_rand_30_20_01.dat";
+  prob["instance"] = "binom_random_30_20_01.dat";
   prob["stopping_criterion"] = "TIME";
 
   MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("ILS");
@@ -280,12 +256,8 @@ TEST(Solve, ILS) {
 TEST(Solve, IHC) {
   using std::string;
   RNG::seed(123l);
-  FSPProblemFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data");
-  MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
@@ -296,30 +268,19 @@ TEST(Solve, IHC) {
     MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("IHC");
     MHParamsValues values(&mhParamsSpecs);
     values.randomizeValues(RNG::engine);
-    // std::cout << solveWithIHC(prob, values.toMap());
   }
 }
 
 TEST(Solve, IG) {
   using std::string;
   RNG::seed(123l);
-  FSPProblemFactory::init(DATA_FOLDER);
-  MHParamsSpecsFactory::init(DATA_FOLDER "/specs", true);
-  std::unordered_map<string, string> prob;
-  // prob["problem"] = "FSP";
-  // prob["type"] = "PERM";
-  // prob["objective"] = "MAKESPAN";
-  // prob["budget"] = "low";
-  // prob["instance"] = "binom_rand_30_20_01.dat";
-  // prob["stopping_criterion"] = "EVALS";
-
-  prob["problem"] = "FSP";
+  std::unordered_map<string, string> prob; 
+  prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
   prob["instance"] = "taill-like_rand_30_20_01.dat";
   prob["stopping_criterion"] = "EVALS";
-
   MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("IG");
   MHParamsValues values(&mhParamsSpecs);
   values.randomizeValues(RNG::engine);
@@ -330,13 +291,9 @@ TEST(Solve, IG) {
 TEST(Solve, ISA) {
   using std::string;
   RNG::seed(123l);
-  FSPProblemFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data");
-  MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
 
   std::unordered_map<string, string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
@@ -353,12 +310,8 @@ TEST(Solve, ISA) {
 TEST(Solve, ACO) {
   using std::string;
   RNG::seed(123l);
-  FSPProblemFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data");
-  MHParamsSpecsFactory::init(
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", true);
   std::unordered_map<string, string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "low";
@@ -372,26 +325,26 @@ TEST(Solve, ACO) {
 }
 
 std::vector<std::string> all_mh = {"IHC", "ISA", "TS", "ILS", "IG", "ACO"};
-auto mh_cat_values = {0, 1, 2,
-                      3, 4, 5};  // TODO: permit values for categorical params
-
-TEST(Solve, AllParamsInAllMH) {
-  MHParamsSpecs allSpecs = MHParamsSpecsFactory::get("all");
-  std::vector<ParamSpec> params;
-  for (const auto& param : allSpecs) {
-    params.push_back(*param);
-  }
-  unsigned count = 0;
-  for (const auto& mh : all_mh) {
-    MHParamsSpecs specs = MHParamsSpecsFactory::get(mh);
-    count += specs.noParams();
-    for (const auto& param : specs) {
-      ASSERT_TRUE(std::find(params.begin(), params.end(), *param) !=
-                  params.end());
-    }
-  }
-  ASSERT_TRUE(params.size() == count + 1);
-}
+ auto mh_cat_values = {0, 1, 2,
+                       3, 4, 5};  // TODO: permit values for categorical params
+// 
+// TEST(Solve, AllParamsInAllMH) {
+//   MHParamsSpecs allSpecs = MHParamsSpecsFactory::get("all");
+//   std::vector<ParamSpec> params;
+//   for (const auto& param : allSpecs) {
+//     params.push_back(*param);
+//   }
+//   unsigned count = 0;
+//   for (const auto& mh : all_mh) {
+//     MHParamsSpecs specs = MHParamsSpecsFactory::get(mh);
+//     count += specs.noParams();
+//     for (const auto& param : specs) {
+//       ASSERT_TRUE(std::find(params.begin(), params.end(), *param) !=
+//                   params.end());
+//     }
+//   }
+//   ASSERT_TRUE(params.size() == count + 1);
+// }
 
 TEST(Solve, SolveAllMHs) {
   RNG::seed(1234);
@@ -399,11 +352,11 @@ TEST(Solve, SolveAllMHs) {
   MHParamsValues params(&allSpecs);
   params.randomizeValues(RNG::engine);
   std::unordered_map<std::string, std::string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
-  prob["instance"] = "binom_rand_30_20_01.dat";
+  prob["instance"] = "exponential_random_30_10_01.txt";
   prob["stopping_criterion"] = "EVALS";
   RNG::seed(1234);
 
@@ -422,12 +375,8 @@ TEST(Solve, SolveAllMHs) {
 // TEST(Solve, irace) {
 //   using std::string;
 //   RNG::seed(123l);
-//   FSPProblemFactory::init(
-//       "/home/lucasmp/projects/git/evolutionary_tunners/data");
-//   MHParamsSpecsFactory::init(
-//       "/home/lucasmp/projects/git/evolutionary_tunners/data/specs", 1);
 //   std::unordered_map<string, string> prob;
-//   prob["problem"] = "FSP";
+//   prob["problem"] = "flowshop";
 //   prob["type"] = "PERM";
 //   prob["objective"] = "MAKESPAN";
 //   prob["budget"] = "low";
@@ -447,10 +396,17 @@ TEST(Solve, SolveAllMHs) {
 //   std::cout << solveWithAny(prob, params);
 // }
 
+TEST(FLA, Snowball) {
+   ASSERT_TRUE(1);
+}
+
 auto main(int argc, char** argv) -> int {
+  FSPProblemFactory::init(DATA_FOLDER);
+  MHParamsSpecsFactory::init(DATA_FOLDER "/specs", true);
+  
   argc = 2;
-  // char* argvv[] = {"", "--gtest_filter=FLA.*"};
-  // testing::InitGoogleTest(&argc, argvv);
-  testing::InitGoogleTest(&argc, argv);
+  char* argvv[] = {"", "--gtest_filter=FLA.Snowball"};
+  testing::InitGoogleTest(&argc, argvv);
+  // testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

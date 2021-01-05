@@ -235,8 +235,6 @@ void testUpdate() {
 #include "flowshop-solver/FSPProblemFactory.h"
 
 void runMMAS() {
-  initFactories("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/generated_intances/generated_instances_all/",
-                "/home/lucasmp/projects/git/evolutionary_tunners/data/specs/",
 true); std::unordered_map<std::string, std::string> prob_data;
 
 

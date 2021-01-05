@@ -8,7 +8,7 @@ TEST(SamplingLON, CanSampleLON) {
   FSPProblemFactory::init(DATA_FOLDER);
   MHParamsSpecsFactory::init(DATA_FOLDER "/specs", true);
   std::unordered_map<std::string, std::string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["type"] = "NOWAIT";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";

@@ -75,9 +75,10 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/main/refine",
+            "program": "${workspaceFolder}/build/bin/test-all",
             "args": [
-                "localLocal"
+                "localLocal",
+                "--gtest_filter=FLA.Snowball"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

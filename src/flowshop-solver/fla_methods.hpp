@@ -210,7 +210,7 @@ struct graph {
   std::vector<std::vector<lo_sample>> samples;
   std::vector<std::vector<edge>> edges;
 
-  int addNode(EOT n, EOT sample, int no_steps) {
+  auto addNode(EOT n, EOT sample, int no_steps) -> int {
     unsigned idx = getIndex(n);
     if (idx == nodes.size()) {
       nodes.emplace_back(n);
@@ -221,14 +221,14 @@ struct graph {
     return idx;
   }
 
-  int getIndex(const EOT& n) {
+  auto getIndex(const EOT& n) -> int {
     auto it = std::find(nodes.begin(), nodes.end(), n);
     return std::distance(nodes.begin(), it);
   }
 
-  bool contains(const EOT& n) { return getIndex(n) != nodes.size(); }
+  auto contains(const EOT& n) -> bool { return getIndex(n) != nodes.size(); }
 
-  edge* getEdge(const EOT& a, const EOT& b) {
+  auto getEdge(const EOT& a, const EOT& b) -> edge* {
     int a_idx = getIndex(a);
     int b_idx = getIndex(b);
     auto edge_it = std::find_if(

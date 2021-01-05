@@ -4,10 +4,8 @@
 void testSolveWithFactories() {
 
   try {
-  initFactories("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/generated_intances/generated_instances_all/",
-                "/home/lucasmp/projects/git/evolutionary_tunners/data/specs/");
   std::unordered_map<std::string, std::string> prob;
-  prob["problem"] = "FSP";
+  prob["problem"] = "flowshop";
   prob["budget"] = "low";
   prob["type"] = "NOIDLE";
   prob["objective"] = "FLOWTIME";
@@ -37,7 +35,7 @@ void testSolveWithFactories() {
 void testSolve() {
   int seed = 481571373;
   FSPData
-fspData("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/flowshop/binom_rand_30_20_01.dat");
+fspData("data/instances/flowshop/binom_rand_30_20_01.dat");
   rng.reseed(seed);
   std::unordered_map<std::string, float> params;
   params["Comp.Strat"] =  0;
@@ -50,7 +48,7 @@ fspData("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/flowshop
   params["ILS.LS.CompStrat"] = 1;
   params["ILS.LS.NeighborhoodStrat"] = 1;
   params["ILS.LS.NeighborhoodSize"] = 10.0;
-  MHParamsSpecsFactory::init("/home/lucasmp/projects/git/evolutionary_tunners/data/specs/",
+  MHParamsSpecsFactory::init("data/specs/",
 true); MHParamsSpecs mh_specs = MHParamsSpecsFactory::get("ILS2");
   MHParamsValues values(&mh_specs);
   for (auto ps : mh_specs) {
@@ -67,9 +65,9 @@ true); MHParamsSpecs mh_specs = MHParamsSpecsFactory::get("ILS2");
 void testFastSolve() {
   unsigned seed = 481571373;
   FSPData
-fspData("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/flowshop/binom_rand_30_20_01.dat");
+fspData("data/instances/flowshop/binom_rand_30_20_01.dat");
   //system("cat
-/home/lucasmp/projects/git/evolutionary_tunners/data/instances/generated_intances/generated_instances_all/taill-like_30_5_3005104.gen.bestKnown");
+data/instances/generated_intances/generated_instances_all/taill-like_30_5_3005104.gen.bestKnown");
   rng.reseed(seed);
   std::unordered_map<std::string, float> params;
   params["Comp.Strat"] =  0;
@@ -82,7 +80,7 @@ fspData("/home/lucasmp/projects/git/evolutionary_tunners/data/instances/flowshop
   params["ILS.LS.CompStrat"] = 1;
   params["ILS.LS.NeighborhoodStrat"] = 0;
   params["ILS.LS.NeighborhoodSize"] = 10.0;
-  MHParamsSpecsFactory::init("/home/lucasmp/projects/git/evolutionary_tunners/data/specs/",
+  MHParamsSpecsFactory::init("data/specs/",
 true); MHParamsSpecs mh_specs = MHParamsSpecsFactory::get("ILS"); MHParamsValues
 values(&mh_specs); for (auto ps : mh_specs) { if (params.find(ps->name) ==
 params.end()) throw std::runtime_error("Parameter " + ps->name + " needs a

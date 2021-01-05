@@ -116,7 +116,7 @@ std::vector<int> line2IntVector(std::istream &line, int size) {
 
 std::vector<JSP> load(int no_jobs, int no_machines) {
   std::string folder =
-      "/home/lucasmp/projects/git/evolutionary_tunners/data/instances/JSP/";
+      "data/instances/JSP/";
   std::string filename = "tai" + std::to_string(no_jobs) + "_" +
                          std::to_string(no_machines) + ".txt";
   std::string filePath = folder + filename;
