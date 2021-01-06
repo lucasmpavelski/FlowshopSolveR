@@ -396,8 +396,19 @@ TEST(Solve, SolveAllMHs) {
 //   std::cout << solveWithAny(prob, params);
 // }
 
+#include "flowshop-solver/fla/SnowballLONSampling.hpp"
+
 TEST(FLA, Snowball) {
-   ASSERT_TRUE(1);
+  const int d = 3, m = 4;
+
+  std::unordered_map<std::string, std::string> prob;
+  prob["problem"] = "flowshop";
+  prob["type"] = "PERM";
+  prob["objective"] = "MAKESPAN";
+  prob["budget"] = "med";
+  prob["instance"] = "exponential_random_30_10_01.txt";
+  prob["stopping_criterion"] = "EVALS";
+
 }
 
 auto main(int argc, char** argv) -> int {

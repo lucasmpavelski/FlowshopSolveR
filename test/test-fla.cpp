@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "flowshop-solver/fla/SnowballLONSampling.hpp"
 #include "flowshop-solver/fla_methods.hpp"
 
 

@@ -52,6 +52,7 @@ class ParamSpec {
         return std::to_string(num);
       case Type::INT:
       case Type::CAT:
+      case Type::ORD:
         return std::to_string(int(num));
     }
     return "";

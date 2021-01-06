@@ -5,9 +5,9 @@
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
-#include "flowshop-solver/problems/Problem.hpp"
 #include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/moHiResTimeContinuator.hpp"
+#include "flowshop-solver/problems/Problem.hpp"
 
 #include "flowshop-solver/problems/FSPData.hpp"
 
@@ -91,6 +91,7 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   }
 
   auto eval() -> eoEvalFunc<EOT>& override { return eval_counter; }
+  void eval(FSP& x) { eval_counter(x); }
   auto neighborEval() -> moEval<Ngh>& override { return eval_neighbor_counter; }
   auto continuator() -> moContinuator<Ngh>& override {
     return *continuator_ptr;

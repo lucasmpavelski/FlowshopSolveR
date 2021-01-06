@@ -374,3 +374,8 @@ inline auto factorial(unsigned n) -> long {
     ret *= n--;
   return ret;
 }
+
+template <class T>
+auto contains(const std::vector<T>& vec, const T& obj) -> bool {
+  return std::find(vec.begin(), vec.end(), obj) != vec.end();
+}
