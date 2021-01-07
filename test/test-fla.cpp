@@ -38,7 +38,7 @@ TEST(SamplingLON, CanSampleLON) {
   sampling_params["IG.LSPS.Single.Step"  ] = "1";
 
 
-  sampleLON(prob, sampling_params, 123l);
+ // sampleLON(prob, sampling_params, 123l);
 }
 
 auto main(int argc, char **argv) -> int {

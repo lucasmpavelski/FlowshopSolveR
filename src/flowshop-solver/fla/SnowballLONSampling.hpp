@@ -85,134 +85,120 @@ struct graph {
   }
 };
 
-template <class Ngh, class EOT = typename Ngh::EOT>
-void snowball(int d,
-              int m,
-              const EOT& x,
-              moLocalSearch<Ngh>& localSearch,
-              moCounterStat<EOT>& counter,
-              moPerturbation<Ngh>& op,
-              graph<EOT>& lon) {
-  if (d > 0) {
-    for (int j = 0; j < m; j++) {
-      EOT x_l = x;
-      op(x_l);
-      EOT x0 = x_l;
-      localSearch(x_l);
-      lon.addNode(x_l, x0, counter.value());
-      auto edge = lon.getEdge(x, x_l);
-      if (edge != nullptr) {
-        edge->weight++;
-      } else {
-        lon.addEdge(x, x_l, 1);
-        snowball(d - 1, m, x_l, localSearch, counter, op, lon);
+
+
+class SnowballLONSampling {
+  template <class Ngh, class EOT = typename Ngh::EOT>
+  void snowball(int d,
+                int m,
+                const EOT& x,
+                moLocalSearch<Ngh>& localSearch,
+                moCounterStat<EOT>& counter,
+                moPerturbation<Ngh>& op,
+                graph<EOT>& lon) {
+    if (d > 0) {
+      for (int j = 0; j < m; j++) {
+        EOT x_l = x;
+        op(x_l);
+        EOT x0 = x_l;
+        localSearch(x_l);
+        lon.addNode(x_l, x0, counter.value());
+        auto edge = lon.getEdge(x, x_l);
+        if (edge != nullptr) {
+          edge->weight++;
+        } else {
+          lon.addEdge(x, x_l, 1);
+          snowball(d - 1, m, x_l, localSearch, counter, op, lon);
+        }
       }
     }
   }
-}
 
 
-template <class Ngh, class EOT = typename Ngh::EOT>
-EOT randomWalkStep(EOT& sol,
-                   graph<EOT>& lon,
-                   moLocalSearch<Ngh>& localSearch,
-                   moCounterStat<EOT>& counter,
-                   eoEvalFunc<EOT>& eval,
-                   const std::vector<EOT>& walk) {
-  for (auto& edge : lon.edges[lon.getIndex(sol)]) {
-    if (!contains(walk, lon.nodes[edge.node_idx])) {
-      return lon.nodes[edge.node_idx];
+  template <class Ngh, class EOT = typename Ngh::EOT>
+  auto randomWalkStep(EOT& sol,
+                    graph<EOT>& lon,
+                    moLocalSearch<Ngh>& localSearch,
+                    moCounterStat<EOT>& counter,
+                    eoEvalFunc<EOT>& eval,
+                    const std::vector<EOT>& walk) -> EOT {
+    for (auto& edge : lon.edges[lon.getIndex(sol)]) {
+      if (!contains(walk, lon.nodes[edge.node_idx])) {
+        return lon.nodes[edge.node_idx];
+      }
     }
+    eoInitPermutation<EOT> init(sol.size());
+    EOT new_sol = sol;
+    init(new_sol);
+    eval(new_sol);
+    EOT x0 = new_sol;
+    localSearch(new_sol);
+    lon.addNode(new_sol, x0, counter.value());
+    return new_sol;
   }
-  eoInitPermutation<EOT> init(sol.size());
-  EOT new_sol = sol;
-  init(new_sol);
-  eval(new_sol);
-  EOT x0 = new_sol;
-  localSearch(new_sol);
-  lon.addNode(new_sol, x0, counter.value());
-  return new_sol;
-}
+  public:
 
-graph<FSPProblem::EOT> sampleLON(
-    const std::unordered_map<std::string, std::string>& prob_params,
-    std::unordered_map<std::string, std::string> sampling_params,
-    unsigned seed) {
-  rng.reseed(seed);
-  FSPProblem problem = FSPProblemFactory::get(prob_params);
-  using EOT = FSPProblem::EOT;
-  using Ngh = FSPProblem::Ngh;
+  SnowballLONSampling() = default;
 
-  MHParamsSpecs specs = MHParamsSpecsFactory::get("Snowball.txt");
-  MHParamsValues params(&specs);
-  params.readValues(sampling_params);
+  auto sampleLON(
+      const std::unordered_map<std::string, std::string>& prob_params,
+      const std::unordered_map<std::string, std::string>& sampling_params,
+      unsigned seed) -> graph<FSPProblem::EOT> {
+    rng.reseed(seed);
+    FSPProblem problem = FSPProblemFactory::get(prob_params);
+    using EOT = FSPProblem::EOT;
+    using Ngh = FSPProblem::Ngh;
 
-  eoFSPFactory factory(params, problem);
+    MHParamsSpecs specs = MHParamsSpecsFactory::get("Snowball");
+    MHParamsValues params(&specs);
+    params.readValues(sampling_params);
 
-  // sampling params
-  using namespace std::string_literals;
-  auto init_strat = getWithDef(sampling_params, "Init.Strat"s, "RANDOM"s);
-  auto sampling_strat =
-      getWithDef(sampling_params, "Sampling.Strat"s, "RANDOM_BEST"s);
-  auto d = stoi(getWithDef(sampling_params, "Depth"s, "2"s));
-  auto m = stoi(getWithDef(sampling_params, "No.Edges"s, "15"s));
-  auto l = stoi(getWithDef(sampling_params, "Walk.Lengh"s, "50"s));
-  auto perturb_strat =
-      getWithDef(sampling_params, "Perturbation.Operator"s, "IG"s);
-  auto strength = stoi(getWithDef(sampling_params, "Strength"s, "1"s));
+    eoFSPFactory factory(params, problem);
 
-  // full IG params defaults
-  sampling_params["IG.Init.Strat"] = "2";
-  sampling_params["IG.Comp.Strat"] = "0";
-  sampling_params["IG.Neighborhood.Size"] = "6.3774";
-  sampling_params["IG.Neighborhood.Strat"] = "1";
-  sampling_params["IG.Local.Search"] = "0";
-  sampling_params["IG.Accept"] = "1";
-  sampling_params["IG.Accept.Temperature"] = "1";
-  sampling_params["IG.Algo"] = "1";
-  sampling_params["IG.Destruction.Size"] = "0.2335";
-  sampling_params["IG.LS.Single.Step"] = "0";
-  sampling_params["IG.LSPS.Local.Search"] = "1";
-  sampling_params["IG.LSPS.Single.Step"] = "1";
- 
+    // sampling params
+    using namespace std::string_literals;
+    auto d = params.integer("Snowball.Depth");
+    auto m = params.integer("Snowball.NoEdges");
+    auto l = params.integer("Snowball.WalkLength");
 
-  eoInit<FSP>* init = factory.buildInit();
-  moIndexNeighborhood<FSPNeighbor>* neighborhood = factory.buildNeighborhood();
-  moLocalSearch<Ngh>* localSearch = factory.buildLocalSearch();
-  moPerturbation<Ngh>* perturbation = factory.buildPerturb();
+    eoInit<FSP>* init = factory.buildInit();
+    moLocalSearch<Ngh>* localSearch = factory.buildLocalSearch();
+    moPerturbation<Ngh>* perturbation = factory.buildPerturb();
 
-  moTrueContinuator<Ngh> tc;
-  moCounterStat<EOT> counter;
-  moCheckpoint<Ngh> checkpoint(tc);
-  checkpoint.add(counter);
+    moTrueContinuator<Ngh> tc;
+    moCounterStat<EOT> counter;
+    moCheckpoint<Ngh> checkpoint(tc);
+    checkpoint.add(counter);
 
-  // continuator
-  moIterContinuator<Ngh> globalContinuator(problem.size(0), false);
+    // continuator
+    moIterContinuator<Ngh> globalContinuator(problem.size(0), false);
 
-  moTrueContinuator<Ngh> localContinuator;
-  moCheckpoint<Ngh> localCheckpoint(localContinuator);
+    moTrueContinuator<Ngh> localContinuator;
+    moCheckpoint<Ngh> localCheckpoint(localContinuator);
 
-  moCheckpoint<Ngh> igCheckpoint(globalContinuator);
-  igCheckpoint.add(counter);
+    moCheckpoint<Ngh> igCheckpoint(globalContinuator);
+    igCheckpoint.add(counter);
 
-  graph<EOT> lon;
+    graph<EOT> lon;
 
-  EOT sol;
-  (*init)(sol);
-  EOT x0 = sol;
-  problem.eval(x0);
-  (*localSearch)(sol);
-  lon.addNode(sol, x0, counter.value());
+    EOT sol(problem.size(0));
+    (*init)(sol);
+    EOT x0 = sol;
+    problem.eval(x0);
+    (*localSearch)(sol);
+    lon.addNode(sol, x0, counter.value());
 
-  std::vector<EOT> walk;
-  walk.reserve(l);
-  walk.push_back(sol);
-  for (int i = 0; i <= l - 1; i++) {
-    snowball(d, m, sol, *localSearch, counter, *perturbation, lon);
-    sol = randomWalkStep(sol, lon, *localSearch, counter, problem.eval(), walk);
+    std::vector<EOT> walk;
+    walk.reserve(l);
     walk.push_back(sol);
+    for (int i = 0; i <= l - 1; i++) {
+      snowball(d, m, sol, *localSearch, counter, *perturbation, lon);
+      sol = randomWalkStep(sol, lon, *localSearch, counter, problem.eval(), walk);
+      walk.push_back(sol);
+    }
+
+    std::cerr << "no_evals" << problem.noEvals() << "\n";
+    return lon;
   }
 
-  std::cerr << "no_evals" << problem.noEvals() << "\n";
-  return lon;
-}
+};

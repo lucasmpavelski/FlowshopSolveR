@@ -140,7 +140,6 @@ class eoFactory : public eoFunctorStore {
   auto buildLocalSearch() -> moLocalSearch<Ngh>* {
     auto compNN = buildNeighborComparator();
     auto compSN = buildSolNeighborComparator();
-    auto neighborhood = buildNeighborhood();
 
     auto& eval = _problem.eval();
     auto& nEval = _problem.neighborEval();
@@ -153,12 +152,15 @@ class eoFactory : public eoFunctorStore {
       auto& explorer = pack<moDummyExplorer<Ngh>>();
       ret = &pack<moLocalSearch<Ngh>>(explorer, cp, eval);
     } else if (name == "first_improvement") {
+      auto neighborhood = buildNeighborhood();
       ret = &pack<moFirstImprHC<Ngh>>(*neighborhood, eval, nEval, cp, *compNN,
                               *compSN);
     } else if (name == "best_improvement") {
+      auto neighborhood = buildNeighborhood();
       ret = &pack<moSimpleHC<Ngh>>(*neighborhood, eval, nEval, cp, *compNN,
                             *compSN);
     } else if (name == "random_best_improvement") {
+      auto neighborhood = buildNeighborhood();
       ret = &pack<moRandomBestHC<Ngh>>(*neighborhood, eval, nEval, cp, *compNN,
                                 *compSN);
     } else if (name == "best_insertion") {

@@ -236,8 +236,8 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   auto domainPerturb() -> moPerturbation<Ngh>* override {
     auto insertionName = categoricalName(".Perturb.Insertion");
     auto insertion =
-        buildInsertionStrategy(insertionName, _problem.neighborEval());
-    storeFunctor(insertion.release());
+        buildInsertionStrategy(insertionName, _problem.neighborEval()).release();
+    storeFunctor(insertion);
     auto destructionSize = buildDestructionSize();
 
     const std::string name = categoricalName(".Perturb");

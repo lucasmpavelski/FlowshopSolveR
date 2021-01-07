@@ -274,7 +274,7 @@ TEST(Solve, IHC) {
 TEST(Solve, IG) {
   using std::string;
   RNG::seed(123l);
-  std::unordered_map<string, string> prob; 
+  std::unordered_map<string, string> prob;
   prob["problem"] = "flowshop";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
@@ -325,9 +325,9 @@ TEST(Solve, ACO) {
 }
 
 std::vector<std::string> all_mh = {"IHC", "ISA", "TS", "ILS", "IG", "ACO"};
- auto mh_cat_values = {0, 1, 2,
-                       3, 4, 5};  // TODO: permit values for categorical params
-// 
+auto mh_cat_values = {0, 1, 2,
+                      3, 4, 5};  // TODO: permit values for categorical params
+//
 // TEST(Solve, AllParamsInAllMH) {
 //   MHParamsSpecs allSpecs = MHParamsSpecsFactory::get("all");
 //   std::vector<ParamSpec> params;
@@ -399,8 +399,6 @@ TEST(Solve, SolveAllMHs) {
 #include "flowshop-solver/fla/SnowballLONSampling.hpp"
 
 TEST(FLA, Snowball) {
-  const int d = 3, m = 4;
-
   std::unordered_map<std::string, std::string> prob;
   prob["problem"] = "flowshop";
   prob["type"] = "PERM";
@@ -409,12 +407,36 @@ TEST(FLA, Snowball) {
   prob["instance"] = "exponential_random_30_10_01.txt";
   prob["stopping_criterion"] = "EVALS";
 
+  std::unordered_map<std::string, std::string> sample;
+  sample["Snowball.Depth"] = "3";
+  sample["Snowball.NoEdges"] = "5";
+  sample["Snowball.WalkLength"] = "10";
+
+  sample["Snowball.Init"] = "random";
+
+  sample["Snowball.Comp.Strat"] = "strict";
+
+  sample["Snowball.Neighborhood.Size"] = "1";
+  sample["Snowball.Neighborhood.Strat"] = "ordered";
+
+  sample["Snowball.Local.Search"] = "best_insertion";
+  sample["Snowball.LS.Single.Step"] = "0";
+
+  sample["Snowball.Perturb"] = "rs";
+  sample["Snowball.Perturb.DestructionSizeStrategy"] = "fixed";
+  sample["Snowball.Perturb.DestructionSize"] = "8";
+  sample["Snowball.Perturb.Insertion"] = "first_best";
+
+  long seed = 123;
+
+  SnowballLONSampling sampling;
+  sampling.sampleLON(prob, sample, seed);
 }
 
 auto main(int argc, char** argv) -> int {
   FSPProblemFactory::init(DATA_FOLDER);
   MHParamsSpecsFactory::init(DATA_FOLDER "/specs", true);
-  
+
   argc = 2;
   char* argvv[] = {"", "--gtest_filter=FLA.Snowball"};
   testing::InitGoogleTest(&argc, argvv);
