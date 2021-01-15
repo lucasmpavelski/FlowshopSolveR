@@ -87,8 +87,16 @@ class eoFactory : public eoFunctorStore {
     const std::string name = categoricalName(".Accept");
     if (name == "always")
       return &pack<moAlwaysAcceptCrit<Ngh>>();
-    else if (name == "better")
-      return &pack<moBetterAcceptCrit<Ngh>>();
+    else if (name == "better") {
+      const std::string comparison = categoricalName(".Accept.Better.Comparison");
+      if (comparison == "strict") {
+        return &pack<moBetterAcceptCrit<Ngh>>();
+      } else if (comparison == "equal") {
+        moSolComparator<EOT>& equal = pack<moEqualSolComparator<EOT>>();
+        return &pack<moBetterAcceptCrit<Ngh>>(equal);
+      }
+      return nullptr;
+    }
     return domainAcceptanceCriterion();
   }
 

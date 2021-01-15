@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include "flowshop-solver/fla/LocalOptimaNetwork.hpp"
 #include "flowshop-solver/heuristics/aco.hpp"
 #include "flowshop-solver/heuristics/all.hpp"
 #include "flowshop-solver/heuristics/hc.hpp"
@@ -433,12 +434,46 @@ TEST(FLA, Snowball) {
   sampling.sampleLON(prob, sample, seed);
 }
 
+#include "flowshop-solver/fla/MarkovChainLONSampling.hpp"
+
+TEST(FLA, MarkovChainLONSampling) {
+  std::unordered_map<std::string, std::string> prob;
+  prob["problem"] = "flowshop";
+  prob["type"] = "PERM";
+  prob["objective"] = "FLOWTIME";
+  prob["budget"] = "med";
+  prob["instance"] = "uniform_machine-correlated_200_20_01.txt";
+  prob["stopping_criterion"] = "EVALS";
+
+  std::unordered_map<std::string, std::string> sample;
+  sample["MarkovChainLONSampling.Init"] = "random";
+  sample["MarkovChainLONSampling.Comp.Strat"] = "strict";
+  sample["MarkovChainLONSampling.Neighborhood.Size"] = "1";
+  sample["MarkovChainLONSampling.Neighborhood.Strat"] = "ordered";
+  sample["MarkovChainLONSampling.Local.Search"] = "best_insertion";
+  sample["MarkovChainLONSampling.LS.Single.Step"] = "0";
+  sample["MarkovChainLONSampling.Perturb"] = "rs";
+  sample["MarkovChainLONSampling.Perturb.DestructionSizeStrategy"] = "fixed";
+  sample["MarkovChainLONSampling.Perturb.DestructionSize"] = "8";
+  sample["MarkovChainLONSampling.Perturb.Insertion"] = "first_best";
+  sample["MarkovChainLONSampling.Accept"] = "better";
+  sample["MarkovChainLONSampling.Accept.Better.Comparison"] = "equal";
+
+  sample["MarkovChainLONSampling.NumberOfIterations"] = "10000";
+  sample["MarkovChainLONSampling.NumberOfSamples"] = "200";
+
+  long seed = 123;
+
+  MarkovChainLONSampling sampling;
+  sampling.sampleLON(prob, sample, seed);
+}
+
 auto main(int argc, char** argv) -> int {
   FSPProblemFactory::init(DATA_FOLDER);
   MHParamsSpecsFactory::init(DATA_FOLDER "/specs", true);
 
   argc = 2;
-  char* argvv[] = {"", "--gtest_filter=FLA.Snowball"};
+  char* argvv[] = {"", "--gtest_filter=FLA.MarkovChainLONSampling"};
   testing::InitGoogleTest(&argc, argvv);
   // testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

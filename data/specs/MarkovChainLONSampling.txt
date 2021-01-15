@@ -1,0 +1,18 @@
+MarkovChainLONSampling.NumberOfIterations              "" i (1, 100000)
+MarkovChainLONSampling.NumberOfSamples                 "" i (1, 200)
+MarkovChainLONSampling.Init                            "" c (random,neh)
+MarkovChainLONSampling.Init.NEH.Priority               "" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3) | MarkovChainLONSampling.Init == 'neh'
+MarkovChainLONSampling.Init.NEH.PriorityOrder          "" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | MarkovChainLONSampling.Init == 'neh'
+MarkovChainLONSampling.Init.NEH.PriorityWeighted       "" i (0,1) | MarkovChainLONSampling.Init == 'neh'
+MarkovChainLONSampling.Init.NEH.Insertion              "" c (first_best,last_best,random_best) | MarkovChainLONSampling.Init == 'neh'
+MarkovChainLONSampling.Comp.Strat                      "" c (strict)
+MarkovChainLONSampling.Neighborhood.Size               "" r (0.0,1.0) | MarkovChainLONSampling.Local.Search != 'best_insertion'
+MarkovChainLONSampling.Neighborhood.Strat              "" c (ordered,random)
+MarkovChainLONSampling.Local.Search                    "" c (first_improvement,best_improvement,random_best_improvement,best_insertion)
+MarkovChainLONSampling.Perturb                         "" c (rs)
+MarkovChainLONSampling.Perturb.DestructionSizeStrategy "" c (fixed)
+MarkovChainLONSampling.Perturb.DestructionSize         "" i (2,8)
+MarkovChainLONSampling.Perturb.Insertion               "" c (first_best,last_best,random_best)
+MarkovChainLONSampling.LS.Single.Step                  "" c (0, 1)
+MarkovChainLONSampling.Accept                          "" c (better)
+MarkovChainLONSampling.Accept.Better.Comparison        "" c (equal)

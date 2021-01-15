@@ -109,15 +109,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // sampleLON
-List sampleLON(Rcpp::CharacterVector rproblem, Rcpp::CharacterVector rsampling, long seed);
-RcppExport SEXP _FlowshopSolveR_sampleLON(SEXP rproblemSEXP, SEXP rsamplingSEXP, SEXP seedSEXP) {
+List sampleLON(std::string sampleType, Rcpp::CharacterVector rproblem, Rcpp::CharacterVector rsampling, long seed);
+RcppExport SEXP _FlowshopSolveR_sampleLON(SEXP sampleTypeSEXP, SEXP rproblemSEXP, SEXP rsamplingSEXP, SEXP seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type sampleType(sampleTypeSEXP);
     Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type rproblem(rproblemSEXP);
     Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type rsampling(rsamplingSEXP);
     Rcpp::traits::input_parameter< long >::type seed(seedSEXP);
-    rcpp_result_gen = Rcpp::wrap(sampleLON(rproblem, rsampling, seed));
+    rcpp_result_gen = Rcpp::wrap(sampleLON(sampleType, rproblem, rsampling, seed));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -131,7 +132,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FlowshopSolveR_adaptiveWalkLengthFLA", (DL_FUNC) &_FlowshopSolveR_adaptiveWalkLengthFLA, 3},
     {"_FlowshopSolveR_enumerateAllFitness", (DL_FUNC) &_FlowshopSolveR_enumerateAllFitness, 1},
     {"_FlowshopSolveR_enumerateSolutions", (DL_FUNC) &_FlowshopSolveR_enumerateSolutions, 2},
-    {"_FlowshopSolveR_sampleLON", (DL_FUNC) &_FlowshopSolveR_sampleLON, 3},
+    {"_FlowshopSolveR_sampleLON", (DL_FUNC) &_FlowshopSolveR_sampleLON, 4},
     {NULL, NULL, 0}
 };
 

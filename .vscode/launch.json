@@ -78,7 +78,7 @@
             "program": "${workspaceFolder}/build/bin/test-all",
             "args": [
                 "localLocal",
-                "--gtest_filter=FLA.Snowball"
+                "--gtest_filter=FLA.MarkovChainLONSampling"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -91,7 +91,7 @@
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 }
-            ]
+            ],
         },
         // {
         //     "name": "clang++ build and debug active file",

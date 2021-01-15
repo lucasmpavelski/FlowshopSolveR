@@ -70,7 +70,7 @@ generated_instances_df <- function() {
   pts <- bind_rows(
     tidyr::crossing(
       dist = c("uniform"),
-      corr = c("job-correlated", "machine-correlated")
+      corr = c("random", "job-correlated", "machine-correlated")
     ),
     tidyr::crossing(
       dist = c("erlang", "exponential"),

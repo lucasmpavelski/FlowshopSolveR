@@ -198,9 +198,23 @@ List enumerateSolutions(Rcpp::List fspInstance, Rcpp::CharacterVector fspProblem
   );
 }
 
+#include "flowshop-solver/fla/LocalOptimaNetwork.hpp"
+#include "flowshop-solver/fla/LONSampling.hpp"
+#include "flowshop-solver/fla/SnowballLONSampling.hpp"
+#include "flowshop-solver/fla/MarkovChainLONSampling.hpp"
+
+inline auto buildLONSampling(const std::string& name) -> std::unique_ptr<LONSampling> {
+  if (name == "snowball")
+    return std::make_unique<SnowballLONSampling>();
+  if (name == "markov")
+    return std::make_unique<MarkovChainLONSampling>();
+  return nullptr;
+}
+
 // [[Rcpp::export]]
-List sampleLON(Rcpp::CharacterVector rproblem, Rcpp::CharacterVector rsampling, long seed) {
-  graph<FSPProblem::EOT> ret = sampleLON(
+List sampleLON(std::string sampleType, Rcpp::CharacterVector rproblem, Rcpp::CharacterVector rsampling, long seed) {
+  std::unique_ptr<LONSampling> lonSampling = buildLONSampling(sampleType);
+  LocalOptimaNetwork<FSPProblem::EOT> ret = lonSampling->sampleLON(
     rcharVec2map(rproblem),
     rcharVec2map(rsampling),
     seed

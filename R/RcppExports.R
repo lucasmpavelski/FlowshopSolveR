@@ -33,7 +33,7 @@ enumerateSolutions <- function(fspInstance, fspProblem) {
     .Call(`_FlowshopSolveR_enumerateSolutions`, fspInstance, fspProblem)
 }
 
-sampleLON <- function(rproblem, rsampling, seed) {
-    .Call(`_FlowshopSolveR_sampleLON`, rproblem, rsampling, seed)
+sampleLON <- function(sampleType, rproblem, rsampling, seed) {
+    .Call(`_FlowshopSolveR_sampleLON`, sampleType, rproblem, rsampling, seed)
 }
 
