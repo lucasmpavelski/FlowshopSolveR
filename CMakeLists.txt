@@ -73,8 +73,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
-include(cmake/Conan.cmake)
-run_conan()
+# include(cmake/Conan.cmake)
+# run_conan()
 
 ######################################################################################
 ### 2) include the sources

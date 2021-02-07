@@ -1,5 +1,6 @@
 #pragma once
 
+#include <eoEvalFunc.h>
 #include <algorithm>
 #include <vector>
 #include <iostream>
@@ -23,6 +24,7 @@ class SnowballLONSampling : public LONSampling {
   void snowball(int d,
                 int m,
                 const EOT& x,
+                eoEvalFunc<EOT>& eval,
                 moLocalSearch<Ngh>& localSearch,
                 moCounterStat<EOT>& counter,
                 moPerturbation<Ngh>& op,
@@ -31,6 +33,7 @@ class SnowballLONSampling : public LONSampling {
       for (int j = 0; j < m; j++) {
         EOT x_l = x;
         op(x_l);
+        eval(x_l);
         EOT x0 = x_l;
         localSearch(x_l);
         lon.addNode(x_l, x0, counter.value());
@@ -39,7 +42,7 @@ class SnowballLONSampling : public LONSampling {
           edge->weight++;
         } else {
           lon.addEdge(x, x_l, 1);
-          snowball(d - 1, m, x_l, localSearch, counter, op, lon);
+          snowball(d - 1, m, x_l, eval, localSearch, counter, op, lon);
         }
       }
     }
@@ -101,13 +104,10 @@ class SnowballLONSampling : public LONSampling {
     checkpoint.add(counter);
 
     // continuator
-    moIterContinuator<Ngh> globalContinuator(problem.size(0), false);
-
     moTrueContinuator<Ngh> localContinuator;
     moCheckpoint<Ngh> localCheckpoint(localContinuator);
-
-    moCheckpoint<Ngh> igCheckpoint(globalContinuator);
-    igCheckpoint.add(counter);
+    localCheckpoint.add(counter);
+    localSearch->setContinuator(localCheckpoint);
 
     LocalOptimaNetwork<EOT> lon;
 
@@ -122,12 +122,11 @@ class SnowballLONSampling : public LONSampling {
     walk.reserve(l);
     walk.push_back(sol);
     for (int i = 0; i <= l - 1; i++) {
-      snowball(d, m, sol, *localSearch, counter, *perturbation, lon);
+      std::cerr << i << '\n';
+      snowball(d, m, sol, problem.eval(), *localSearch, counter, *perturbation, lon);
       sol = randomWalkStep(sol, lon, *localSearch, counter, problem.eval(), walk);
       walk.push_back(sol);
     }
-
-    std::cerr << "no_evals" << problem.noEvals() << "\n";
     return lon;
   }
 };

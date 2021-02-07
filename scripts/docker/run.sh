@@ -13,6 +13,8 @@
 # (sleep 3 && Rscript reports/03-build-features-data.R) & 
 # wait
 
-(sleep 0 && Rscript reports/02-best-solver.R) &
-(sleep 1 && Rscript reports/03-build-features-data.R) &
-wait
+# (sleep 0 && Rscript reports/02-best-solver.R) &
+# (sleep 1 && Rscript reports/03-build-features-data.R) &
+# wait
+
+R_PROGRESSR_ENABLE=TRUE Rscript reports/lons_study/sample_lons.R --config_id 9

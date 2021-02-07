@@ -113,24 +113,31 @@ public:
     moPerturbation<Ngh>* perturbation = factory.buildPerturb();
     moAcceptanceCriterion<Ngh>* accept = factory.buildAcceptanceCriterion();
 
-    LocalOptimaNetwork<EOT> lon;
-    LONBuilder<EOT> lonBuilder(lon);
+    LocalOptimaNetwork<EOT> fullLon;
+    const int noSamples = params.integer("MarkovChainLONSampling.NumberOfSamples");
+    for (int i = 0; i < noSamples; i++) {
+      LocalOptimaNetwork<EOT> lon;
+      LONBuilder<EOT> lonBuilder(lon);
 
-    moTrueContinuator<Ngh> localStopCondition;
-    LocalLONBuilderStat localLonBuilder(lonBuilder);
-    problem.checkpoint().add(localLonBuilder);
+      moTrueContinuator<Ngh> localStopCondition;
+      LocalLONBuilderStat localLonBuilder(lonBuilder);
+      problem.checkpoint().add(localLonBuilder);
 
-    moIterContinuator<Ngh> stopCondition(params.integer("MarkovChainLONSampling.NumberOfIterations"));
-    moCheckpoint<Ngh> checkpoint(stopCondition);
+      moIterContinuator<Ngh> stopCondition(params.integer("MarkovChainLONSampling.NumberOfIterations"), false);
+      moCheckpoint<Ngh> checkpoint(stopCondition);
 
-    LONBuilderStat<EOT> globalLonBuilder(lonBuilder);
-    checkpoint.add(globalLonBuilder);
-     
-    moILS<Ngh, Ngh> ils(*localSearch, problem.eval(), checkpoint, *perturbation, *accept);
-    EOT sol;
-    (*init)(sol);
-    ils(sol);
+      LONBuilderStat<EOT> globalLonBuilder(lonBuilder);
+      checkpoint.add(globalLonBuilder);
+      
+      moILS<Ngh, Ngh> ils(*localSearch, problem.eval(), checkpoint, *perturbation, *accept);
 
-    return lon;
+      EOT sol;
+      (*init)(sol);
+      stopCondition.init(sol);
+      ils(sol);
+
+      fullLon.merge(lon);
+    }
+    return fullLon;
   }
 };

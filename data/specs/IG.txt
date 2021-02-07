@@ -13,6 +13,7 @@ IG.Local.Search              "" c (none,first_improvement,best_improvement,rando
 IG.LS.Single.Step            "" c (0, 1)
 
 IG.Accept                    "" c (always,better,temperature)
+IG.Accept.Better.Comparison  "" c (equal,strict)
 IG.Accept.Temperature        "" r (0.0,5.0)    | IG.Accept == 'temperature'
 
 IG.Perturb                   "" c (rs,lsps)

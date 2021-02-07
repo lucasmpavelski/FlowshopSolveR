@@ -321,8 +321,8 @@
   \StringTok{'decision_tree'}\NormalTok{, }\StringTok{'instance-based-dependencies'}\NormalTok{,}
   \StringTok{'rand_forest'}\NormalTok{, }\StringTok{'instance-based'}\NormalTok{,}
   \StringTok{'rand_forest'}\NormalTok{, }\StringTok{'instance-based-dependencies'}\NormalTok{,}
-  \StringTok{'decision_tree'}\NormalTok{, }\StringTok{'ablation'}\NormalTok{,}
-  \StringTok{'rand_forest'}\NormalTok{, }\StringTok{'ablation'}\NormalTok{,}
+  \CommentTok{# 'decision_tree', 'ablation',}
+  \CommentTok{# 'rand_forest', 'ablation',}
   \StringTok{'none'}\NormalTok{, }\StringTok{'default'}\NormalTok{,}
   \StringTok{'none'}\NormalTok{, }\StringTok{'global_best'}\NormalTok{,}
   \StringTok{'none'}\NormalTok{, }\StringTok{'random'}\NormalTok{,}
@@ -336,7 +336,7 @@
 \NormalTok{  \})) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{unnest}\NormalTok{(results) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{unnest}\NormalTok{(problem) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\NormalTok{config, }\OperatorTok{-}\NormalTok{metaopt_problem) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\NormalTok{config) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{left_join}\NormalTok{(best_instance) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{rp =} \DecValTok{100} \OperatorTok{*}\StringTok{ }\NormalTok{(fitness }\OperatorTok{-}\StringTok{ }\NormalTok{best_fitness) }\OperatorTok{/}\StringTok{ }\NormalTok{best_fitness)}
 \end{Highlighting}
@@ -347,8 +347,6 @@
 ## [1] "/home/lucasmp/dev/FlowshopSolveR/data/models/NEH_recommendation/results/decision_tree,instance-based-dependencies.rda"
 ## [1] "/home/lucasmp/dev/FlowshopSolveR/data/models/NEH_recommendation/results/rand_forest,instance-based.rda"
 ## [1] "/home/lucasmp/dev/FlowshopSolveR/data/models/NEH_recommendation/results/rand_forest,instance-based-dependencies.rda"
-## [1] "/home/lucasmp/dev/FlowshopSolveR/data/models/NEH_recommendation/results/decision_tree,ablation.rda"
-## [1] "/home/lucasmp/dev/FlowshopSolveR/data/models/NEH_recommendation/results/rand_forest,ablation.rda"
 ## [1] "/home/lucasmp/dev/FlowshopSolveR/data/models/NEH_recommendation/results/none,default.rda"
 ## [1] "/home/lucasmp/dev/FlowshopSolveR/data/models/NEH_recommendation/results/none,global_best.rda"
 ## [1] "/home/lucasmp/dev/FlowshopSolveR/data/models/NEH_recommendation/results/none,random.rda"
@@ -368,49 +366,151 @@
     \DataTypeTok{q50 =} \KeywordTok{quantile}\NormalTok{(rp, }\FloatTok{0.50}\NormalTok{),}
     \DataTypeTok{q75 =} \KeywordTok{quantile}\NormalTok{(rp, }\FloatTok{0.75}\NormalTok{),}
     \DataTypeTok{q1  =} \KeywordTok{quantile}\NormalTok{(rp, }\FloatTok{1.00}\NormalTok{),}
-\NormalTok{  ) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\NormalTok{knitr}\OperatorTok{::}\KeywordTok{kable}\NormalTok{(}\DataTypeTok{format =} \StringTok{'latex'}\NormalTok{)}
+\NormalTok{  ) }\CommentTok{# %>% knitr::kable(format = 'latex')}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## `summarise()` regrouping output by 'strat' (override with `.groups` argument)
+## `summarise()` has grouped output by 'strat'. You can override using the `.groups` argument.
 \end{verbatim}
 
-\begin{tabular}{l|l|r|r|r|r|r}
-\hline
-strat & ml\_model & q00 & q25 & q50 & q75 & q1\\
-\hline
-ablation & decision\_tree & -6.454414 & 0.0774342 & 0.7703340 & 2.8052462 & 74.42786\\
-\hline
-ablation & rand\_forest & -7.855974 & 0.0000000 & 0.2763155 & 1.4647825 & 67.85636\\
-\hline
-default & none & -8.489846 & 0.0000000 & 0.4352138 & 1.6293360 & 28.46078\\
-\hline
-global\_best & none & -9.913169 & 0.0000000 & 0.4488229 & 1.4098469 & 14.31729\\
-\hline
-instance-based & decision\_tree & -8.911596 & 0.0000000 & 0.1750807 & 0.8874725 & 13.32882\\
-\hline
-instance-based & rand\_forest & -8.489846 & 0.0000000 & 0.1549657 & 0.8165678 & 24.01786\\
-\hline
-instance-based-dependencies & decision\_tree & -8.565194 & 0.0000000 & 0.1765974 & 0.8709982 & 10.72643\\
-\hline
-instance-based-dependencies & rand\_forest & -8.367690 & -0.0083383 & 0.0975155 & 0.6451000 & 16.71320\\
-\hline
-random & none & -9.319826 & 1.0872599 & 4.5165265 & 15.9898617 & 2137.01230\\
-\hline
-\end{tabular}
+\hypertarget{a-tibble-7-x-7}{%
+\section{A tibble: 7 x 7}\label{a-tibble-7-x-7}}
+
+\hypertarget{groups-strat-5}{%
+\section{Groups: strat {[}5{]}}\label{groups-strat-5}}
+
+strat ml\_model q00 q25 q50 q75 q1 1 default none -8.49 0 0.435 1.63
+28.5 2 global\_best none -9.91 0 0.449 1.41 14.3 3 instance-based
+decision\_tree -8.91 0 0.175 0.887 13.3 4 instance-based rand\_forest
+-8.49 0 0.155 0.817 24.0 5 instance-based-dependencies decision\_tree
+-8.57 0 0.177 0.871 10.7 6 instance-based-dependencies rand\_forest
+-8.37 -0.00834 0.0975 0.645 16.7 7 random none -9.32 1.09 4.52 16.0
+2137.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(ggallin)}
+
 \NormalTok{experiments }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(strat }\OperatorTok{!=}\StringTok{ 'random'}\NormalTok{, ml_model }\OperatorTok{!=}\StringTok{ 'decision_tree'}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{model_strat =} \KeywordTok{paste}\NormalTok{(ml_model, strat)) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{model_strat =} \KeywordTok{factor}\NormalTok{(}
+    \KeywordTok{paste}\NormalTok{(ml_model, strat),}
+    \DataTypeTok{levels =} \KeywordTok{c}\NormalTok{(}
+      \StringTok{'none default'}\NormalTok{,}
+      \StringTok{'none global_best'}\NormalTok{,}
+      \StringTok{'decision_tree instance-based'}\NormalTok{,}
+      \StringTok{'decision_tree instance-based-dependencies'}\NormalTok{,}
+      \StringTok{'rand_forest instance-based'}\NormalTok{,}
+      \StringTok{'rand_forest instance-based-dependencies'}
+\NormalTok{    ),}
+    \DataTypeTok{labels =} \KeywordTok{c}\NormalTok{(}
+      \StringTok{'Standard NEH'}\NormalTok{,}
+      \StringTok{'Global-best NEH'}\NormalTok{,}
+      \StringTok{'DT'}\NormalTok{,}
+      \StringTok{'DT+Dependencies'}\NormalTok{,}
+      \StringTok{'RF'}\NormalTok{,}
+      \StringTok{'RF+Dependencies'}
+\NormalTok{    )}
+\NormalTok{  )) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_violin}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ strat, }\DataTypeTok{fill =}\NormalTok{ strat, }\DataTypeTok{y =}\NormalTok{ rp))}
+\StringTok{  }\KeywordTok{geom_violin}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ model_strat, }\DataTypeTok{fill =}\NormalTok{ model_strat, }\DataTypeTok{y =}\NormalTok{ rp)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{scale_y_continuous}\NormalTok{(}\DataTypeTok{trans =}\NormalTok{ pseudolog10_trans) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{scale_fill_viridis_d}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme_bw}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.title =} \KeywordTok{element_blank}\NormalTok{(), }\DataTypeTok{axis.text.x =} \KeywordTok{element_blank}\NormalTok{()) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{fill =} \StringTok{"Strategy"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{05-evaluate-models_files/figure-latex/unnamed-chunk-8-1.pdf}
+\includegraphics{05-evaluate-models_files/figure-latex/strategies-comparison-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(ggallin)}
+
+\NormalTok{experiments }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{filter}\NormalTok{(strat }\OperatorTok{!=}\StringTok{ 'random'}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }\CommentTok{# , ml_model != 'decision_tree'}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{model_strat =} \KeywordTok{factor}\NormalTok{(}
+    \KeywordTok{paste}\NormalTok{(ml_model, strat),}
+    \DataTypeTok{levels =} \KeywordTok{c}\NormalTok{(}
+      \StringTok{'none default'}\NormalTok{,}
+      \StringTok{'none global_best'}\NormalTok{,}
+      \StringTok{'decision_tree instance-based'}\NormalTok{,}
+      \StringTok{'decision_tree instance-based-dependencies'}\NormalTok{,}
+      \StringTok{'rand_forest instance-based'}\NormalTok{,}
+      \StringTok{'rand_forest instance-based-dependencies'}
+\NormalTok{    ),}
+    \DataTypeTok{labels =} \KeywordTok{c}\NormalTok{(}
+      \StringTok{'Standard NEH'}\NormalTok{,}
+      \StringTok{'Global-best NEH'}\NormalTok{,}
+      \StringTok{'DT'}\NormalTok{,}
+      \StringTok{'DT+Dependencies'}\NormalTok{,}
+      \StringTok{'RF'}\NormalTok{,}
+      \StringTok{'RF+Dependencies'}
+\NormalTok{    )}
+\NormalTok{  )) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_violin}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ model_strat, }\DataTypeTok{fill =}\NormalTok{ model_strat, }\DataTypeTok{y =}\NormalTok{ rp)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{scale_y_continuous}\NormalTok{(}\DataTypeTok{trans =}\NormalTok{ pseudolog10_trans) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{scale_fill_viridis_d}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme_bw}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{axis.title =} \KeywordTok{element_blank}\NormalTok{(), }\DataTypeTok{axis.text.x =} \KeywordTok{element_blank}\NormalTok{()) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{fill =} \StringTok{"Strategy"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{05-evaluate-models_files/figure-latex/strategies-comparison-without-random-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{stat_data <-}\StringTok{ }\NormalTok{experiments }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
+    \DataTypeTok{block =} \KeywordTok{paste}\NormalTok{(model, instance),}
+    \DataTypeTok{group =} \KeywordTok{factor}\NormalTok{(}\KeywordTok{paste}\NormalTok{(ml_model, strat),}
+    \DataTypeTok{levels =} \KeywordTok{c}\NormalTok{(}
+      \StringTok{'rand_forest instance-based-dependencies'}\NormalTok{,}
+      \StringTok{'rand_forest instance-based'}\NormalTok{,}
+      \StringTok{'decision_tree instance-based-dependencies'}\NormalTok{,}
+      \StringTok{'decision_tree instance-based'}\NormalTok{,}
+      \StringTok{'none global_best'}\NormalTok{,}
+      \StringTok{'none default'}\NormalTok{,}
+      \StringTok{'none random'}
+\NormalTok{    )),}
+    \DataTypeTok{y =}\NormalTok{ rp}
+\NormalTok{  ) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(block, group, y) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{arrange}\NormalTok{(group }\OperatorTok{!=}\StringTok{ 'rand_forest instance-based-dependencies'}\NormalTok{)}
+
+\NormalTok{PMCMRplus}\OperatorTok{::}\KeywordTok{frdManyOneDemsarTest}\NormalTok{(stat_data}\OperatorTok{$}\NormalTok{y, stat_data}\OperatorTok{$}\NormalTok{group, stat_data}\OperatorTok{$}\NormalTok{block)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Pairwise comparisons using Demsar's many-to-one test for a two-way balanced complete block design
+\end{verbatim}
+
+\begin{verbatim}
+## data: y, groups and blocks
+\end{verbatim}
+
+\begin{verbatim}
+##                                           rand_forest instance-based-dependencies
+## rand_forest instance-based                8.5e-05                                
+## decision_tree instance-based-dependencies 9.6e-06                                
+## decision_tree instance-based              4.7e-05                                
+## none global_best                          < 2e-16                                
+## none default                              < 2e-16                                
+## none random                               < 2e-16
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## P value adjustment method: holm
+\end{verbatim}
+
+\begin{verbatim}
+## alternative hypothesis: two.sided
+\end{verbatim}
 
 \end{document}

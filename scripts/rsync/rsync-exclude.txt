@@ -6,3 +6,6 @@ build
 *.o
 .Rproj.user/*
 .git/*
+data/lons_cache
+data/models/NEH_recommendation
+data/performances

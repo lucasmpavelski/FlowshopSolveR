@@ -105,7 +105,7 @@ plot_metric <- function(pmetric) {
 getParamName <- function(param) {
   case_when(
     param == "NEH.Init.NEH.Ratio" ~ 'IOR',
-    param == "NEH.Init.NEH.First.Priority" ~ 'IOIA', 
+    param == "NEH.Init.NEH.First.Priority" ~ 'IOI', 
     param == "NEH.Init.NEH.First.PriorityWeighted" ~ 'IOW', 
     param == "NEH.Init.NEH.First.PriorityOrder" ~ 'IOS', 
     param == "NEH.Init.NEH.Priority" ~ 'NOI', 
@@ -117,14 +117,16 @@ getParamName <- function(param) {
 
 
  all_perfs %>%
-    filter(.metric == 'accuracy') %>%
+    filter(.metric == 'accuracy', exp_name != 'ablation') %>%
     mutate(
       exp_name = case_when(
         exp_name == 'instance-based' ~ 'No dependencies',
         exp_name == 'instance-based-dependencies' ~ 'With dependencies',
         T ~ as.character(exp_name)
       ),
-      param = getParamName(param)
+      param = factor(getParamName(param), c(
+        'IOR', 'IOI', 'IOW', 'IOS', 'NOI', 'NOS', 'NOW', 'NTB' 
+      ))
     ) %>%
     ggplot() +
     facet_wrap(~param, ncol = 4) +
@@ -138,14 +140,16 @@ getParamName <- function(param) {
 
 ```{r ml-results-f-measure, fig.asp=0.45, echo=FALSE}
  all_perfs %>%
-    filter(.metric == 'f_meas') %>%
+    filter(.metric == 'f_meas', exp_name != 'ablation') %>%
     mutate(
       exp_name = case_when(
         exp_name == 'instance-based' ~ 'No dependencies',
         exp_name == 'instance-based-dependencies' ~ 'With dependencies',
         T ~ as.character(exp_name)
       ),
-      param = getParamName(param)
+      param = factor(getParamName(param), c(
+        'IOR', 'IOI', 'IOW', 'IOS', 'NOI', 'NOS', 'NOW', 'NTB' 
+      ))
     ) %>%
     ggplot() +
     facet_wrap(~param, ncol = 4) +
@@ -215,8 +219,8 @@ experiments <- tribble(
   'decision_tree', 'instance-based-dependencies',
   'rand_forest', 'instance-based',
   'rand_forest', 'instance-based-dependencies',
-  'decision_tree', 'ablation',
-  'rand_forest', 'ablation',
+  # 'decision_tree', 'ablation',
+  # 'rand_forest', 'ablation',
   'none', 'default',
   'none', 'global_best',
   'none', 'random',
@@ -230,7 +234,7 @@ experiments <- tribble(
   })) %>%
   unnest(results) %>%
   unnest(problem) %>%
-  select(-config, -metaopt_problem) %>%
+  select(-config) %>%
   left_join(best_instance) %>%
   mutate(rp = 100 * (fitness - best_fitness) / best_fitness)
 
@@ -247,16 +251,143 @@ experiments %>%
     q50 = quantile(rp, 0.50),
     q75 = quantile(rp, 0.75),
     q1  = quantile(rp, 1.00),
-  ) %>% 
-  knitr::kable(format = 'latex')
+  ) # %>% knitr::kable(format = 'latex')
+```
+
+
+```{r strategies-comparison, fig.height=2}
+library(ggallin)
+
+experiments %>%
+  mutate(model_strat = factor(
+    paste(ml_model, strat),
+    levels = c(
+      'none default',
+      'none global_best',
+      'decision_tree instance-based',
+      'decision_tree instance-based-dependencies',
+      'rand_forest instance-based',
+      'rand_forest instance-based-dependencies'
+    ),
+    labels = c(
+      'Standard NEH',
+      'Global-best NEH',
+      'DT',
+      'DT+Dependencies',
+      'RF',
+      'RF+Dependencies'
+    )
+  )) %>%
+  ggplot() +
+  geom_violin(aes(x = model_strat, fill = model_strat, y = rp)) +
+  scale_y_continuous(trans = pseudolog10_trans) +
+  scale_fill_viridis_d() +
+  theme_bw() +
+  theme(axis.title = element_blank(), axis.text.x = element_blank()) +
+  labs(fill = "Strategy")
+```
+
+```{r strategies-comparison-without-random}
+library(ggallin)
+
+experiments %>%
+  filter(strat != 'random') %>% # , ml_model != 'decision_tree'
+  mutate(model_strat = factor(
+    paste(ml_model, strat),
+    levels = c(
+      'none default',
+      'none global_best',
+      'decision_tree instance-based',
+      'decision_tree instance-based-dependencies',
+      'rand_forest instance-based',
+      'rand_forest instance-based-dependencies'
+    ),
+    labels = c(
+      'Standard NEH',
+      'Global-best NEH',
+      'DT',
+      'DT+Dependencies',
+      'RF',
+      'RF+Dependencies'
+    )
+  )) %>%
+  ggplot() +
+  geom_violin(aes(x = model_strat, fill = model_strat, y = rp)) +
+  scale_y_continuous(trans = pseudolog10_trans) +
+  scale_fill_viridis_d() +
+  theme_bw() +
+  theme(axis.title = element_blank(), axis.text.x = element_blank()) +
+  geom_segment(aes(x = 0.5, xend=2.5, y=30, yend=30)) +
+  geom_segment(aes(x = 2.5, xend=5.5, y=20, yend=20)) +
+  labs(fill = "Strategy")
 ```
 
 
 ```{r}
-experiments %>%
-  filter(strat != 'random', ml_model != 'decision_tree') %>%
-  mutate(model_strat = paste(ml_model, strat)) %>%
-  ggplot() +
-  geom_violin(aes(x = strat, fill = strat, y = rp))
+stat_data <- experiments %>%
+  mutate(
+    block = paste(model, instance),
+    group = factor(paste(ml_model, strat),
+    levels = c(
+      'rand_forest instance-based-dependencies',
+      'rand_forest instance-based',
+      'decision_tree instance-based-dependencies',
+      'decision_tree instance-based',
+      'none global_best',
+      'none default',
+      'none random'
+    )),
+    y = rp
+  ) %>%
+  select(block, group, y) %>%
+  arrange(group != 'rand_forest instance-based-dependencies')
+
+PMCMRplus::frdManyOneDemsarTest(stat_data$y, stat_data$group, stat_data$block)
+```
+
+
+```{r}
+stat_data <- experiments %>%
+  mutate(
+    block = paste(model, instance),
+    group = factor(paste(ml_model, strat),
+    levels = c(
+      'decision_tree instance-based-dependencies',
+      'rand_forest instance-based-dependencies',
+      'rand_forest instance-based',
+      'decision_tree instance-based',
+      'none global_best',
+      'none default',
+      'none random'
+    )),
+    y = rp
+  ) %>%
+  select(block, group, y) %>%
+  arrange(group != 'rand_forest instance-based-dependencies')
+
+PMCMRplus::frdManyOneDemsarTest(stat_data$y, stat_data$group, stat_data$block)
+```
+
+
+```{r}
+stat_data <- experiments %>%
+  mutate(
+    block = paste(model, instance),
+    group = factor(paste(ml_model, strat),
+    levels = c(
+      'decision_tree instance-based-dependencies',
+      'rand_forest instance-based-dependencies',
+      'rand_forest instance-based',
+      'decision_tree instance-based',
+      'none global_best',
+      'none default',
+      'none random'
+    )),
+    y = rp
+  ) %>%
+  select(block, group, y) %>%
+  arrange(group != 'rand_forest instance-based-dependencies')
+
+PMCMRplus::frdAllPairsNemenyiTest(stat_data$y, stat_data$group, stat_data$block)
 ```
 

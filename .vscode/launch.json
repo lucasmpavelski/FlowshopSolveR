@@ -77,8 +77,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/test-all",
             "args": [
-                "localLocal",
-                "--gtest_filter=FLA.MarkovChainLONSampling"
+                "localLocal"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

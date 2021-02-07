@@ -9,10 +9,13 @@ MarkovChainLONSampling.Comp.Strat                      "" c (strict)
 MarkovChainLONSampling.Neighborhood.Size               "" r (0.0,1.0) | MarkovChainLONSampling.Local.Search != 'best_insertion'
 MarkovChainLONSampling.Neighborhood.Strat              "" c (ordered,random)
 MarkovChainLONSampling.Local.Search                    "" c (first_improvement,best_improvement,random_best_improvement,best_insertion)
-MarkovChainLONSampling.Perturb                         "" c (rs)
+MarkovChainLONSampling.Perturb                         "" c (rs,lsps)
 MarkovChainLONSampling.Perturb.DestructionSizeStrategy "" c (fixed)
 MarkovChainLONSampling.Perturb.DestructionSize         "" i (2,8)
 MarkovChainLONSampling.Perturb.Insertion               "" c (first_best,last_best,random_best)
 MarkovChainLONSampling.LS.Single.Step                  "" c (0, 1)
 MarkovChainLONSampling.Accept                          "" c (better)
 MarkovChainLONSampling.Accept.Better.Comparison        "" c (equal)
+
+MarkovChainLONSampling.LSPS.Local.Search               "" c (none,first_improvement,best_improvement,random_best_improvement,best_insertion) | MarkovChainLONSampling.Perturb == 'lsps'
+MarkovChainLONSampling.LSPS.Single.Step                "" c (0,1) | MarkovChainLONSampling.Perturb == 'lsps' & IG.LSPS.Local.Search != 'none'

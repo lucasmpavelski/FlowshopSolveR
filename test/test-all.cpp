@@ -401,37 +401,35 @@ TEST(Solve, SolveAllMHs) {
 
 TEST(FLA, Snowball) {
   std::unordered_map<std::string, std::string> prob;
-  prob["problem"] = "flowshop";
+  prob["problem"] = "vrf-small";
   prob["type"] = "PERM";
   prob["objective"] = "MAKESPAN";
   prob["budget"] = "med";
-  prob["instance"] = "exponential_random_30_10_01.txt";
+  prob["instance"] = "VRF60_10_1_Gap.txt";
   prob["stopping_criterion"] = "EVALS";
 
   std::unordered_map<std::string, std::string> sample;
-  sample["Snowball.Depth"] = "3";
-  sample["Snowball.NoEdges"] = "5";
-  sample["Snowball.WalkLength"] = "10";
-
-  sample["Snowball.Init"] = "random";
-
-  sample["Snowball.Comp.Strat"] = "strict";
-
-  sample["Snowball.Neighborhood.Size"] = "1";
-  sample["Snowball.Neighborhood.Strat"] = "ordered";
-
-  sample["Snowball.Local.Search"] = "best_insertion";
-  sample["Snowball.LS.Single.Step"] = "0";
-
-  sample["Snowball.Perturb"] = "rs";
-  sample["Snowball.Perturb.DestructionSizeStrategy"] = "fixed";
-  sample["Snowball.Perturb.DestructionSize"] = "8";
-  sample["Snowball.Perturb.Insertion"] = "first_best";
+  sample[                          "Snowball.Depth"] = "2" ;
+  sample[                        "Snowball.NoEdges"] = "60" ;
+  sample[                     "Snowball.WalkLength"] = "100" ;
+  sample[                           "Snowball.Init"] = "random" ;
+  sample[                     "Snowball.Comp.Strat"] = "strict" ;
+  sample[              "Snowball.Neighborhood.Size"] = "1" ;
+  sample[             "Snowball.Neighborhood.Strat"] = "ordered" ;
+  sample[                   "Snowball.Local.Search"] = "best_insertion" ;
+  sample[                 "Snowball.LS.Single.Step"] = "0" ;
+  sample[                        "Snowball.Perturb"] = "rs" ;
+  sample["Snowball.Perturb.DestructionSizeStrategy"] = "fixed" ;
+  sample[        "Snowball.Perturb.DestructionSize"] = "4" ;
+  sample[              "Snowball.Perturb.Insertion"] = "first_best" ;
+  sample[                         "Snowball.Accept"] = "better" ;
+  sample[       "Snowball.Accept.Better.Comparison"] = "equal" ;
 
   long seed = 123;
 
   SnowballLONSampling sampling;
-  sampling.sampleLON(prob, sample, seed);
+  auto lon = sampling.sampleLON(prob, sample, seed);
+  lon.print(std::cerr);
 }
 
 #include "flowshop-solver/fla/MarkovChainLONSampling.hpp"
@@ -442,7 +440,7 @@ TEST(FLA, MarkovChainLONSampling) {
   prob["type"] = "PERM";
   prob["objective"] = "FLOWTIME";
   prob["budget"] = "med";
-  prob["instance"] = "uniform_machine-correlated_200_20_01.txt";
+  prob["instance"] = "uniform_machine-correlated_30_20_01.txt";
   prob["stopping_criterion"] = "EVALS";
 
   std::unordered_map<std::string, std::string> sample;
@@ -468,12 +466,57 @@ TEST(FLA, MarkovChainLONSampling) {
   sampling.sampleLON(prob, sample, seed);
 }
 
+TEST(FLA, MergeGraphContainsAllNodes) {
+  LocalOptimaNetwork<FSP> lon1;
+  FSP a = {1, 2};
+  FSP b = {3, 4};
+  lon1.addNode(a, a, 0);
+  lon1.addNode(b, b, 0);
+  LocalOptimaNetwork<FSP> lon2;
+  FSP c = {5, 6};
+  lon2.addNode(b, b, 0);
+  lon2.addNode(c, c, 0);
+
+  lon1.merge(lon2);
+
+  ASSERT_EQ(3, lon1.size());
+  ASSERT_TRUE(lon1.contains(a));
+  ASSERT_TRUE(lon1.contains(b));
+  ASSERT_TRUE(lon1.contains(c));
+}
+
+TEST(FLA, MergeGraphContainsAllEdges) {
+  LocalOptimaNetwork<FSP> lon1;
+  FSP a = {1, 2};
+  FSP b = {3, 4};
+  FSP c = {5, 6};
+  lon1.addNode(a, a, 0);
+  lon1.addNode(b, b, 0);
+  lon1.addNode(c, c, 0);
+  lon1.addEdge(a, b, 1);
+  lon1.addEdge(b, c, 1);
+  FSP d = {7, 8};
+  LocalOptimaNetwork<FSP> lon2;
+  lon2.addNode(b, b, 0);
+  lon2.addNode(c, c, 0);
+  lon2.addNode(d, d, 0);
+  lon2.addEdge(b, c, 1);
+  lon2.addEdge(c, d, 1);
+
+  lon1.merge(lon2);
+
+  ASSERT_EQ(3, lon1.noEdges());
+  ASSERT_EQ(1, lon1.getEdge(a, b)->weight);
+  ASSERT_EQ(2, lon1.getEdge(b, c)->weight);
+  ASSERT_EQ(1, lon1.getEdge(c, d)->weight);
+}
+
 auto main(int argc, char** argv) -> int {
   FSPProblemFactory::init(DATA_FOLDER);
   MHParamsSpecsFactory::init(DATA_FOLDER "/specs", true);
 
   argc = 2;
-  char* argvv[] = {"", "--gtest_filter=FLA.MarkovChainLONSampling"};
+  char* argvv[] = {"", "--gtest_filter=FLA.Snowball"};
   testing::InitGoogleTest(&argc, argvv);
   // testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

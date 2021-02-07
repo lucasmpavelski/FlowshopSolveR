@@ -8,74 +8,71 @@ library(ggraph)
 library(tidygraph)
 library(wrapr)
 library(corrr)
-# library(FSelector)
+library(FlowshopSolveR)
 
-# source(here::here("R/flowshop.R"))
+problems <- all_problems_df() %>%
+  crossing(sample_n = 1:50) %>%
+  filter(
+    problem == 'vrf-small',
+    budget == 'low',
+    type == 'PERM',
+    objective == 'MAKESPAN'
+  ) %>%
+  unnest(cols = instances) %>%
+  mutate(budget = 'med', stopping_criterion = 'EVALS') %>%
+  mutate(lon_metrics = pmap(., function(problem, type, objective, budget, instance, stopping_criterion, sample_n, ...) {
+    prob <- c(
+      problem = problem,
+      type = type,
+      objective = objective,
+      budget = budget,
+      instance = instance,
+      stopping_criterion = stopping_criterion
+    )
+  }))
 
-lon_metrics <- c(
-  "no_nodes", "no_edges", "average_fitness", "weight_mean", "weight_std", 
-  "average_weight_of_self_loops", "fitness_fitness_correlation", 
-  "avarege_out_degree", "average_disparity", 
-  "average_weighted_clustering_coefficient"
-)
 
-adaptive_walk_metrics <- c(
-  "fdc_absolutePositionDistance", "fdc_adjacencyDistance", 
-  "fdc_aproximatedSwapDistance", "fdc_deviationDistance", 
-  "fdc_precedenceDistance", "fdc_shiftDistance", "mean_no_steps"
-)
+lon_configs <- read_rds(here('reports/lons_study/lon_configs.rds'))
 
-lo_distance_metrics <- c(
-  c("md_adjacencyDistance", "md_precedenceDistance", "md_absolutePositionDistance", 
-    "md_deviationDistance", "md_shiftDistance" #, "md_aproximatedSwapDistance"
-  )
-)
+all_fla <- tibble(sample = map_chr(lon_configs, ~.x$id)) %>%
+  mutate(metrics_path = map_chr(sample, ~here(sprintf('data/lons_cache/%s_metrics.rds', .x)))) %>%
+  filter(file.exists(metrics_path)) %>%
+  mutate(metrics = map(metrics_path, readRDS)) %>%
+  select(-metrics_path) %>%
+  unnest(cols = c(metrics))
 
-neutral_metrics <- qc(
-  neutral_no_edges, neutral_rel_no_edges, neutral_mean_weight, 
-  neutral_mean_out_degree, neutral_mean_size, neutral_no_groups
-)
+configs_select <- map(lon_configs, ~.x$id)
+names(configs_select) <- map(lon_configs, ~.x$name)
 
-graph_metrics <- qc(
-  graph_clique, graph_reciprocity, graph_clustering,
-  graph_assortativity_degree, graph_proportion_self_loops
-)
-
-metrics <- c(
-  lon_metrics,
-  adaptive_walk_metrics,
-  lo_distance_metrics,
-  neutral_metrics,
-  graph_metrics
-)
-
-lon_files <- list.files(here::here('data', 'lons_cache'))
-
-# load(here("data/fla/NEH_FULL_IG_2_10_15_3_SWAP_lon.Rdata"))
 # all_fla <- lon_fla %>%
 #   mutate(no_jobs = as.integer(no_jobs),
 #          no_machines = as.integer(no_machines)) %>%
 #   # select(-inst_n) %>%
 #   mutate_if(is.character, as.factor)
 # 
-# prob_params <- qc(dist, corr, type, objective, no_jobs, no_machines, inst_n)
-# metrics <- all_fla %>% select(-prob_params) %>% colnames()
-# all_fla_tidy <- all_fla %>%
-#   gather("metric", "value", metrics)
-# 
-# uniqueChar <- function(v) unique(as.character(v))
-# 
-# no_jobs <- uniqueChar(all_fla$no_jobs)
-# no_machs <- uniqueChar(all_fla$no_machines)
-# dists <- uniqueChar(all_fla$dist)
-# corrs <- uniqueChar(all_fla$corr)
-# types <- uniqueChar(all_fla$type)
-# objectives <- uniqueChar(all_fla$objective)
+prob_params <- qc(sample, problem, dist, corr, type, objective, no_jobs, no_machines, inst_n, corv, 
+                  stopping_criterion, budget, model, instance, instance_features, id, metrics_path)
+metrics <- all_fla %>% select(-all_of(prob_params)) %>% colnames()
+all_fla_tidy <- all_fla %>%
+  pivot_longer(metrics, names_to = "metric", values_to = "value")
+
+uniqueChar <- function(v) unique(as.character(v))
+
+no_jobs <- uniqueChar(all_fla$no_jobs)
+no_machs <- uniqueChar(all_fla$no_machines)
+dists <- uniqueChar(all_fla$dist)
+corrs <- uniqueChar(all_fla$corr)
+types <- uniqueChar(all_fla$type)
+objectives <- uniqueChar(all_fla$objective)
 
 
 
 dataFilters <- function() {
   sidebarPanel(
+    selectInput("sample",
+                "Sample:",
+                multiple = T,
+                configs_select),
     selectInput("metrics",
                 "Metric:",
                 metrics,
@@ -124,7 +121,7 @@ flaMetricsPanel <- function() {
                    column(
                      3,
                      selectInput("rows", "Rows:",
-                                 c("all", "no_jobs", "no_machines", "dist", "corr", "objective", "type"),
+                                 c("all", "no_jobs", "no_machines", "dist", "corr", "objective", "type", "sample"),
                                  selected = NULL)
                    ),
                    column(
@@ -136,10 +133,11 @@ flaMetricsPanel <- function() {
                    column(
                      3,
                      textInput("limita", "Limit:", 0),
-                     textInput("limitb", "Limit:", 0)
+                     textInput("limitb", "Limit:", 0),
+                     checkboxInput("log", "Log scale:", F)
                    )
                  ),
-                 plotOutput("histogram", height = "180px", width = '748px'),
+                 plotOutput("histogram"), #, height = "180px", width = '748px'),
                  downloadButton("histogramPdf"),
                  verbatimTextOutput("summary")
         ),
@@ -154,17 +152,33 @@ flaMetricsPanel <- function() {
   )
 }
 
-names(lon_files) <- str_replace(lon_files, 'random;strict;1;ordered;best_insertion;0;rs;fixed;4;first_best;better;equal;10000_flowshop;', '')
-
 lonsPanel <- function() {
   sidebarLayout(
     sidebarPanel(
-      selectInput("lon_file",
+      selectInput("lon_sample",
                   "LON sample",
-                  lon_files)
+                  configs_select),
+      selectInput("lon_problem",
+                  "Problem",
+                  unique(problems$problem)),
+      selectInput("lon_type",
+                  "Type",
+                  unique(problems$type)),
+      selectInput("lon_objective",
+                  "Objective",
+                  unique(problems$objective)),
+      selectInput("lon_budget",
+                  "Budget",
+                  unique(problems$budget)),
+      selectInput("lon_instance",
+                  "Instance",
+                  unique(problems$instance)),
+      selectInput("lon_stopping_criterion",
+                  "Stopping criterion",
+                  unique(problems$stopping_criterion))
     ),
     mainPanel(
-      selectInput("lonLayout", "Layout", c('nicely', 'tree', 'circle', 'circlepack', 'kk', 'fr'), "fr"),
+      selectInput("lonLayout", "Layout", c('nicely', 'tree', 'circle', 'circlepack', 'kk', 'fr'), "circle"),
       plotOutput("lonPlot", height = '100vh')
     )
   )
@@ -216,10 +230,10 @@ dtPanel <- function() {
 
 ui <- fluidPage(
   tabsetPanel(
-    # tabPanel(
-    #   "FLA metrics",
-    #   flaMetricsPanel()
-    # ),
+    tabPanel(
+      "FLA metrics",
+      flaMetricsPanel()
+    ),
     tabPanel(
       "LONs",
       lonsPanel()
@@ -237,7 +251,8 @@ server <- function(input, output) {
         no_jobs %in% input$no_jobs,
         no_machines %in% input$no_machs,
         type %in% input$types,
-        objective %in% input$objectives
+        objective %in% input$objectives,
+        sample %in% input$sample
       )
   })
   
@@ -254,22 +269,17 @@ server <- function(input, output) {
       mutate(all = "all") %>%
       mutate_at(input$fill, as.factor) %>%
       ggplot(aes_string(fill = input$fill)) + 
-      facet_wrap("obj_type", ncol = 6, scales = "free_y") +
-      #rows = vars(get(input$rows)),
-      #cols = vars(get(input$cols))) +
-      geom_histogram(aes(x = value), bins = 30) +
-      labs(x = NULL, y = NULL, fill = case_when(
-        input$fill == 'corr' ~ 'Correlation',
-        input$fill == 'no_jobs' ~ 'Number of jobs',
-        TRUE ~ input$fill
-      )) +
-      theme_bw() +
-      theme(legend.position = 'bottom',
-            axis.text.y = element_blank(),
-            axis.ticks.y = element_blank())
+        facet_wrap(
+          ~sample, ncol = 2
+        ) +
+        geom_histogram(aes(x = value), bins = 30) +
+        theme_bw() +
+        theme(legend.position = 'bottom',
+              axis.text.y = element_blank(),
+              axis.ticks.y = element_blank())
     limita <- as.numeric(input$limita)
     limitb <- as.numeric(input$limitb)
-    if (limitb > 0) {
+    if (input$log) {
       plt <- plt +
         scale_x_log10(limits = c(limita, limitb))
     }
@@ -425,35 +435,49 @@ server <- function(input, output) {
    })
    
    output$lonPlot <-  renderPlot({
-     fn <- here('data', 'lons_cache', input$lon_file)
+     problem <-  paste(c(
+       input$lon_problem, 
+       input$lon_type, 
+       input$lon_objective, 
+       input$lon_budget, 
+       input$lon_instance, 
+       input$lon_stopping_criterion), collapse = ";", sep = "_")
+     fn <- sprintf("%s_%s_full.rds", input$lon_sample, problem)
+     fn <- here('data', 'lons_cache', fn)
      print(fn)
      if (file.exists(fn)) {
-       load(fn)
+       print("reading...")
+       lon <- readRDS(fn)
        print("drawing...")
-       neutral_graph <- tidygraph::tbl_graph(
-         edges = lon$edges,
-         nodes = as_tibble(lon$nodes)
-       ) %>%
-         activate(edges) %>%
-         filter(from != to, .N()$fitness[from] == .N()$fitness[to])
-       
-       # tidygraph::tbl_graph(
+       # neutral_graph <- tidygraph::tbl_graph(
        #   edges = lon$edges,
-       #   nodes = as_tibble(lon$nodes) %>%
-       #     mutate(label = row_number()) #map_chr(solutions, ~paste0(.x, collapse = ",")))
+       #   nodes = as_tibble(lon$nodes)
        # ) %>%
-       neutral <- tidygraph::tbl_graph(
-         edges = lon$edges,
-         nodes = as_tibble(lon$nodes)
-       ) %>% morph(to_contracted, fitness) %>% crystallize() %>% 
-         pull(graph)
+       #   activate(edges) %>%
+       #   filter(from != to, .N()$fitness[from] == .N()$fitness[to])
+       # 
+       # # tidygraph::tbl_graph(
+       # #   edges = lon$edges,
+       # #   nodes = as_tibble(lon$nodes) %>%
+       # #     mutate(label = row_number()) #map_chr(solutions, ~paste0(.x, collapse = ",")))
+       # # ) %>%
+       # neutral <- tidygraph::tbl_graph(
+       #   edges = lon$edges,
+       #   nodes = as_tibble(lon$nodes)
+       # ) %>% morph(to_contracted, fitness) %>% crystallize() %>% 
+       #   pull(graph)
        
-       neutral[[1]] %>%
+       # neutral[[1]] %>%
+       # browser()
+       tidygraph::tbl_graph(
+           edges = lon$edges,
+           nodes = as_tibble(lon$nodes)
+         ) %>%
          ggraph(layout = input$lonLayout) +
          geom_edge_link(edge_alpha = .05) +
          geom_node_point(aes(color = 1)) +
-         geom_edge_loop(edge_alpha = .05) +
          theme_graph()
+       # geom_edge_loop(edge_alpha = .05) +
      }
    })
   
