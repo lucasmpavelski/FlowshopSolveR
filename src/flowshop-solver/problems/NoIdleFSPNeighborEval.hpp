@@ -106,7 +106,7 @@ class NoIdleFSPNeighborEvalCompiler {
 
   // [[nodiscard]] auto noJobs() -> int { return fspData.noJobs(); }
 
-  void compile(const std::vector<int>& perm,
+  void compile(const FSP& perm,
                const std::pair<unsigned, unsigned>& move) {
     const auto& t = move.first;
     const auto& h = move.second;

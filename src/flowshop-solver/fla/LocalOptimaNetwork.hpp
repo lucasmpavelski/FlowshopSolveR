@@ -3,7 +3,18 @@
 #include <algorithm>
 #include <numeric>
 #include <ostream>
+#include <unordered_map>
 #include <vector>
+
+struct VectorHasher {
+    int operator()(const std::vector<int> &V) const {
+        int hash = V.size();
+        for(auto &i : V) {
+            hash ^= i + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+        }
+        return hash;
+    }
+};
 
 template <class EOT>
 struct LocalOptimaNetwork {
@@ -21,6 +32,7 @@ struct LocalOptimaNetwork {
   };
 
   std::vector<EOT> nodes;
+  std::unordered_map<std::vector<int>, int, VectorHasher> indexMap;
   std::vector<std::vector<lo_sample>> samples;
   std::vector<std::vector<edge>> edges;
 
@@ -36,6 +48,7 @@ struct LocalOptimaNetwork {
       nodes.emplace_back(n);
       samples.resize(samples.size() + 1);
       edges.resize(edges.size() + 1);
+      indexMap[n] = idx;
     }
     return idx;
   }
@@ -51,8 +64,8 @@ struct LocalOptimaNetwork {
   }
 
   auto getIndex(const EOT& n) -> int {
-    auto it = std::find(nodes.begin(), nodes.end(), n);
-    return std::distance(nodes.begin(), it);
+    auto it = indexMap.find(n);
+    return it == indexMap.end() ? nodes.size() : it->second;
   }
 
   auto contains(const EOT& n) -> bool { return getIndex(n) != nodes.size(); }
