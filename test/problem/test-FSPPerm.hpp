@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <iostream>
 
 #include "flowshop-solver/problems/FSPData.hpp"
 #include "flowshop-solver/problems/PermFSPEval.hpp"
@@ -7,13 +8,13 @@
 TEST(PermFSP, NeighborMakespanEvaluationSamples) {
   const int no_jobs = 10;
   const int no_machines = 10;
+  FSPData dt{no_jobs, no_machines};
+  PermFSPMakespanEval fullEval{dt};
+  PermFSPNeighborMakespanEval neighborEval{dt};
+  eoInitPermutation<FSP> init(no_jobs);
+  FSP solMoved(no_jobs);
   for (int i = 0; i < 100; i++) {
-    FSPData dt{no_jobs, no_machines};
-    PermFSPMakespanEval fullEval{dt};
-    PermFSPNeighborMakespanEval neighborEval{dt};
     FSP sol(no_jobs);
-    FSP solMoved(no_jobs);
-    eoInitPermutation<FSP> init(no_jobs);
     init(sol);
     sol.resize(1 + rand() % (no_jobs - 1));
     for (int j = 0; j < sol.size(); j++) {

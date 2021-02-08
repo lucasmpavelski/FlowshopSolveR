@@ -52,6 +52,10 @@ class PermFSPNeighborMakespanEval : public moEval<FSPNeighbor> {
       return f_times[m * (fspData.noJobs() + 1) + j];
     }
 
+    inline auto idx(const int& j, const int& m, const int& no_jobs) -> std::size_t {
+      return m * (no_jobs + 1) + j;
+    }
+
     void compile(const ivec& seq) {
       compile(seq, 0);
     }
@@ -64,52 +68,68 @@ class PermFSPNeighborMakespanEval : public moEval<FSPNeighbor> {
       for (int i = from + 1; i <= seq_size - 1; i++) {
         auto seq_i = seq[i - 1];
         for (int j = 1; j <= no_machines; j++) {
-          e_(i, j) =
-              std::max(e_(i, j - 1), e_(i - 1, j)) + fspData.pt(seq_i, j - 1);
+          const auto e_i_jm1 = e_times[idx(i, j - 1, no_jobs)];
+          const auto e_im1_j = e_times[idx(i - 1, j, no_jobs)];
+          e_times[idx(i, j, no_jobs)] =
+              std::max(e_i_jm1, e_im1_j) + fspData.pt(seq_i, j - 1);
         }
       }
 
       for (int i = no_jobs; i >= seq_size - 1; i--) {
         for (int j = no_machines; j >= 1; j--) {
-          q_(i, j) = 0;
+          q_times[idx(i, j, no_jobs)] = 0;
         }
       }
       for (int i = seq_size - 1; i >= 1; i--) {
         int seq_i = seq[i - 1];
         for (int j = no_machines; j >= 1; j--) {
-          q_(i, j) =
-              std::max(q_(i, j + 1), q_(i + 1, j)) + fspData.pt(seq_i, j - 1);
+          const auto q_i_jp1 = q_times[idx(i, j + 1, no_jobs)];
+          const auto q_ip1_j = q_times[idx(i + 1, j, no_jobs)];
+          q_times[idx(i, j, no_jobs)] =
+              std::max(q_i_jp1, q_ip1_j) + fspData.pt(seq_i, j - 1);
         }
       }
       for (int i = 1; i <= seq_size; i++) {
         int seq_k = seq[seq_size - 1];
         for (int j = 1; j <= no_machines; j++) {
-          f_(i, j) =
-              std::max(f_(i, j - 1), e_(i - 1, j)) + fspData.pt(seq_k, j - 1);
+          const auto f_i_jm1 = f_times[idx(i, j - 1, no_jobs)];
+          const auto e_im1_j = e_times[idx(i - 1, j, no_jobs)];
+          f_times[idx(i, j, no_jobs)] =
+              std::max(f_i_jm1, e_im1_j) + fspData.pt(seq_k, j - 1);
         }
       }
 
       std::fill(makespan.begin(), makespan.end(), 0);
       for (int i = 1; i <= seq_size; i++) {
         for (int j = 1; j <= no_machines; j++) {
-          int c_ij = f_(i, j) + q_(i, j);
+          const auto f_i_j = f_times[idx(i, j, no_jobs)];
+          const auto q_i_j = q_times[idx(i, j, no_jobs)];
+          int c_ij = f_i_j + q_i_j;
           makespan[i - 1] = std::max(makespan[i - 1], c_ij);
         }
       }
     }
 
     auto getMakespan(const FSP& sol, const int first, const int second) -> int {
-      auto mPtr = std::mismatch(compiledSolution.begin(), compiledSolution.end(),
-                                sol.begin(), sol.end());
-      int from = std::distance(sol.begin(), mPtr.second);
+      // auto mPtr = std::mismatch(compiledSolution.begin(), compiledSolution.end(),
+      //                           sol.begin(), sol.end());
+      // int from = std::distance(sol.begin(), mPtr.second);
 
-      if (mPtr.second != sol.end() || sol.size() != compiledSolution.size()) {
-        EOT perm_i = sol;
-        std::rotate(perm_i.begin() + first, perm_i.begin() + first + 1,
-                    perm_i.end());
+      // if (mPtr.second != sol.end() || sol.size() != compiledSolution.size()) {
+      //   EOT perm_i = sol;
+      //   std::rotate(perm_i.begin() + first, perm_i.begin() + first + 1,
+      //               perm_i.end());
 
-        compile(perm_i, std::max(0, from - 1));
-        compiledSolution = sol;
+      //   compile(perm_i, std::max(0, from - 1));
+      //   compiledSolution = sol;
+      // }
+      if (sol != compiledSolution) {
+          EOT perm_i = sol;
+          std::rotate(perm_i.begin() + first, perm_i.begin() + first + 1,
+                      perm_i.end());
+          
+          compile(perm_i);
+          compiledSolution = sol;
       }
       return makespan[second];
     }

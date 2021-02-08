@@ -411,7 +411,7 @@ TEST(FLA, Snowball) {
   std::unordered_map<std::string, std::string> sample;
   sample[                          "Snowball.Depth"] = "2" ;
   sample[                        "Snowball.NoEdges"] = "60" ;
-  sample[                     "Snowball.WalkLength"] = "100" ;
+  sample[                     "Snowball.WalkLength"] = "1" ;
   sample[                           "Snowball.Init"] = "random" ;
   sample[                     "Snowball.Comp.Strat"] = "strict" ;
   sample[              "Snowball.Neighborhood.Size"] = "1" ;
