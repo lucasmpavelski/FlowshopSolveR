@@ -14,9 +14,13 @@ TEST(PermFSP, NeighborMakespanEvaluationSamples) {
   eoInitPermutation<FSP> init(no_jobs);
   FSP solMoved(no_jobs);
   for (int i = 0; i < 100; i++) {
+    if (i == 70) {
+      std::cerr << '\n';
+    }
     FSP sol(no_jobs);
     init(sol);
     sol.resize(1 + rand() % (no_jobs - 1));
+    std::cerr << sol << '\n';
     for (int j = 0; j < sol.size(); j++) {
       for (int k = 0; k < sol.size(); k++) {
         if (k != j && k != j - 1) {
@@ -25,6 +29,7 @@ TEST(PermFSP, NeighborMakespanEvaluationSamples) {
           solMoved = sol;
           ngh.move(solMoved);
           fullEval(solMoved);
+          std::cerr << i << ' ' << j << ' ' << k << '\n';
           ASSERT_EQ(solMoved.fitness(), ngh.fitness());
         }
       }

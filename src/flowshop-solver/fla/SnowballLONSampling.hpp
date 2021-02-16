@@ -122,7 +122,6 @@ class SnowballLONSampling : public LONSampling {
     walk.reserve(l);
     walk.push_back(sol);
     for (int i = 0; i <= l - 1; i++) {
-      std::cerr << i << '\n';
       snowball(d, m, sol, problem.eval(), *localSearch, counter, *perturbation, lon);
       sol = randomWalkStep(sol, lon, *localSearch, counter, problem.eval(), walk);
       walk.push_back(sol);

@@ -6,7 +6,7 @@ library(optparse)
 lon_configs <- read_rds(here('reports/lons_study/lon_configs.rds'))
 
 option_list <- list( 
-    make_option(c("-c", "--config_id"), action="dist", default=10, type='integer',
+    make_option(c("-c", "--config_id"), action="dist", default=9, type='integer',
                 help="Print extra output [default]")
 )
 
@@ -29,7 +29,8 @@ join_nodes_df <- function(s1df, s2df, sol_size) {
 unite_lons <- function(lons_folder, problem_config, lon_config) {
     savePath <- sprintf("%s/%s_%s_wfull.rds", lons_folder, lon_config, problem_config)
     if (!file.exists(savePath)) {
-        s1 <- readRDS(sprintf("%s/%s_%s_1.rds", lons_folder, lon_config, problem_config))
+        s1 <- read_rds(sprintf("%s/%s_%s_1.rds", lons_folder, lon_config, problem_config))
+        s1$nodes$solutions <- map(s1$nodes$solutions, as.integer)
         
         allnodes <- nodes_df(s1$nodes$solutions, 1)
         sol_size <- length(s1$nodes$solutions[[1]])
@@ -39,6 +40,7 @@ unite_lons <- function(lons_folder, problem_config, lon_config) {
         for (i in 2:50) {
           print(sprintf("%s/%s_%s_%s.rds", lons_folder, lon_config, problem_config, i))
             s2 <-read_rds(sprintf("%s/%s_%s_%s.rds", lons_folder, lon_config, problem_config, i))
+            s2$nodes$solutions <- map(s2$nodes$solutions, as.integer)
             
             
             inodes <- nodes_df(s2$nodes$solutions, i)
@@ -92,7 +94,7 @@ problems <- all_problems_df() %>%
         budget == 'low',
         type == 'PERM',
         objective == 'MAKESPAN',
-        no_jobs <= 200
+        no_jobs <= 300
     ) %>%
     unnest(cols = instances) %>%
     mutate(budget = 'med', stopping_criterion = 'EVALS') %>%

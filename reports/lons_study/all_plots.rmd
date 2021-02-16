@@ -1,0 +1,304 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: 
+    keep_tex: true
+  html_notebook: default
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r setup, include=F}
+library(here)
+library(tidyverse)
+library(tidygraph)
+library(corrr)
+library(wrapr)
+library(FlowshopSolveR)
+library(viridis)
+library(gridExtra)
+
+problems <- all_problems_df() %>%
+  crossing(sample_n = 1:50) %>%
+  filter(
+    problem %in% c('vrf-small', 'vrf-large'),
+    budget == 'low',
+    type == 'PERM',
+    objective == 'MAKESPAN',
+    no_jobs <= 200
+  ) %>%
+  unnest(cols = instances) %>%
+  mutate(budget = 'med', stopping_criterion = 'EVALS') %>%
+  mutate(lon_metrics = pmap(., function(problem, type, objective, budget, instance, stopping_criterion, sample_n, ...) {
+    prob <- c(
+      problem = problem,
+      type = type,
+      objective = objective,
+      budget = budget,
+      instance = instance,
+      stopping_criterion = stopping_criterion
+    )
+  }))
+
+
+lon_configs <- read_rds(here('reports/lons_study/lon_configs.rds'))[c(1,2,9,10)]
+
+all_fla <- tibble(
+    sample_type = map_chr(lon_configs, ~.x$sample_type),
+    local_search = map_chr(lon_configs, ~.x$local_search),
+    perturbation = map_chr(lon_configs, ~.x$perturbation),
+    metrics_path = map_chr(lon_configs, ~here(sprintf('data/lons_cache/%s_metrics.rds', .x$id)))
+  ) %>%
+  filter(file.exists(metrics_path)) %>%
+  mutate(metrics = map(metrics_path, readRDS)) %>%
+  select(-metrics_path) %>%
+  unnest(cols = c(metrics)) %>%
+  mutate(
+    compress_rate = no_nodes / clon_no_nodes
+  )
+
+prob_params <- qc(problem, dist, corr, type, objective, no_jobs, no_machines, inst_n, corv, 
+                  stopping_criterion, budget, model, instance, instance_features, id,
+                  sample_type, local_search, perturbation)
+metrics <- all_fla %>% select(-all_of(prob_params)) %>% colnames()
+
+# relative_perfs <- readRDS("~/dev/FlowshopSolveR/reports/lons_study/relative_perfs_all2.rds")
+
+all_fla_tidy <- all_fla %>%
+  filter(no_jobs <= 300) %>%
+  select(-budget, -stopping_criterion) %>%
+  pivot_longer(all_of(metrics), names_to = "metric", values_to = "value") %>%
+  # inner_join(relative_perfs, by = c("dist", "corr", "no_jobs", "no_machines",
+  #                                   "problem", "corv", "objective", "type",
+  #                                   "model", "inst_n", "instance", 
+  #                                   "instance_features", "id")) %>%
+  mutate(
+    local_search = factor(
+      local_search,
+      levels = c('II', 'FI', 'BI'),
+      labels = c('I', 'First', 'B')
+    ),
+    perturbation = factor(
+      perturbation,
+      levels = c('RS', 'LSPS'),
+      labels = c('R','L')
+    ),
+    no_machines = as.factor(no_machines),
+    no_jobs = as.factor(no_jobs)
+  )
+
+
+
+histogram <- function(dt) {
+  dt %>%
+    ggplot() +
+      facet_grid(local_search ~ perturbation) +
+      geom_histogram(aes(x = value, fill = no_jobs)) +
+      scale_fill_viridis(discrete = T) +
+      theme_bw() +
+      labs(fill = 'J') +
+      theme(axis.title = element_blank(),
+            text = element_text(size = 8))
+}
+
+histogram_machine <- function(dt) {
+  dt %>%
+    ggplot() +
+    facet_grid(local_search ~ perturbation) +
+    geom_histogram(aes(x = value, fill = no_machines)) +
+    scale_fill_viridis(discrete = T) +
+    theme_bw() +
+    labs(fill = 'M') +
+    theme(axis.title = element_blank(),
+          text = element_text(size = 8))
+}
+
+boxplots <- function(dt, log_scale = F) {
+  plt <- dt %>%
+    mutate(
+      sample = paste0(local_search, perturbation)
+    ) %>%
+    ggplot() +
+      facet_wrap(~no_machines) +
+      geom_boxplot(aes(x = no_jobs, y = value, color = sample)) +
+      scale_fill_viridis(discrete = T) +
+      scale_color_viridis(discrete = T) +
+      theme_bw() +
+      theme(axis.title = element_blank(),
+            text = element_text(size = 8),
+            legend.position = 'right',
+            legend.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"),
+            plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"))
+  if (log_scale) {
+    if (all(dt$value > 0)) {
+      plt <- plt +  scale_y_log10()
+    } else {
+      plt <- plt +  scale_y_continuous(trans="pseudo_log")
+    }
+  }
+  plt
+}
+
+box_plot_hard_easy <- function(dt, fct_scales = "free_x", ...) {
+  dt_easy <- dt %>%
+  filter(
+    as.integer(as.character(no_jobs)) <= 60,
+    as.integer(as.character(no_machines)) <= 15
+  ) %>%
+  mutate(type = 'easy')
+  dt_hard <- dt %>%
+    filter(
+      as.integer(as.character(no_jobs)) >= 100,
+      as.integer(as.character(no_machines)) >= 20
+    ) %>%
+  mutate(type = 'hard')
+  bind_rows(dt_easy, dt_hard) %>%
+    boxplots(...) +
+    facet_wrap(~no_machines, nrow = 1, scales = fct_scales)
+}
+
+```
+
+
+```{r no_nodes_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  filter(
+    metric == 'no_nodes'
+  ) %>%
+  box_plot_hard_easy()
+```
+
+
+
+```{r clon_average_weight_of_self_loops_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  filter(
+    metric == 'clon_average_weight_of_self_loops',
+  ) %>%
+    box_plot_hard_easy()
+```
+
+
+
+```{r avarege_out_degree_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  filter(
+    metric == 'clon_avarege_out_degree',
+  ) %>%
+    box_plot_hard_easy(log_scale = T)
+```
+
+```{r clon_average_disparity_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  filter(
+    metric == 'clon_average_disparity',
+  ) %>%
+    box_plot_hard_easy(log_scale = F)
+```
+
+
+```{r clon_fitness_fitness_correlation_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  filter(
+    metric == 'clon_fitness_fitness_correlation',
+  ) %>%
+    box_plot_hard_easy(log_scale = F)
+```
+
+```{r neutral_no_groups_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  filter(
+    metric == 'clon_no_nodes',
+  ) %>%
+    box_plot_hard_easy(log_scale = F)
+```
+
+
+
+```{r compress_rate_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  filter(
+    metric == 'compress_rate',
+  ) %>%
+    box_plot_hard_easy(log_scale = T, fct_scales = "free")
+```
+
+
+```{r md_shiftDistance_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  filter(
+    metric == 'md_shiftDistance',
+  ) %>%
+    box_plot_hard_easy(log_scale = F)
+```
+
+
+```{r clon_average_weighted_clustering_coefficient_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  mutate(value = value) %>%
+  filter(
+    metric == 'clon_average_weighted_clustering_coefficient'
+  ) %>%
+    box_plot_hard_easy(log_scale = T)
+```
+
+```{r graph_clique_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  filter(
+    metric == 'graph_clique',
+  ) %>%
+    box_plot_hard_easy(log_scale = T)
+```
+
+
+
+```{r average_fitness_bp, echo=F, fig.asp=0.3}
+all_fla_tidy %>%
+  mutate(value = value) %>%
+  filter(
+    metric == 'average_fitness'
+  ) %>%
+    box_plot_hard_easy(log_scale = T)
+```
+
+
+
+```{r neutral_rel_no_edges_bp, echo=F, fig.asp=0.3}
+all_fla_tidy %>%
+  mutate(value = value) %>%
+  filter(
+    metric == 'neutral_rel_no_edges'
+  ) %>%
+    box_plot_hard_easy(log_scale = F)
+```
+
+
+
+
+```{r clon_graph_assortativity_degree_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  mutate(value = value) %>%
+  filter(
+    metric == 'clon_graph_assortativity_degree'
+  ) %>%
+    box_plot_hard_easy(log_scale = T, fct_scales = "free")
+```
+
+
+
+
+
+```{r graph_reciprocity_bp, echo=F, fig.asp=0.26}
+all_fla_tidy %>%
+  mutate(value = value) %>%
+  filter(
+    metric == 'clon_graph_reciprocity'
+  ) %>%
+    box_plot_hard_easy(log_scale = T, fct_scales = "free")
+```
+
+
+
+

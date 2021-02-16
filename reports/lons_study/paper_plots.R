@@ -29,7 +29,7 @@ problems <- all_problems_df() %>%
   }))
 
 
-lon_configs <- read_rds(here('reports/lons_study/lon_configs.rds'))
+lon_configs <- read_rds(here('reports/lons_study/lon_configs.rds'))[c(1,2,9,10)]
 
 all_fla <- tibble(
     sample_type = map_chr(lon_configs, ~.x$sample_type),

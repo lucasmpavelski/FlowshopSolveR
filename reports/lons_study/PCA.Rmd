@@ -1,0 +1,257 @@
+---
+title: "Principal Component Analysis"
+author: "Dataset metrics_data"
+output:
+  pdf_document: default
+---
+This dataset contains 330 individuals and 45 variables, 2 quantitative variables are considered as illustrative.
+
+- - -
+
+```{r, echo = FALSE}
+library(FactoMineR)
+load('/home/lucasmp/dev/FlowshopSolveR/Workspace.RData')
+```
+### 1. Study of the outliers
+The analysis of the graphs does not detect any outlier.
+
+- - -
+
+### 2. Inertia distribution
+The inertia of the first dimensions shows if there are strong relationships between variables and suggests the number of dimensions that should be studied.
+
+The first two dimensions of analyse express **59%** of the total dataset inertia ; that means that 59% of the individuals (or variables) cloud total variability is explained by the plane.
+This percentage is relatively high and thus the first plane well represents the data variability.
+This value is strongly greater than the reference value that equals **8.32%**, the variability explained by this plane is thus highly significant
+(the reference value is the 0.95-quantile of the inertia percentages distribution obtained by simulating 2672 data tables of equivalent size on the basis of a normal distribution).
+
+From these observations, it should be better to also interpret the dimensions greater or equal to the third one.
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+par(mar = c(2.6, 4.1, 1.1, 2.1))
+ggplot2::ggplot(cbind.data.frame(x=1:nrow(res$eig),y=res$eig[,2])) + ggplot2::aes(x=x, y=y)+ ggplot2::geom_col(fill="blue") + ggplot2::xlab("Dimension") + ggplot2::ylab("Percentage of variance") + ggplot2::ggtitle("Decomposition of the total inertia") + ggplot2::theme_light() + ggplot2::theme(plot.title = ggplot2::element_text(hjust =0.5)) + ggplot2::scale_x_continuous(breaks=1:nrow(res$eig))
+```
+
+**Figure 2 - Decomposition of the total inertia**
+
+An estimation of the right number of axis to interpret suggests to restrict the analysis to the description of the first 5 axis.
+These axis present an amount of inertia greater than those obtained by the 0.95-quantile of random distributions (84.77% against 19.4%).
+This observation suggests that only these axis are carrying a real information.
+As a consequence, the description will stand to these axis.
+
+- - -
+
+### 3. Description of the plane 1:2
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+drawn <-
+"210"
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.PCA(res, select = drawn, axes = c(1,2), choix = 'ind', invisible = 'quali', title = '', cex = cex)
+```
+
+**Figure 3.1 - Individuals factor map (PCA)**
+*The labeled individuals are those with the higher contribution to the plane construction.*
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+drawn <-
+c("Nnodes", "Nedges", "CLONWii", "CLONNedgesA", "CLONNnodes", 
+"NEdgesNeut", "Wmean", "MDshift", "MDabs", "CLONAvgDisp", "WEdgesNeut", 
+"RelEdgesNeut", "MDadj", "ffc", "AvgFit", "CLONAvgFit", "AvgDisp", 
+"J", "Wstd", "CLONWstd")
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.PCA(res, select = drawn, axes = 1:2, choix = 'var', title = '', cex = cex)
+```
+
+**Figure 3.2 - Variables factor map (PCA)**
+*The variables in black are considered as active whereas those in blue are illustrative.*
+*The labeled variables are those the best shown on the plane.*
+
+* * *
+
+The **dimension 1** opposes individuals characterized by a strongly positive coordinate on the axis (to the right of the graph)
+to individuals characterized by a strongly negative coordinate on the axis (to the left of the graph).
+
+The group 1 (characterized by a positive coordinate on the axis) is sharing :
+
+- high values for variables like *AvgFit*, *CLONAvgFit*, *J*, *MDshift*, *CLONNedgesA*, *CLONNnodes*, *MDabs*, *M*, *MDadj* and *MDprec* (variables are sorted from the strongest).
+- low values for variables like *CLONWii*, *AvgDisp*, *CLONAvgDisp*, *Wii*, *CLONffc*, *NoutEdgesNeut*, *Wstd*, *WEdgesNeut*, *RelEdgesNeut* and *CLONAvgOut* (variables are sorted from the weakest).
+
+The group 2 (characterized by a negative coordinate on the axis) is sharing :
+
+- high values for variables like *ffc*, *CLONAvgDisp*, *Clust*, *CLONWstd*, *CLONClique*, *Recip*, *AvgOut*, *CLONRecip*, *Clique* and *CLONAvgWWC* (variables are sorted from the strongest).
+- low values for variables like *Nedges*, *Nnodes*, *MDadj*, *MDabs*, *CLONNnodes*, *CLONNedgesA*, *MDshift*, *CLONAssort*, *MDprec* and *Assort* (variables are sorted from the weakest).
+
+
+* * *
+
+The **dimension 2** opposes individuals characterized by a strongly positive coordinate on the axis (to the top of the graph)
+to individuals characterized by a strongly negative coordinate on the axis (to the bottom of the graph).
+
+The group 1 (characterized by a positive coordinate on the axis) is sharing :
+
+- high values for variables like *Wstd*, *WEdgesNeut*, *NEdgesNeut*, *Wmean*, *RelEdgesNeut*, *CLONAvgOut*, *AvgDisp*, *NoutEdgesNeut*, *CLONWii* and *Compress* (variables are sorted from the strongest).
+- low values for variables like *CLONRelWii*, *M*, *RelWii*, *CLONWmean*, *CLONClique*, *AvgFit*, *CLONAvgFit*, *AvgOut*, *J* and *CLONWstd* (variables are sorted from the weakest).
+
+The group 2 (characterized by a negative coordinate on the axis) is sharing :
+
+- high values for variables like *ffc*, *CLONAvgDisp*, *Clust*, *CLONWstd*, *CLONClique*, *Recip*, *AvgOut*, *CLONRecip*, *Clique* and *CLONAvgWWC* (variables are sorted from the strongest).
+- low values for variables like *Nedges*, *Nnodes*, *MDadj*, *MDabs*, *CLONNnodes*, *CLONNedgesA*, *MDshift*, *CLONAssort*, *MDprec* and *Assort* (variables are sorted from the weakest).
+
+The group 3 (characterized by a negative coordinate on the axis) is sharing :
+
+- high values for variables like *AvgFit*, *CLONAvgFit*, *J*, *MDshift*, *CLONNedgesA*, *CLONNnodes*, *MDabs*, *M*, *MDadj* and *MDprec* (variables are sorted from the strongest).
+- low values for variables like *CLONWii*, *AvgDisp*, *CLONAvgDisp*, *Wii*, *CLONffc*, *NoutEdgesNeut*, *Wstd*, *WEdgesNeut*, *RelEdgesNeut* and *CLONAvgOut* (variables are sorted from the weakest).
+
+
+- - -
+
+### 4. Description of the plane 3:4
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+drawn <-
+"12"
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.PCA(res, select = drawn, axes = c(3,4), choix = 'ind', invisible = 'quali', title = '', cex = cex)
+```
+
+**Figure 4.1 - Individuals factor map (PCA)**
+*The labeled individuals are those with the higher contribution to the plane construction.*
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+drawn <-
+c("NoutEdgesNeut", "CLONRelWii", "CLONWmean", "MDdev", "Clique", 
+"MDprec", "CLONRecip", "CLONAssort", "CLONWstd", "Recip")
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.PCA(res, select = drawn, axes = 3:4, choix = 'var', title = '', cex = cex)
+```
+
+**Figure 4.2 - Variables factor map (PCA)**
+*The variables in black are considered as active whereas those in blue are illustrative.*
+*The labeled variables are those the best shown on the plane.*
+
+* * *
+
+The **dimension 3** opposes individuals characterized by a strongly positive coordinate on the axis (to the right of the graph)
+to individuals characterized by a strongly negative coordinate on the axis (to the left of the graph).
+
+The group 1 (characterized by a positive coordinate on the axis) is sharing :
+
+- high values for variables like *CLONRecip*, *CLONWmean*, *CLONWstd*, *CLONRelWii*, *CLONAvgWWC*, *AvgWWC*, *CLONClust*, *AvgDisp*, *Wstd* and *CLONAvgDisp* (variables are sorted from the strongest).
+- low values for variables like *Assort*, *CLONAssort*, *Nedges*, *CLONNedgesA*, *CLONNnodes*, *Nnodes*, *MDabs*, *J*, *CLONAvgOut* and *MDshift* (variables are sorted from the weakest).
+
+The group 2 (characterized by a negative coordinate on the axis) is sharing :
+
+- high values for variables like *CLONAssort*, *CLONNedgesA*, *CLONNnodes*, *Nnodes*, *Assort*, *Nedges*, *J*, *AvgFit*, *CLONAvgFit* and *MDabs* (variables are sorted from the strongest).
+- low values for variables like *AvgWWC*, *CLONAvgDisp*, *Recip*, *Clust*, *CLONWstd*, *CLONRecip*, *CLONWmean*, *CLONRelWii*, *CLONAvgWWC* and *CLONWii* (variables are sorted from the weakest).
+
+
+* * *
+
+The **dimension 4** opposes individuals such as *12* (to the top of the graph, characterized by a strongly positive coordinate on the axis)
+to individuals characterized by a strongly negative coordinate on the axis (to the bottom of the graph).
+
+The group in which the individual *12* stands (characterized by a positive coordinate on the axis) is sharing :
+
+- high values for variables like *Clique*, *Recip*, *Clust*, *AvgOut*, *NoutEdgesNeut*, *RelEdgesNeut*, *CLONAvgDisp*, *ffc*, *CLONWii* and *RelWii* (variables are sorted from the strongest).
+- low values for variables like *CLONAssort*, *Wii*, *CLONNedgesA*, *CLONNnodes*, *WEdgesNeut*, *Nnodes*, *AvgFit*, *CLONAvgFit*, *J* and *Wstd* (variables are sorted from the weakest).
+
+The group 2 (characterized by a negative coordinate on the axis) is sharing :
+
+- high values for variables like *CLONRecip*, *CLONWmean*, *CLONWstd*, *CLONRelWii*, *CLONAvgWWC*, *AvgWWC*, *CLONClust*, *AvgDisp*, *Wstd* and *CLONAvgDisp* (variables are sorted from the strongest).
+- low values for variables like *Assort*, *CLONAssort*, *Nedges*, *CLONNedgesA*, *CLONNnodes*, *Nnodes*, *MDabs*, *J*, *CLONAvgOut* and *MDshift* (variables are sorted from the weakest).
+
+The group 3 (characterized by a negative coordinate on the axis) is sharing :
+
+- high values for variables like *CLONAssort*, *CLONNedgesA*, *CLONNnodes*, *Nnodes*, *Assort*, *Nedges*, *J*, *AvgFit*, *CLONAvgFit* and *MDabs* (variables are sorted from the strongest).
+- low values for variables like *AvgWWC*, *CLONAvgDisp*, *Recip*, *Clust*, *CLONWstd*, *CLONRecip*, *CLONWmean*, *CLONRelWii*, *CLONAvgWWC* and *CLONWii* (variables are sorted from the weakest).
+
+
+- - -
+
+### 5. Description of the dimension 5
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+drawn <-
+"210"
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.PCA(res, select = drawn, axes = c(5,6), choix = 'ind', invisible = 'quali', title = '', cex = cex)
+```
+
+**Figure 5.1 - Individuals factor map (PCA)**
+*The labeled individuals are those with the higher contribution to the plane construction.*
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+drawn <-
+c("RelWii", "NeutSize", "Compress", "AvgOut", "Wii", "CLONffc", 
+"Wstd", "Recip", "M", "NoutEdgesNeut")
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.PCA(res, select = drawn, axes = 5:6, choix = 'var', title = '', cex = cex)
+```
+
+**Figure 5.2 - Variables factor map (PCA)**
+*The variables in black are considered as active whereas those in blue are illustrative.*
+*The labeled variables are those the best shown on the plane.*
+
+* * *
+
+The **dimension 5** opposes individuals such as *210* (to the right of the graph, characterized by a strongly positive coordinate on the axis)
+to individuals characterized by a strongly negative coordinate on the axis (to the left of the graph).
+
+The group 1 (characterized by a positive coordinate on the axis) is sharing :
+
+- high values for variables like *ffc*, *AvgOut*, *CLONClique*, *M*, *CLONWstd*, *Wii*, *CLONClust*, *CLONWmean*, *AvgFit* and *CLONAvgFit* (variables are sorted from the strongest).
+- low values for variables like *RelWii*, *Nedges*, *Wstd*, *Nnodes*, *Assort*, *WEdgesNeut*, *CLONNnodes*, *CLONNedgesA*, *RelEdgesNeut* and *NEdgesNeut* (variables are sorted from the weakest).
+
+The group in which the individual *210* stands (characterized by a positive coordinate on the axis) is sharing :
+
+- high values for variables like *Compress*, *NeutSize*, *Wmean*, *NEdgesNeut*, *RelEdgesNeut*, *CLONWii*, *WEdgesNeut*, *AvgDisp*, *Wii* and *MDdev* (variables are sorted from the strongest).
+- low values for the variables *CLONNedgesA*, *CLONNnodes*, *CLONClique* and *ffc* (variables are sorted from the weakest).
+
+The group 3 (characterized by a negative coordinate on the axis) is sharing :
+
+- high values for variables like *RelWii*, *Nedges*, *Wstd*, *Nnodes*, *CLONNnodes*, *CLONNedgesA*, *Assort*, *WEdgesNeut*, *CLONAvgOut* and *RelEdgesNeut* (variables are sorted from the strongest).
+- low values for variables like *ffc*, *AvgOut*, *Wii*, *M*, *CLONClique*, *CLONWstd*, *CLONClust*, *MDdev*, *MDprec* and *CLONWmean* (variables are sorted from the weakest).
+
+
+- - -
+
+### 6. Classification
+
+```{r, echo = FALSE}
+res.hcpc = HCPC(res, nb.clust = -1, graph = FALSE)
+```
+
+```{r, echo = FALSE, fig.align = 'center', fig.height = 3.5, fig.width = 5.5}
+drawn <-
+"210"
+par(mar = c(4.1, 4.1, 1.1, 2.1))
+plot.HCPC(res.hcpc, choice = 'map', draw.tree = FALSE, select = drawn, title = '')
+```
+
+**Figure 6 - Ascending Hierarchical Classification of the individuals.**
+*The classification made on individuals reveals 4 clusters.*
+
+
+The **cluster 1** is made of individuals sharing :
+
+-  variables whose values do not differ significantly from the mean.
+
+The **cluster 2** is made of individuals sharing :
+
+-  variables whose values do not differ significantly from the mean.
+
+The **cluster 3** is made of individuals such as *210*. This group is characterized by :
+
+-  variables whose values do not differ significantly from the mean.
+
+The **cluster 4** is made of individuals sharing :
+
+-  variables whose values do not differ significantly from the mean.
+
+- - -
+
+## Annexes
+
+
+

@@ -20,36 +20,10 @@ class PermFSPNeighborMakespanEval : public moEval<FSPNeighbor> {
 
     CompiledSchedule(const FSPData& fspData)
         : fspData(fspData),
-          e_times((fspData.noJobs() + 1) * (fspData.noMachines() + 1)),
-          q_times((fspData.noJobs() + 1) * (fspData.noMachines() + 2)),
-          f_times((fspData.noJobs() + 1) * (fspData.noMachines() + 1)),
+          e_times((fspData.noJobs() + 1) * (fspData.noMachines() + 1), 0),
+          q_times((fspData.noJobs() + 1) * (fspData.noMachines() + 2), 0),
+          f_times((fspData.noJobs() + 1) * (fspData.noMachines() + 1), 0),
           makespan(fspData.noJobs()) {
-      const int no_jobs = fspData.noJobs();
-      const int no_machines = fspData.noMachines();
-      e_(0, 0) = 0;
-      for (int i = 1; i <= no_machines; i++)
-        e_(0, i) = 0;
-      for (int i = 1; i <= no_jobs; i++)
-        e_(i, 0) = 0;
-      q_(no_jobs, no_machines) = 0;
-      for (int j = no_machines; j >= 1; j--)
-        q_(no_jobs, j) = 0;
-      for (int i = no_jobs - 1; i >= 1; i--)
-        q_(i, no_machines + 1) = 0;
-      for (int i = 0; i <= no_jobs; i++)
-        f_(i, 0) = 0;
-    }
-
-    inline auto e_(const int j, const int m) -> int& {
-      return e_times[m * (fspData.noJobs() + 1) + j];
-    }
-
-    inline auto q_(const int j, const int m) -> int& {
-      return q_times[m * (fspData.noJobs() + 1) + j];
-    }
-
-    inline auto f_(const int j, const int m) -> int& {
-      return f_times[m * (fspData.noJobs() + 1) + j];
     }
 
     inline auto idx(const int& j, const int& m, const int& no_jobs) -> std::size_t {
