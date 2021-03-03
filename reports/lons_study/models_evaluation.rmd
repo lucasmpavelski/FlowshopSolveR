@@ -1,0 +1,250 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r setup}
+library(here)
+library(tidyverse)
+library(tidymodels)
+library(vip)
+library(PMCMRplus)
+
+lon_configs <- read_rds(here('reports/lons_study/lon_configs.rds'))[c(1,2,9,10)]
+
+models_data <- 
+  tibble(
+    lon_id = c(map_chr(lon_configs, ~.x$id), "all"),
+    local_search = c(map_chr(lon_configs, ~.x$local_search), "all"),
+    perturbation = c(map_chr(lon_configs, ~.x$perturbation), "all"),
+  ) %>%
+    crossing(
+      fold_id = sprintf("Fold%d", 1:5),
+      task = c("ig_lsps_rpd", "ig_rs_rpd"),
+      problem_set = c("vrf-small", "vrf-large"),
+      model_name = c("linear_reg", "rand_forest")
+    ) %>%
+    mutate(
+      save_path = here(
+        "reports",
+        "lons_study",
+        "models-5-fold",
+        model_name,
+        lon_id,
+        problem_set,
+        task,
+        fold_id
+      )
+    ) %>%
+    filter(file.exists(save_path))
+
+perf_data <- 
+  models_data %>%
+    mutate(
+      metrics = map(save_path, function(save_path) {
+        wf_dt <- read_rds(save_path)
+        wf_dt %>% collect_metrics()
+      })
+    ) %>%
+    unnest(metrics)
+
+importance_data <-
+  models_data %>%
+  mutate(
+    importances = map(save_path, function(save_path) {
+      wf_dt <- read_rds(save_path)
+      wf_dt %>% 
+       pluck(".workflow", 1) %>%
+       pull_workflow_fit() %>%
+       vi(rank = T)
+    })
+  ) %>%
+  unnest(importances)
+```
+
+```{r results='asis'}
+tbl_dt <- perf_data %>%
+  filter(model_name == "linear_reg", lon_id != 'all') %>%
+  mutate(
+    experiment = paste(local_search, perturbation),
+    ml_problem = task
+  ) %>%
+  group_by(experiment, ml_problem, problem_set, .metric) %>%
+  summarise(.estimate = sprintf("%.03f %.02f", mean(.estimate), sd(.estimate)), .groups = "drop") %>% 
+  tidyr::unite(ml_metric, ml_problem, .metric) %>%
+  pivot_wider(names_from = ml_metric, values_from = .estimate) %>%
+  arrange(desc(problem_set), desc(experiment))
+
+tbl_dt[c("experiment", "problem_set", "ig_rs_rpd_rsq", "ig_rs_rpd_rmse", 
+"ig_lsps_rpd_rsq", "ig_lsps_rpd_rmse")]
+
+```
+
+```{r results='asis'}
+tbl_dt <- perf_data %>%
+  filter(model_name == "rand_forest", lon_id != 'all') %>%
+  mutate(
+    experiment = paste(local_search, perturbation),
+    ml_problem = task
+  ) %>%
+  group_by(experiment, ml_problem, problem_set, .metric) %>%
+  summarise(.estimate = sprintf("%.03f %.02f", mean(.estimate), sd(.estimate)), .groups = "drop") %>% 
+  tidyr::unite(ml_metric, ml_problem, .metric) %>%
+  pivot_wider(names_from = ml_metric, values_from = .estimate) %>%
+  arrange(desc(problem_set), desc(experiment))
+
+tbl_dt[c("experiment", "problem_set", "ig_rs_rpd_rsq", "ig_rs_rpd_rmse", 
+"ig_lsps_rpd_rsq", "ig_lsps_rpd_rmse")]
+
+```
+
+
+
+```{r}
+test_dt <-
+  perf_data %>%
+  filter(model_name == "linear_reg", lon_id != 'all') %>%
+    filter(.metric == 'rsq', problem_set == 'vrf-small') %>%
+    mutate(
+      groups = paste(local_search, perturbation),
+      blocks = paste(task, fold_id),
+      y = .estimate
+    ) %>%
+    select(groups, blocks, y)
+print(friedmanTest(test_dt$y, test_dt$groups, test_dt$blocks))
+print(frdAllPairsExactTest(test_dt$y, test_dt$groups, test_dt$blocks))
+```
+
+
+```{r}
+test_dt <-
+  perf_data %>%
+  filter(model_name == "linear_reg", lon_id != 'all') %>%
+    filter(.metric == 'rsq', problem_set == 'vrf-large') %>%
+    mutate(
+      groups = paste(local_search, perturbation),
+      blocks = paste(task, fold_id),
+      y = .estimate
+    ) %>%
+    select(groups, blocks, y)
+print(friedmanTest(test_dt$y, test_dt$groups, test_dt$blocks))
+print(frdAllPairsExactTest(test_dt$y, test_dt$groups, test_dt$blocks))
+```
+
+
+```{r}
+test_dt <-
+  perf_data %>%
+  filter(model_name == "linear_reg", lon_id != 'all') %>%
+    filter(.metric == 'rsq') %>%
+    mutate(
+      groups = paste(local_search, perturbation),
+      blocks = paste(task, fold_id, problem_set),
+      y = .estimate
+    ) %>%
+    select(groups, blocks, y)
+print(friedmanTest(test_dt$y, test_dt$groups, test_dt$blocks))
+print(frdAllPairsExactTest(test_dt$y, test_dt$groups, test_dt$blocks))
+```
+
+```{r}
+test_dt <-
+  perf_data %>%
+  filter(model_name == "rand_forest", lon_id != 'all') %>%
+    filter(.metric == 'rsq', problem_set == 'vrf-small') %>%
+    mutate(
+      groups = paste(local_search, perturbation),
+      blocks = paste(task, fold_id),
+      y = .estimate
+    ) %>%
+    select(groups, blocks, y)
+print(friedmanTest(test_dt$y, test_dt$groups, test_dt$blocks))
+print(frdAllPairsExactTest(test_dt$y, test_dt$groups, test_dt$blocks))
+```
+
+```{r}
+test_dt <-
+  perf_data %>%
+  filter(model_name == "rand_forest", lon_id != 'all') %>%
+    filter(.metric == 'rsq', problem_set == 'vrf-large') %>%
+    mutate(
+      groups = paste(local_search, perturbation),
+      blocks = paste(task, fold_id),
+      y = .estimate
+    ) %>%
+    select(groups, blocks, y)
+print(friedmanTest(test_dt$y, test_dt$groups, test_dt$blocks))
+print(frdAllPairsExactTest(test_dt$y, test_dt$groups, test_dt$blocks))
+```
+
+```{r}
+test_dt <-
+  perf_data %>%
+  filter(model_name == "rand_forest", lon_id != 'all') %>%
+    filter(.metric == 'rsq') %>%
+    mutate(
+      groups = paste(local_search, perturbation),
+      blocks = paste(task, fold_id, problem_set),
+      y = .estimate
+    ) %>%
+    select(groups, blocks, y)
+print(friedmanTest(test_dt$y, test_dt$groups, test_dt$blocks))
+print(frdAllPairsExactTest(test_dt$y, test_dt$groups, test_dt$blocks))
+```
+
+```{r}
+test_dt <-
+  perf_data %>%
+  filter(lon_id != 'all') %>%
+    filter(.metric == 'rsq') %>%
+    mutate(
+      groups = paste(model_name),
+      blocks = paste(local_search, perturbation, task, fold_id, problem_set),
+      y = .estimate
+    ) %>%
+    select(groups, blocks, y)
+print(friedmanTest(test_dt$y, test_dt$groups, test_dt$blocks))
+
+print(test_dt %>% group_by(groups) %>% summarise(y = mean(y)))
+```
+
+
+
+```{r}
+importance_data %>%
+  filter(model_name == "rand_forest",
+    (local_search == 'II' & perturbation == 'RS' & problem_set == 'vrf-small') |
+    (local_search == 'II' & perturbation == 'LSPS' & problem_set == 'vrf-large')
+  ) %>%
+  group_by(problem_set, task, Variable) %>%
+  summarise(rank = mean(Importance)) %>%
+  arrange(desc(problem_set), task, rank) %>%
+  select(problem_set, task, Variable, rank) %>%
+  filter(row_number() <= 5)
+
+```
+
+```{r}
+importance_data %>%
+  filter(model_name == "linear_reg",
+    (local_search == 'II' & perturbation == 'LSPS' & problem_set == 'vrf-small') |
+    (local_search == 'BI' & perturbation == 'LSPS' & problem_set == 'vrf-large')
+  ) %>%
+  group_by(problem_set, task, Variable) %>%
+  summarise(rank = mean(Importance)) %>%
+  arrange(desc(problem_set), task, rank) %>%
+  select(problem_set, task, Variable, rank) %>%
+  filter(row_number() <= 5)
+```
+```{r}
+library(future)
+library(furrr)
+plan(remote, workers = "linode2", persistent = TRUE)
+plan(sequential)
+
+future_map(rep(30, 3), ~system("sleep 30"))
+```

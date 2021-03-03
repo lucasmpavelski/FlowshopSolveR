@@ -3,35 +3,33 @@ library(here)
 library(furrr)
 library(optparse)
 
+
 lon_configs <- read_rds(here('reports/lons_study/lon_configs.rds'))
 
 option_list <- list( 
-  make_option(c("-c", "--config_id"), default=10, type='integer',
+  make_option(c("-c", "--config_id"), default=9, type='integer',
               help="Print extra output [default]"),
   
   make_option(c("-p", "--problem"), default="vrf-large", type='character',
               help="Print extra output [default]"),
   
-  make_option(c("-i", "--inst"), default="1", type='character',
+  make_option(c("-i", "--inst"), default="1,2,3,4,5,6,7,8,9,10", type='character',
               help="Print extra output [default]"),
   
   make_option(c("-w", "--workers"), default=, type='integer',
               help="Print extra output [default]")
 )
 
-write_rds(lon_configs, here('reports/lons_study/lon_configs.rds'))
+# write_rds(lon_configs, here('reports/lons_study/lon_configs.rds'))
 
 
 opt <- parse_args(OptionParser(option_list=option_list))
 CONFIG_ID <- opt$config_id
 
-sample_lon <- function(problem, sample_n) {
-  file_name <- sprintf("%s_%s_%d.rds",
-                       lon_configs[[CONFIG_ID]]$id,
-                       paste(problem, collapse = ";", sep = "_"),
-                       sample_n)
-  savePath <- here('data', 'lons_cache', file_name)
+sample_lon <- function(problem, file_name, sample_n) {
+  savePath <- file_name # here('data', 'lons_cache', file_name)
   if (!file.exists(savePath)) {
+    print(savePath)
     initFactories(here("data"))
     lon <- sampleLON(
       sampleType = lon_configs[[CONFIG_ID]]$sample_type,
@@ -56,13 +54,13 @@ problems <- all_problems_df() %>%
     budget == 'low',
     type == 'PERM',
     objective == 'MAKESPAN',
-    no_jobs <= 400
+    no_jobs == 400
   ) %>%
   unnest(cols = instances) %>%
   filter(inst_n %in% as.integer(str_split(opt$inst, ',', simplify = T))) %>%
   mutate(budget = 'med', stopping_criterion = 'EVALS') %>%
   mutate(lon_metrics = pmap(., function(problem, type, objective, budget, instance, stopping_criterion, sample_n, ...) {
-    prob <- c(
+    c(
       problem = problem,
       type = type,
       objective = objective,
@@ -70,9 +68,18 @@ problems <- all_problems_df() %>%
       instance = instance,
       stopping_criterion = stopping_criterion
     )
-  }))
+  })) %>%
+  mutate(
+    file_name = map2_chr(lon_metrics, sample_n, ~here('data', 'lons_cache', sprintf("%s_%s_%d.rds",
+                        lon_configs[[CONFIG_ID]]$id,
+                        paste(.x, collapse = ";", sep = "_"),
+                        .y)))
+  ) %>%
+   filter(!file.exists(file_name))
 
 plan(multisession(workers= opt$workers))
+# plan(remote, workers = rep("linode2", 32), persistent = TRUE)
+# plan(sequential)
 # 
 library(progressr)
 handlers(global = TRUE)
@@ -82,10 +89,12 @@ sample_all_lons <- function() {
   p <- progressor(along = seq_along(problems$lon_metrics))
   y <- future_map(seq_along(problems$lon_metrics), function(i) {
     prob <- problems$lon_metrics[[i]]
-    samp <- problems$sample_n[i]
-    sample_lon(prob, samp)
+    samp <- problems$file_name[i]
+    sample_n <- problems$sample_n[i]
+    sample_lon(prob, samp, sample_n)
     p(sprintf("x=%g", i))
   })
 }
 
 sample_all_lons()
+plan(sequential)

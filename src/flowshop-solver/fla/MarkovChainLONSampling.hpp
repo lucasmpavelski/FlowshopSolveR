@@ -80,7 +80,7 @@ class LocalLONBuilderStat : public moStatBase<EOT> {
       lonBuilder.setSampleStart(sol);
   }
 
-  void operator()(EOT& sol) override { 
+  void operator()(EOT&) override { 
       lonBuilder.incrementNoSteps();
   }
 

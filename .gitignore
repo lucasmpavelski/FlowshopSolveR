@@ -39,4 +39,6 @@ aclib2/fsp/scenarios/*
 data/instances/*/*
 data/features/*.rds
 data/performances/*/*
-runs/*reports/lons_study/models
+runs/*
+reports/lons_study/models/*
+tmp/*
