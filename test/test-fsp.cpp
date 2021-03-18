@@ -247,11 +247,14 @@ TEST(TaillardAcceleration, ReCompileEval) {
   }
 }
 
+#include "flowshop-solver/heuristics/perturb/RandomDestructionStrategy.hpp"
+
 TEST(TaillardAcceleration, DestructionConstruction) {
   rng.reseed(65465l);
   const int no_jobs = 50;
   const int no_machines = 10;
   auto ds = FixedDestructionSize(3);
+  RandomDestructionStrategy<FSP> destruction(ds);
 
   FSPData fspData(no_jobs, no_machines, 100);
 
@@ -267,13 +270,13 @@ TEST(TaillardAcceleration, DestructionConstruction) {
   moFullEvalByCopy<FSPNeighbor> fullNe(fullEval);
 
   InsertFirstBest<FSPNeighbor> fbf(fullNe);
-  DestructionConstruction<FSPNeighbor> opdc(fbf, ds);
+  DestructionConstruction<FSPNeighbor> opdc(fbf, destruction);
 
   rng.reseed(65465l);
   opdc(sol);
 
   InsertFirstBest<FSPNeighbor> fb(ne);
-  DestructionConstruction<FSPNeighbor> dc(fb, ds);
+  DestructionConstruction<FSPNeighbor> dc(fb, destruction);
   rng.reseed(65465l);
   dc(sol2);
 
@@ -321,6 +324,7 @@ TEST(TaillardAcceleration, RecompileNeighbor) {
 #include "heuristic/test-InsertionStrategy.hpp"
 #include "heuristic/test-AppendingNEH.hpp"
 #include "heuristic/test-NEH.hpp"
+#include "heuristic/test-IG.hpp"
 
 // TEST(AllFSP, ScheduleInfo) {
 //   std::vector<int> pts = { //
@@ -359,6 +363,9 @@ TEST(TaillardAcceleration, RecompileNeighbor) {
 // }
 
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) -> int {
+  FSPProblemFactory::init(DATA_FOLDER);
+  MHParamsSpecsFactory::init(DATA_FOLDER "/specs");
+
   testing::InitGoogleTest(&argc, argv);
   // int c = 2;
   // char** v = new char*[2];

@@ -119,7 +119,7 @@ sampleCombinations <- function(len) {
     repeat {
       pair <- sample.int(len, 2, replace = F)
       res <- union(res, list(pair))
-      if (length(res) == 1000) {
+      if (length(res) == 2000) {
         return(as_tibble(do.call(rbind, res)))
       }
     }
@@ -128,21 +128,38 @@ sampleCombinations <- function(len) {
 
 meanDistanceBetweenLocalOptimas <- function(lon, distance_fns = ALL_DISTANCES_FUNCTIONS) {
   len <- length(lon$nodes$solutions)
-  sampleCombinations(len) %>%
-    mutate(
-      sol_i = map(V1, ~lon$nodes$solutions[[.x]]),
-      sol_j = map(V2, ~lon$nodes$solutions[[.x]]),
-      dists = map2(sol_i, sol_j, function(i, j) {
-        map_dfc(distance_fns, function(x) {
-          x(i, j)
-        })
-      })
-    ) %>% 
-    select(dists) %>%
-    unnest(cols = c(dists)) %>% 
-    rename_all(~paste0("md_", .)) %>%
-    summarise_all(mean) %>%
-    as.list()
+  combinations <- sampleCombinations(len)
+  mean_dists <- c()
+  for (dist_i in seq_along(distance_fns)) {
+    print(names(distance_fns)[dist_i])
+    dist_fn <- distance_fns[[dist_i]]
+    sum <- 0
+    for (comb in seq(nrow(combinations))) {
+      a <- lon$nodes$solutions[[as.integer(combinations[comb, 1])]]
+      b <- lon$nodes$solutions[[as.integer(combinations[comb, 2])]]
+      sum <- sum + dist_fn(a, b) / nrow(combinations)
+    }
+    mean_dists[paste0("md_", names(distance_fns)[dist_i])] <- sum
+  }
+  mean_dists
+  # tt <- 0
+  # sampleCombinations(len) %>%
+  #   mutate(
+  #     sol_i = map(V1, ~lon$nodes$solutions[[.x]]),
+  #     sol_j = map(V2, ~lon$nodes$solutions[[.x]]),
+  #     dists = map2(sol_i, sol_j, function(i, j) {
+  #       tt <- tt + 1
+  #       print(tt)
+  #       map_dfc(distance_fns, function(x) {
+  #         x(i, j)
+  #       })
+  #     })
+  #   ) %>% 
+  #   select(dists) %>%
+  #   unnest(cols = c(dists)) %>% 
+  #   rename_all(~paste0("md_", .)) %>%
+  #   summarise_all(mean) %>%
+  #   as.list()
 }
 
 lonMetrics <- function(lon) {

@@ -6,7 +6,7 @@ library(optparse)
 lon_configs <- read_rds(here('reports/lons_study/lon_configs.rds'))
 
 option_list <- list( 
-    make_option(c("-c", "--config_id"), action="dist", default=10, type='integer',
+    make_option(c("-c", "--config_id"), action="dist", default=9, type='integer',
                 help="Print extra output [default]")
 )
 
@@ -94,7 +94,7 @@ problems <- all_problems_df() %>%
         budget == 'low',
         type == 'PERM',
         objective == 'MAKESPAN',
-        no_jobs <= 400
+        no_jobs == 400
     ) %>%
     unnest(cols = instances) %>%
     mutate(budget = 'med', stopping_criterion = 'EVALS') %>%

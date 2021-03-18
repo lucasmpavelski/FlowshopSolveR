@@ -1,3 +1,5 @@
+#pragma once
+
 #include <gtest/gtest.h>
 
 #include "flowshop-solver/problems/FSPData.hpp"

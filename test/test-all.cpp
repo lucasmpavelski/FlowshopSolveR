@@ -272,23 +272,6 @@ TEST(Solve, IHC) {
   }
 }
 
-TEST(Solve, IG) {
-  using std::string;
-  RNG::seed(123l);
-  std::unordered_map<string, string> prob;
-  prob["problem"] = "flowshop";
-  prob["type"] = "PERM";
-  prob["objective"] = "MAKESPAN";
-  prob["budget"] = "med";
-  prob["instance"] = "taill-like_rand_30_20_01.dat";
-  prob["stopping_criterion"] = "EVALS";
-  MHParamsSpecs mhParamsSpecs = MHParamsSpecsFactory::get("IG");
-  MHParamsValues values(&mhParamsSpecs);
-  values.randomizeValues(RNG::engine);
-
-  // std::cout << solveWithIG(prob, values.toMap());
-}
-
 TEST(Solve, ISA) {
   using std::string;
   RNG::seed(123l);

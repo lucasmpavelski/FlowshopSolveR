@@ -8,6 +8,7 @@
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/heuristics/perturb/DestructionConstruction.hpp"
+#include "flowshop-solver/heuristics/perturb/DestructionStrategy.hpp"
 
 template <class Ngh, class EOT = typename Ngh::EOT>
 class myResizableLocalSearch : public eoFunctorBase {
@@ -36,9 +37,9 @@ class IGLocalSearchPartialSolution : public DestructionConstruction<Ngh> {
 
  public:
   IGLocalSearchPartialSolution(InsertionStrategy<Ngh>& insert,
-                               DestructionSize& destructionSize,
+                               DestructionStrategy<EOT>& destructionStrategy,
                                myResizableLocalSearch<Ngh>& localSearch)
-      : DestructionConstruction<Ngh>{insert, destructionSize},
+      : DestructionConstruction<Ngh>{insert, destructionStrategy},
         localSearch{localSearch} {}
 
   using DestructionConstruction<Ngh>::destruction;

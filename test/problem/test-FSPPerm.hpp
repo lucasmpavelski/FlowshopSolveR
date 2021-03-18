@@ -6,7 +6,7 @@
 #include "flowshop-solver/problems/PermFSPNeighborMakespanEval.hpp"
 
 TEST(PermFSP, NeighborMakespanEvaluationSamples) {
-  const int no_jobs = 10;
+  const int no_jobs = 20; // 10;
   const int no_machines = 10;
   FSPData dt{no_jobs, no_machines};
   PermFSPMakespanEval fullEval{dt};
@@ -20,7 +20,7 @@ TEST(PermFSP, NeighborMakespanEvaluationSamples) {
     FSP sol(no_jobs);
     init(sol);
     sol.resize(1 + rand() % (no_jobs - 1));
-    std::cerr << sol << '\n';
+    //std::cerr << sol << '\n';
     for (int j = 0; j < sol.size(); j++) {
       for (int k = 0; k < sol.size(); k++) {
         if (k != j && k != j - 1) {
@@ -29,7 +29,7 @@ TEST(PermFSP, NeighborMakespanEvaluationSamples) {
           solMoved = sol;
           ngh.move(solMoved);
           fullEval(solMoved);
-          std::cerr << i << ' ' << j << ' ' << k << '\n';
+          //std::cerr << i << ' ' << j << ' ' << k << '\n';
           ASSERT_EQ(solMoved.fitness(), ngh.fitness());
         }
       }

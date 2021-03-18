@@ -6,6 +6,7 @@
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
+#include "flowshop-solver/heuristics/perturb/DestructionStrategy.hpp"
 
 class DestructionSize : public eoFunctorBase {
   public:
@@ -26,35 +27,26 @@ class FixedDestructionSize : public DestructionSize {
 
 template <class Ngh, typename EOT = typename Ngh::EOT>
 class DestructionConstruction : public moPerturbation<Ngh> {
-  InsertionStrategy<Ngh>& _insertionStrategy;
-  DestructionSize& _destructionSize;
+  InsertionStrategy<Ngh>& insertionStrategy;
+  DestructionStrategy<EOT>& destructionStrategy;
+
+protected:
+  auto construction(EOT& sol, const EOT& jobsToInsert) -> bool {
+    EOT tmp = sol;
+    for (const auto& jobToInsert : jobsToInsert)
+      insertionStrategy.insertJob(sol, jobToInsert);
+    return true; // !std::equal(tmp.begin(), tmp.end(), sol.begin(), sol.end());
+  }
+
+  auto destruction(EOT& sol) -> EOT {
+    return destructionStrategy(sol);
+  }
 
  public:
   DestructionConstruction(InsertionStrategy<Ngh>& insertionStrategy,
-                          DestructionSize& destructionSize)
-      : _insertionStrategy{insertionStrategy},
-        _destructionSize{destructionSize} {}
-
-  [[nodiscard]] auto destructionSize() const -> const DestructionSize& { return _destructionSize; }
-  
-  auto destruction(EOT& sol) -> std::vector<int> {
-    int n = sol.size();
-    std::vector<int> removed;
-    int ds = std::min(_destructionSize.value(), n);
-    for (int k = 0; k < ds; k++) {
-      int index = rng.random(sol.size());
-      removed.push_back(sol[index]);
-      sol.erase(sol.begin() + index);
-    }
-    return removed;
-  }
-
-  auto construction(EOT& sol, const std::vector<int>& jobsToInsert) -> bool {
-    EOT tmp = sol;
-    for (const auto& jobToInsert : jobsToInsert)
-      _insertionStrategy.insertJob(sol, jobToInsert);
-    return !std::equal(tmp.begin(), tmp.end(), sol.begin(), sol.end());
-  }
+                          DestructionStrategy<EOT>& destructionStrategy)
+      : insertionStrategy(insertionStrategy),
+        destructionStrategy(destructionStrategy) {}
 
   auto operator()(EOT& sol) -> bool override {
     return construction(sol, destruction(sol));

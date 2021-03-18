@@ -7,7 +7,7 @@ library(optparse)
 lon_configs <- read_rds(here('reports/lons_study/lon_configs.rds'))
 
 option_list <- list( 
-  make_option(c("-c", "--config_id"), default=9, type='integer',
+  make_option(c("-c", "--config_id"), default=10, type='integer',
               help="Print extra output [default]"),
   
   make_option(c("-p", "--problem"), default="vrf-large", type='character',
@@ -16,7 +16,7 @@ option_list <- list(
   make_option(c("-i", "--inst"), default="1,2,3,4,5,6,7,8,9,10", type='character',
               help="Print extra output [default]"),
   
-  make_option(c("-w", "--workers"), default=, type='integer',
+  make_option(c("-w", "--workers"), default=2, type='integer',
               help="Print extra output [default]")
 )
 

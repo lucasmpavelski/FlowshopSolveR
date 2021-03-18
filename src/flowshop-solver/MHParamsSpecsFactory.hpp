@@ -12,7 +12,7 @@ class MHParamsSpecsFactory {
   static std::unordered_map<std::string, MHParamsSpecs> cache;
 
  public:
-  static void init(const std::string& folder, bool quiet = false) {
+  static void init(const std::string& folder) {
     specsFolder = folder;
   }
 

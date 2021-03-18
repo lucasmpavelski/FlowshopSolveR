@@ -75,7 +75,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/test-all",
+            "program": "${workspaceFolder}/build/test/test-fsp",
             "args": [
                 "localLocal"
             ],
