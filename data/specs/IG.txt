@@ -1,8 +1,13 @@
 IG.Init                      "" c (random,neh)
-IG.Init.NEH.Priority         "" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3) | IG.Init == 'neh'
-IG.Init.NEH.PriorityOrder    "" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | IG.Init == 'neh'
-IG.Init.NEH.PriorityWeighted "" i (0,1) | IG.Init == 'neh'
-IG.Init.NEH.Insertion        "" c (first_best,last_best,random_best) | IG.Init == 'neh'
+
+IG.Init.NEH.Ratio                  "" o (0, 0.25, 0.5, 0.75, 1)
+IG.Init.NEH.First.Priority         "" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3,lr_it_aj_ct,lr_it_ct,lr_it,lr_aj,lr_ct,kk1,kk2,nm) | IG.Init.NEH.Ratio > 0
+IG.Init.NEH.First.PriorityWeighted "" c (no,yes) | IG.Init.NEH.Ratio > 0
+IG.Init.NEH.First.PriorityOrder    "" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | IG.Init.NEH.Ratio > 0
+IG.Init.NEH.Priority               "" c (sum_pij,dev_pij,avgdev_pij,abs_dif,ss_sra,ss_srs,ss_srn_rcn,ss_sra_rcn,ss_srs_rcn,ss_sra_2rcn,ra_c1,ra_c2,ra_c3,lr_it_ct,lr_it,lr_aj,lr_ct,kk1,kk2,nm) | IG.Init.NEH.Ratio < 1
+IG.Init.NEH.PriorityOrder          "" c (incr,decr,hill,valley,hi_hilo,hi_lohi,lo_hilo,lo_lohi) | IG.Init.NEH.Ratio < 1
+IG.Init.NEH.PriorityWeighted       "" c (no,yes) | IG.Init.NEH.Ratio < 1
+IG.Init.NEH.Insertion              "" c (first_best,last_best,kk1,kk2,nm1) | IG.Init.NEH.Ratio < 1
 
 IG.Comp.Strat                "" c (strict,equal)
 
@@ -49,24 +54,24 @@ IG.AOS.TS.C                  "" i (1,500)  | IG.Perturb.DestructionSizeStrategy 
 
 IG.DestructionStrategy        "" c (random,adaptive_position)
 
-IG.AdaptivePosition.AOS.Strategy              "" c (probability_matching,frrmab,linucb,thompson_sampling,random) | IG.DestructionSizeStrategy == 'adaptive_position'
+IG.AdaptivePosition.AOS.Strategy              "" c (probability_matching,frrmab,linucb,thompson_sampling,random) | IG.DestructionStrategy == 'adaptive_position'
 
-IG.AdaptivePosition.AOS.WarmUp.Proportion     "" r (0.0,0.5) | IG.DestructionSizeStrategy == 'adaptive_position'
-IG.AdaptivePosition.AOS.WarmUp.Strategy       "" c (random, fixed) | IG.DestructionSizeStrategy == 'adaptive_position'
+IG.AdaptivePosition.AOS.WarmUp.Proportion     "" r (0.0,0.5) | IG.DestructionStrategy == 'adaptive_position'
+IG.AdaptivePosition.AOS.WarmUp.Strategy       "" c (random, fixed) | IG.DestructionStrategy == 'adaptive_position'
 
-IG.AdaptivePosition.AOS.RewardType            "" c (0,1,2,3) | IG.DestructionSizeStrategy == 'adaptive_position'  & IG.AdaptivePosition.AOS.Strategy != 'random'
-IG.AdaptivePosition.AOS.Options               "" c (1_2_3) | IG.DestructionSizeStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy != 'random'
+IG.AdaptivePosition.AOS.RewardType            "" c (0,1,2,3) | IG.DestructionStrategy == 'adaptive_position'  & IG.AdaptivePosition.AOS.Strategy != 'random'
+IG.AdaptivePosition.AOS.Options               "" c (1_2_3) | IG.DestructionStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy != 'random'
 
-IG.AdaptivePosition.AOS.PM.RewardType         "" c (avgabs,avgnorm,extabs,extnorm)  | IG.DestructionSizeStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'probability_matching'
-IG.AdaptivePosition.AOS.PM.Alpha              "" r (0.1, 0.9) | IG.DestructionSizeStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'probability_matching'
-IG.AdaptivePosition.AOS.PM.PMin               "" r (0.05, 0.2) | IG.DestructionSizeStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'probability_matching'
-IG.AdaptivePosition.AOS.PM.UpdateWindow       "" i (1,500) | IG.DestructionSizeStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'probability_matching'
+IG.AdaptivePosition.AOS.PM.RewardType         "" c (avgabs,avgnorm,extabs,extnorm)  | IG.DestructionStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'probability_matching'
+IG.AdaptivePosition.AOS.PM.Alpha              "" r (0.1, 0.9) | IG.DestructionStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'probability_matching'
+IG.AdaptivePosition.AOS.PM.PMin               "" r (0.05, 0.2) | IG.DestructionStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'probability_matching'
+IG.AdaptivePosition.AOS.PM.UpdateWindow       "" i (1,500) | IG.DestructionStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'probability_matching'
 
-IG.AdaptivePosition.AOS.FRRMAB.WindowSize     "" i (10, 500) | IG.DestructionSizeStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'frrmab'
-IG.AdaptivePosition.AOS.FRRMAB.Scale          "" r (0.01, 100) | IG.DestructionSizeStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'frrmab'
-IG.AdaptivePosition.AOS.FRRMAB.Decay          "" r (0.25, 1.0) | IG.DestructionSizeStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'frrmab'
+IG.AdaptivePosition.AOS.FRRMAB.WindowSize     "" i (10, 500) | IG.DestructionStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'frrmab'
+IG.AdaptivePosition.AOS.FRRMAB.Scale          "" r (0.01, 100) | IG.DestructionStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'frrmab'
+IG.AdaptivePosition.AOS.FRRMAB.Decay          "" r (0.25, 1.0) | IG.DestructionStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'frrmab'
 
-IG.AdaptivePosition.AOS.LINUCB.Alpha          "" r (0.0, 1.5) | IG.DestructionSizeStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'linucb'
+IG.AdaptivePosition.AOS.LINUCB.Alpha          "" r (0.0, 1.5) | IG.DestructionStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'linucb'
 
-IG.AdaptivePosition.AOS.TS.Strategy           "" c (static, dynamic) | IG.DestructionSizeStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'thompson_sampling'
-IG.AdaptivePosition.AOS.TS.C                  "" i (1,500)  | IG.DestructionSizeStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'thompson_sampling' & IG.AOS.TS.Strategy == 'dynamic'
+IG.AdaptivePosition.AOS.TS.Strategy           "" c (static, dynamic) | IG.DestructionStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'thompson_sampling'
+IG.AdaptivePosition.AOS.TS.C                  "" i (1,500)  | IG.DestructionStrategy == 'adaptive_position' & IG.AdaptivePosition.AOS.Strategy == 'thompson_sampling' & IG.AOS.TS.Strategy == 'dynamic'
