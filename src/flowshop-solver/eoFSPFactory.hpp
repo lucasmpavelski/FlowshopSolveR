@@ -238,10 +238,9 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   auto buildDestructionSize() -> DestructionSize* {
     const std::string name =
         categoricalName(".Perturb.DestructionSizeStrategy");
-    DestructionSize* destructionSize = nullptr;
     if (name == "fixed") {
       const int fixedDs = integer(".Perturb.DestructionSize");
-      destructionSize = &pack<FixedDestructionSize>(fixedDs);
+      return &pack<FixedDestructionSize>(fixedDs);
     } else if (name == "adaptive") {
       auto operator_selection = buildOperatorSelection("");
       int rewardType = categorical(".AOS.RewardType");

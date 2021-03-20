@@ -496,7 +496,7 @@ TEST(FLA, MergeGraphContainsAllEdges) {
 
 auto main(int argc, char** argv) -> int {
   FSPProblemFactory::init(DATA_FOLDER);
-  MHParamsSpecsFactory::init(DATA_FOLDER "/specs", true);
+  MHParamsSpecsFactory::init(DATA_FOLDER "/specs");
 
   argc = 2;
   char* argvv[] = {"", "--gtest_filter=FLA.Snowball"};

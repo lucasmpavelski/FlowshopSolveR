@@ -7,7 +7,7 @@
 TEST(SamplingLON, CanSampleLON) {
   // data/fla/lons_cache/1/NEH;IG;2;10;15;3;SWAP_FSP;med;binom;mcorr;NOWAIT;MAKESPAN;10;5;3;all;EVALS;binom_mcorr_10_5_03.dat.Rdata 
   FSPProblemFactory::init(DATA_FOLDER);
-  MHParamsSpecsFactory::init(DATA_FOLDER "/specs", true);
+  MHParamsSpecsFactory::init(DATA_FOLDER "/specs");
   std::unordered_map<std::string, std::string> prob;
   prob["problem"] = "flowshop";
   prob["type"] = "NOWAIT";

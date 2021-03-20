@@ -23,7 +23,7 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 void initFactories(std::string data_folder)
 {
-  MHParamsSpecsFactory::init(data_folder + "/specs", true);
+  MHParamsSpecsFactory::init(data_folder + "/specs");
   FSPProblemFactory::init(data_folder);
 }
 
@@ -58,6 +58,7 @@ try {
     Named("time") = result.time,
     Named("no_evals") = result.no_evals);
 } catch (std::exception &ex) {
+  std::cerr << ex.what();
   throw Rcpp::exception(ex.what());
 }
 
