@@ -42,3 +42,4 @@ data/performances/*/*
 runs/*
 reports/lons_study/models/*
 tmp/*
+reports/aos/data/*
