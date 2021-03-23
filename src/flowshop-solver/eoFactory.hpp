@@ -1,23 +1,27 @@
 #pragma once
 
+#include <algo/moLocalSearch.h>
 #include <type_traits>
 
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/MHParamsValues.hpp"
-#include "flowshop-solver/problems/Problem.hpp"
 #include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
+#include "flowshop-solver/heuristics/InitLocalSearch.hpp"
 #include "flowshop-solver/heuristics/falseContinuator.hpp"
+#include "flowshop-solver/problems/Problem.hpp"
 
 
 template <class Ngh>
-class myOrderNeighborhood : public moOrderNeighborhood<Ngh>, public eoFunctorBase {
+class myOrderNeighborhood : public moOrderNeighborhood<Ngh>,
+                            public eoFunctorBase {
   using moOrderNeighborhood<Ngh>::moOrderNeighborhood;
 };
 
 template <class Ngh>
-class myRndWithoutReplNeighborhood : public moRndWithoutReplNeighborhood<Ngh>, public eoFunctorBase {
+class myRndWithoutReplNeighborhood : public moRndWithoutReplNeighborhood<Ngh>,
+                                     public eoFunctorBase {
   using moRndWithoutReplNeighborhood<Ngh>::moRndWithoutReplNeighborhood;
 };
 
@@ -31,7 +35,9 @@ class eoFactory : public eoFunctorStore {
   virtual auto domainAcceptanceCriterion() -> moAcceptanceCriterion<Ngh>* {
     return nullptr;
   }
-  virtual auto domainNeighborhood() -> moIndexNeighborhood<Ngh>* { return nullptr; }
+  virtual auto domainNeighborhood() -> moIndexNeighborhood<Ngh>* {
+    return nullptr;
+  }
   virtual auto domainPerturb() -> moPerturbation<Ngh>* { return nullptr; }
 
   virtual auto domainSolComparator() -> moSolComparator<Ngh>* {
@@ -72,15 +78,20 @@ class eoFactory : public eoFunctorStore {
     return _params.real(_params.mhName() + name);
   }
 
-  void params(MHParamsValues& _params) {
-    this->_params = _params;
-  }
+  void params(MHParamsValues& _params) { this->_params = _params; }
 
   auto buildInit() -> eoInit<EOT>* {
-    const std::string init = categoricalName(".Init");
-    if (init == "random")
-      return &pack<eoInitPermutation<EOT>>(_problem.size(0));
-    return domainInit();
+    eoInit<EOT>* init = nullptr;
+    if (categoricalName(".Init") == "random")
+      init = &pack<eoInitPermutation<EOT>>(_problem.size(0));
+    else {
+      init = domainInit();
+    }
+    return init;
+  //  auto initLocalSearch = buildLocalSearchByName(
+  //      categoricalName(".Init.LocalSearch"),
+  //      categorical(".Init.LocalSearch.SingleStep") == 1);
+  //  return &pack<InitLocalSearch<Ngh>>(*init, *initLocalSearch);
   }
 
   auto buildAcceptanceCriterion() -> moAcceptanceCriterion<Ngh>* {
@@ -88,7 +99,8 @@ class eoFactory : public eoFunctorStore {
     if (name == "always")
       return &pack<moAlwaysAcceptCrit<Ngh>>();
     else if (name == "better") {
-      const std::string comparison = categoricalName(".Accept.Better.Comparison");
+      const std::string comparison =
+          categoricalName(".Accept.Better.Comparison");
       if (comparison == "strict") {
         return &pack<moBetterAcceptCrit<Ngh>>();
       } else if (comparison == "equal") {
@@ -146,6 +158,12 @@ class eoFactory : public eoFunctorStore {
   }
 
   auto buildLocalSearch() -> moLocalSearch<Ngh>* {
+    return buildLocalSearchByName(categoricalName(".Local.Search"),
+                                  categorical(".LS.Single.Step") == 1);
+  }
+
+  auto buildLocalSearchByName(const std::string& name, bool singleStep)
+      -> moLocalSearch<Ngh>* {
     auto compNN = buildNeighborComparator();
     auto compSN = buildSolNeighborComparator();
 
@@ -153,8 +171,6 @@ class eoFactory : public eoFunctorStore {
     auto& nEval = _problem.neighborEval();
     auto& cp = _problem.checkpoint();
     auto& nghCp = _problem.neighborhoodCheckpoint();
-
-    const std::string name = categoricalName(".Local.Search");
     moLocalSearch<Ngh>* ret = nullptr;
     if (name == "none") {
       auto& explorer = pack<moDummyExplorer<Ngh>>();
@@ -162,15 +178,15 @@ class eoFactory : public eoFunctorStore {
     } else if (name == "first_improvement") {
       auto neighborhood = buildNeighborhood();
       ret = &pack<moFirstImprHC<Ngh>>(*neighborhood, eval, nEval, cp, *compNN,
-                              *compSN);
+                                      *compSN);
     } else if (name == "best_improvement") {
       auto neighborhood = buildNeighborhood();
       ret = &pack<moSimpleHC<Ngh>>(*neighborhood, eval, nEval, cp, *compNN,
-                            *compSN);
+                                   *compSN);
     } else if (name == "random_best_improvement") {
       auto neighborhood = buildNeighborhood();
       ret = &pack<moRandomBestHC<Ngh>>(*neighborhood, eval, nEval, cp, *compNN,
-                                *compSN);
+                                       *compSN);
     } else if (name == "best_insertion") {
       auto explorer =
           &pack<BestInsertionExplorer<EOT>>(nEval, nghCp, *compNN, *compSN);
@@ -179,16 +195,14 @@ class eoFactory : public eoFunctorStore {
       return nullptr;
     }
 
-    if (categorical(".LS.Single.Step")) {
-      // auto& singleStepContinuator = pack<moCombinedContinuator<Ngh>>(cp);
-      auto& falseCont = pack<falseContinuator<Ngh>>();
-      cp.add(falseCont);
+    if (singleStep) {
+      auto falseCont = &pack<falseContinuator<Ngh>>();
+      cp.add(*falseCont);
+      //ret->setContinuator(*singleStepContinuator);
     }
+
     return ret;
   }
 
-  auto buildPerturb() -> moPerturbation<Ngh>* {
-    return domainPerturb();
-  }
-
+  auto buildPerturb() -> moPerturbation<Ngh>* { return domainPerturb(); }
 };

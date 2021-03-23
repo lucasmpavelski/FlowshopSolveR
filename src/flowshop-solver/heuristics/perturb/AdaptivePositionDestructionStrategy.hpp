@@ -21,7 +21,7 @@ class AdaptivePositionDestructionStrategy : public DestructionStrategy<EOT> {
   myTimeStat<EOT> time;
 
   auto choosePosition(int size) -> std::pair<int, int> {
-    if (iteration >= 2) {
+    if (iteration > 2) {
       if (printRewards) {
         EOT sol;
         time(sol);
@@ -31,15 +31,18 @@ class AdaptivePositionDestructionStrategy : public DestructionStrategy<EOT> {
       }
       operatorSelection.feedback(reward());
       operatorSelection.update();
+      std::cerr << iteration << "\n";
     }
     iteration++;
     int option = operatorSelection.selectOperator();
-    if (option == 0) {
+    if (option == 1) {
       return {0, size / 3};
-    } else if (option == 1) {
+    } else if (option == 2) {
       return {size / 3 + 1, 2 * size / 3};
-    } else {
+    } else if (option == 3) {
       return {2 * size / 3 + 1, size};
+    } else {
+      return {0, size};
     }
   }
 
@@ -89,7 +92,8 @@ class AdaptivePositionDestructionStrategy : public DestructionStrategy<EOT> {
     int ds = std::min(destructionSize.value(), n);
     for (int k = 0; k < ds; k++) {
       unsigned int index =
-          rng.random((minMax.second - minMax.first)) + minMax.first;
+          rng.random((minMax.second - minMax.first - k)) + minMax.first;
+      // std::cerr << minMax.first << ' ' << minMax.second << ' ' << index << '\n';
       removed.push_back(sol[index]);
       sol.erase(sol.begin() + index);
     }

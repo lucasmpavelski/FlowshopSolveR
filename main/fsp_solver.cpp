@@ -37,7 +37,7 @@ auto main(int argc, char* argv[]) -> int {
   mh = parser.createParam(mh, "mh", "metaheuristic").value();
   seed = parser.createParam(seed, "seed", "rng seed").value();
 
-  MHParamsSpecsFactory::init(data_folder + "/specs", true);
+  MHParamsSpecsFactory::init(data_folder + "/specs");
   FSPProblemFactory::init(data_folder);
   RNG::seed(seed);
 

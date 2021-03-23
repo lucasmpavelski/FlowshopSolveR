@@ -1,5 +1,4 @@
-#ifndef PROBABILITY_MATCHING_H
-#define PROBABILITY_MATCHING_H
+#pragma once
 
 #include <cctype>
 #include <iostream>
@@ -13,24 +12,24 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
  public:
   enum class RewardType { AvgAbs, AvgNorm, ExtAbs, ExtNorm };
   using real_vec = std::vector<double>;
-  using int_vec  = std::vector<int>;
+  using int_vec = std::vector<int>;
 
  private:
   const double alpha;
   const double p_min;
-  RewardType   rew_type;
-  double       best_fitness;
-  int          chosen_strat;
+  RewardType rew_type;
+  double best_fitness;
+  int chosen_strat;
 
   real_vec quality;
   real_vec reward;
   real_vec prob;
   real_vec S;
-  int_vec  nr_S;
+  int_vec nr_S;
   real_vec maior_S;
 
   int updateCounter = 0;
-  int updateWindow  = 5;
+  int updateWindow = 5;
 
   void updateRewards();
   auto updateQualities() -> double;
@@ -53,7 +52,7 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
  protected:
   auto selectOperatorIdx() -> int {
     const auto rnd = RNG::realUniform<double>();
-    double     aux = 0.0;
+    double aux = 0.0;
     for (int k = 0; k < noOperators(); k++) {
       aux += prob[k];
       if (rnd <= aux) {
@@ -70,10 +69,10 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
   using OperatorSelection<OpT>::noOperators;
 
   ProbabilityMatching(const std::vector<OpT>& operators,
-                      const RewardType&       rew_type,
-                      const double            alpha,
-                      const double            p_min,
-                      const int               updateWindow)
+                      const RewardType& rew_type,
+                      const double alpha,
+                      const double p_min,
+                      const int updateWindow)
       : OperatorSelection<OpT>(operators),
         alpha(alpha),
         p_min(p_min),
@@ -90,10 +89,10 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
   };
 
   ProbabilityMatching(const std::vector<OpT>& operators,
-                      const std::string&      rew_type     = "avgabs",
-                      const double            alpha        = 0.8,
-                      const double            p_min        = 0.1,
-                      const int               updateWindow = 1)
+                      const std::string& rew_type = "avgabs",
+                      const double alpha = 0.8,
+                      const double p_min = 0.1,
+                      const int updateWindow = 1)
       : ProbabilityMatching{operators, rewardTypeFromString(rew_type), alpha,
                             p_min, updateWindow} {}
 
@@ -182,7 +181,7 @@ void ProbabilityMatching<OpT>::updateRewards() {
     }
     case RewardType::AvgNorm: {
       std::vector<double> rew_linha(noOperators());
-      double              max_rew_linha = 0.0;
+      double max_rew_linha = 0.0;
       // calcula o r_linha
       for (int k = 0; k < noOperators(); ++k) {
         rew_linha[k] = nr_S[k] > 0 ? S[k] / nr_S[k] : 0.0;
@@ -202,7 +201,7 @@ void ProbabilityMatching<OpT>::updateRewards() {
     }
     case RewardType::ExtNorm: {
       std::vector<double> rew_linha(noOperators());
-      double              max_rew_linha = 0.000001;
+      double max_rew_linha = 0.000001;
       // calcula r_linha
       for (int k = 0; k < noOperators(); k++) {
         rew_linha[k] = maior_S[k];
@@ -223,9 +222,7 @@ auto ProbabilityMatching<OpT>::updateQualities() -> double {
   double q_total = 0.0;
   for (int k = 0; k < noOperators(); ++k) {
     quality[k] = quality[k] + alpha * (reward[k] - quality[k]);
-    q_total    = q_total + quality[k];
+    q_total = q_total + quality[k];
   }
   return q_total;
 }
-
-#endif  // PROBABILITY_MATCHING_H

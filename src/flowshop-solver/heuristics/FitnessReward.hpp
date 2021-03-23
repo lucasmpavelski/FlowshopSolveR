@@ -59,7 +59,7 @@ class FitnessRewards : public eoFunctorBase {
 
   auto throwIfInvalid(double val) const {
     if (val == -1)
-      throw eoInvalidFitnessError{};
+      throw std::runtime_error("invalid fitness in reward computation");
     return val;
   }
 

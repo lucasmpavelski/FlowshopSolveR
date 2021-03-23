@@ -1,5 +1,6 @@
 #pragma once
 
+#include <continuator/moCombinedContinuator.h>
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
@@ -136,7 +137,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     auto compSN = buildSolNeighborComparator();
     auto& eval = _problem.eval();
     auto& nEval = _problem.neighborEval();
-    auto& cont = _problem.continuator();
+    auto& cp = _problem.continuator();
     auto& nghCp = _problem.neighborhoodCheckpoint();
 
     moLocalSearch<Ngh>* localSearch = nullptr;
@@ -144,19 +145,27 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     if (name == "none") {
       localSearch = &pack<moDummyLS<Ngh>>(eval);
     } else if (name == "first_improvement") {
-      localSearch = &pack<moFirstImprHC<Ngh>>(*neighborhood, eval, nEval, cont,
+      localSearch = &pack<moFirstImprHC<Ngh>>(*neighborhood, eval, nEval, cp,
                                               *compNN, *compSN);
     } else if (name == "best_improvement") {
-      localSearch = &pack<moSimpleHC<Ngh>>(*neighborhood, eval, nEval, cont,
+      localSearch = &pack<moSimpleHC<Ngh>>(*neighborhood, eval, nEval, cp,
                                            *compNN, *compSN);
     } else if (name == "random_best_improvement") {
-      localSearch = &pack<moRandomBestHC<Ngh>>(*neighborhood, eval, nEval, cont,
+      localSearch = &pack<moRandomBestHC<Ngh>>(*neighborhood, eval, nEval, cp,
                                                *compNN, *compSN);
     } else if (name == "best_insertion") {
       auto explorer =
           &pack<BestInsertionExplorer<EOT>>(nEval, nghCp, *compNN, *compSN);
-      localSearch = &pack<moLocalSearch<Ngh>>(*explorer, cont, eval);
+      localSearch = &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);
     }
+
+    if (categoricalName(".LSPS.Single.Step") == "1") {
+      auto singleStepContinuator = &pack<moCombinedContinuator<Ngh>>(cp);
+      auto falseCont = &pack<falseContinuator<Ngh>>();
+      singleStepContinuator->add(*falseCont);
+      localSearch->setContinuator(*singleStepContinuator);
+    }
+
     return &pack<myResizableLocalSearch<Ngh>>(
         *localSearch, *neighborhood,
         [this](int size) { return this->_problem.getNeighborhoodSize(size); });
@@ -213,12 +222,11 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
       strategy = &pack<Random<int>>(options);
     }
 
-    auto warmUpProportion = real(prefix + ".AOS.WarmUp.Proportion");
+    auto warmUpProportion = integer(prefix + ".AOS.WarmUp");
     auto warmUpStrategy = categoricalName(prefix + ".AOS.WarmUp.Strategy");
-    auto maxTime = _problem.getFixedTime() * warmUpProportion;
     auto& warmUpContinuator =
-        pack<moHighResTimeContinuator<OperatorSelection<int>::DummyNgh>>(
-            maxTime, false);
+        pack<moIterContinuator<OperatorSelection<int>::DummyNgh>>(
+            warmUpProportion, false);
     strategy->setWarmUp(warmUpContinuator, warmUpStrategy, 1);
 
     return strategy;

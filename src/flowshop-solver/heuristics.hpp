@@ -28,6 +28,7 @@ class myTimeFitnessPrinter : public moStatBase<EOT> {
   myTimeStat<EOT>& timer;
   EOT best;
   moSolComparator<EOT> compare;
+  int iteration;
 
  public:
   myTimeFitnessPrinter(myTimeStat<EOT>& timer)
@@ -38,12 +39,14 @@ class myTimeFitnessPrinter : public moStatBase<EOT> {
   void init(EOT& sol) override {
     if (!sol.invalid())
       (*this)(sol);
+    iteration = 0;
   }
 
   void operator()(EOT& sol) final {
+    iteration++;
     if (compare(best, sol)) {
       timer(sol);
-      std::cout << timer.value() << ',' << sol.fitness() << '\n';
+      std::cout << iteration << ',' << timer.value() << ',' << sol.fitness() << '\n';
       best.fitness(sol.fitness());
     }
   }
@@ -57,7 +60,7 @@ auto runExperiment(eoInit<EOT>& init,
   myTimeStat<EOT> timer;
   myTimeFitnessPrinter<EOT> timeFitness{timer};
   if (options.printBestFitness) {
-    std::puts("runtime,fitness");
+    std::puts("iteration,runtime,fitness");
     prob.checkpointGlobal().add(timeFitness);
   }
   // LocalFitnessReward<EOT> printReward{timer, options.printFitnessReward};

@@ -21,6 +21,26 @@ default_configs <- function(name) {
       NEH.Init.NEH.PriorityWeighted='no',
       NEH.Init.NEH.Insertion='first_best'
     )
+  } else if (name == 'IG') {
+    tibble(
+      IG.Init                            = "neh",
+      IG.Init.NEH.Priority               = "sum_pij",
+      IG.Init.NEH.PriorityOrder          = "incr",
+      IG.Init.NEH.PriorityWeighted       = "0",
+      IG.Init.NEH.Insertion              = "random_best",
+      IG.Comp.Strat                      = "strict",
+      IG.Neighborhood.Size               = "1.0",
+      IG.Neighborhood.Strat              = "ordered",
+      IG.Local.Search                    = "best_improvement",
+      IG.LS.Single.Step                  = "0",
+      IG.Accept                          = "temperature",
+      IG.Accept.Better.Comparison        = "strict",
+      IG.Accept.Temperature              = "0.25",
+      IG.Perturb                         = "rs",
+      IG.Perturb.DestructionSizeStrategy = "fixed",
+      IG.Perturb.DestructionSize         = "4",
+      IG.Perturb.Insertion               = "random_best"
+    )
   } else {
     tibble()
   }

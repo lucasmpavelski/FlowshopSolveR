@@ -7,6 +7,7 @@
 
 #include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/global.hpp"
+#include "flowshop-solver/heuristics/falseContinuator.hpp"
 
 template <typename OpT>
 class OperatorSelection : public eoFunctorBase {
@@ -21,8 +22,8 @@ private:
     FIXED
   } warmUpStrategy = WarmUpStrategy::FIXED;
   Continuator*  warmupContinuator;
-  int                 fixedWarmUpParameter = 0;
-  moTrueContinuator<DummyNgh> noWarmUp;
+  int fixedWarmUpParameter = 0;
+  falseContinuator<DummyNgh> noWarmUp;
 
  protected:
   virtual auto selectOperatorIdx() -> int = 0;
@@ -53,6 +54,8 @@ private:
     this->warmupContinuator    = &warmup;
     this->warmUpStrategy       = strategy;
     this->fixedWarmUpParameter = fixedWarmUpParameter;
+    typename DummyNgh::EOT dummy;
+    warmup.init(dummy);
   }
 
   // main interface
@@ -71,7 +74,8 @@ private:
           return rng.choice(operators);
       }
     }
-    return operators[selectOperatorIdx()];
+    auto op_idx = selectOperatorIdx();
+    return operators[op_idx];
   };
 
   // misc
