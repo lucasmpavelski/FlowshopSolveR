@@ -9,8 +9,8 @@
 template <class OpT>
 class ThompsonSampling : public OperatorSelection<OpT> {
  protected:
-  std::vector<int> alphas;
-  std::vector<int> betas;
+  std::vector<double> alphas;
+  std::vector<double> betas;
   int              noSamples;
   int              opIdx = 0;
 
@@ -42,12 +42,10 @@ class ThompsonSampling : public OperatorSelection<OpT> {
 
   void update() override{};
 
-  void feedback(double fb) override {
-    if (fb > 0) {
-      alphas[opIdx]++;
-    } else {
-      betas[opIdx]++;
-    }
+  void doFeedback(double fb) override {
+    int reward = fb > 0;
+    alphas[opIdx] = alphas[opIdx] + reward;
+    betas[opIdx] = betas[opIdx] + (1 - reward);
   }
 
   auto printOn(std::ostream& os) -> std::ostream& final {
@@ -78,19 +76,14 @@ class DynamicThompsonSampling : public ThompsonSampling<OpT> {
         threshold{threshold},
         scale{threshold / (threshold + 1.0)} {}
 
-  void feedback(double fb) override {
+  void doFeedback(double fb) override {
+    int reward = fb > 0;
     if (alphas[opIdx] + betas[opIdx] < threshold) {
-      if (fb > 0) {
-        alphas[opIdx]++;
-      } else {
-        betas[opIdx]++;
-      }
+      alphas[opIdx] = alphas[opIdx] + reward;
+      betas[opIdx] = betas[opIdx] + (1 - reward);
     } else {
-      if (fb > 0) {
-        alphas[opIdx] = (alphas[opIdx] + 1) * scale;
-      } else {
-        betas[opIdx] = (betas[opIdx] + 1) * scale;
-      }
+      alphas[opIdx] = (alphas[opIdx] + reward) * scale;
+      betas[opIdx] = (betas[opIdx] + (1 - reward)) * scale;
     }
   }
 };

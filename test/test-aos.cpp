@@ -21,23 +21,23 @@ auto timeAverage(std::vector<double> vals, int size) -> std::vector<double> {
 
 TEST(AOSStaticDistributions, AOSTests)
 {
-  const int gens = 50000;
+  const int gens = 10000;
   std::default_random_engine rng;
   std::vector<int> choices = {0, 1};
 
   std::map<std::string, OperatorSelection<int>*> aoss;
-  FRRMAB<int> mab(choices, 500, 50, 0.5);
+  FRRMAB<int> mab(choices, 500, 5, 0.5);
   aoss["FRRMAB"] = &mab;
   ThompsonSampling<int> ts(choices);
-  aoss["TS"] = &ts;
+  // aoss["TS"] = &ts;
   ProbabilityMatching<int> pm(choices);
-  aoss["PM"] = &pm;
+  //aoss["PM"] = &pm;
   // AdaptivePursuit<int> pm(choices);
   // aoss["PM"] = &pm;
 
   for (const auto& kv : aoss) {
     std::vector<std::normal_distribution<float>> dists = {
-      std::normal_distribution<float>(0, 1),
+      std::normal_distribution<float>(-1, 1),
       std::normal_distribution<float>(1, 1)
     };
 
@@ -46,7 +46,9 @@ TEST(AOSStaticDistributions, AOSTests)
     for (int i = 0; i < gens; i++) {
       int sel = aos.selectOperator();
       float val = dists[sel](rng);
-    //  std::cerr << sel << ' ' << val << '\n';
+      if (i == gens / 2)
+        std::swap(dists[0], dists[1]);
+      std::cerr << sel << ' ' << val << '\n';
       choices.push_back(sel);
       aos.feedback(val);
       aos.update();
@@ -68,8 +70,6 @@ TEST(AOSStaticDistributions, AOSTests)
   //  aos.reset(0);
   //  std::vector<double> choices;
   //  for (int i = 0; i < gens; i++) {
-  //    if (i == gens / 2)
-  //      std::swap(dists[0], dists[1]);
   //    int sel = aos.selectOperator();
   //    float val = dists[sel](rng);
   //    choices.push_back(sel);

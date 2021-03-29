@@ -65,7 +65,7 @@ class LinUCB : public OperatorSelection<OpT> {
 
   void update() final{};
 
-  void feedback(double reward) final {
+  void doFeedback(double reward) final {
     if (opIdx == -1)
       return;
     std::vector<double> features = context.compute();

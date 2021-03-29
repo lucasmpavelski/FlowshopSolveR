@@ -24,6 +24,7 @@ private:
   Continuator*  warmupContinuator;
   int fixedWarmUpParameter = 0;
   falseContinuator<DummyNgh> noWarmUp;
+  bool warmingUp = true;
 
  protected:
   virtual auto selectOperatorIdx() -> int = 0;
@@ -60,9 +61,15 @@ private:
 
   // main interface
   virtual void reset(double){};  // on init algorithm
-  virtual void feedback(double){};
+  virtual void doFeedback(double){};
   virtual void update(){};  // on finish generation
   virtual auto printOn(std::ostream& os) -> std::ostream& = 0;
+
+  void feedback(const double reward) {
+    if (warmingUp) 
+      return;
+    doFeedback(reward);
+  } 
 
   auto selectOperator() -> OpT& {
     int dummy;
@@ -73,6 +80,8 @@ private:
         case WarmUpStrategy::RANDOM:
           return rng.choice(operators);
       }
+    } else {
+      warmingUp = false;
     }
     auto op_idx = selectOperatorIdx();
     return operators[op_idx];

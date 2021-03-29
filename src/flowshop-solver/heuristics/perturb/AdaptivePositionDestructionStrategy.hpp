@@ -31,7 +31,6 @@ class AdaptivePositionDestructionStrategy : public DestructionStrategy<EOT> {
       }
       operatorSelection.feedback(reward());
       operatorSelection.update();
-      std::cerr << iteration << "\n";
     }
     iteration++;
     int option = operatorSelection.selectOperator();

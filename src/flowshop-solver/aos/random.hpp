@@ -19,7 +19,7 @@ class Random : public OperatorSelection<OpT> {
 
   void update() final{};
 
-  void feedback(double) final {}
+  void doFeedback(double) final {}
 
   auto printOn(std::ostream& os) -> std::ostream& final {
     os << "  strategy: Random\n";

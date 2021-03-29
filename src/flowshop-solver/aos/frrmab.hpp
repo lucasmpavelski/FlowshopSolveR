@@ -235,7 +235,7 @@ class FRRMAB : public OperatorSelection<OpT> {
     fir = 0;
   }
 
-  void feedback(double feedback) final { fir += feedback; }
+  void doFeedback(double feedback) final { fir += feedback; }
 
   auto printOn(std::ostream& os) -> std::ostream& final {
     os << "  strategy: FRRMAB\n"

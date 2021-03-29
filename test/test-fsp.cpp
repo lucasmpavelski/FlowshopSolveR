@@ -325,6 +325,7 @@ TEST(TaillardAcceleration, RecompileNeighbor) {
 #include "heuristic/test-AppendingNEH.hpp"
 #include "heuristic/test-NEH.hpp"
 #include "heuristic/test-IG.hpp"
+#include "heuristic/test-PositionSelector.hpp"
 
 // TEST(AllFSP, ScheduleInfo) {
 //   std::vector<int> pts = { //

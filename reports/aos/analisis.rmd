@@ -23,10 +23,7 @@ library(tidyverse)
 library(here)
 library(PMCMRplus)
 library(wrapr)
-```
 
-
-```{r load}
 wrangle_perf <- function(dt) {
   dt %>%
     mutate(prob_data = map(problem, ~as_tibble(.x@data))) %>% 
@@ -34,6 +31,10 @@ wrangle_perf <- function(dt) {
     unnest(prob_data) %>%
     mutate(fitness = map_dbl(result, ~.x$cost))
 }
+```
+
+
+```{r load}
 
 
 ig_pos_test <- read_rds(here("reports", "aos", "data", "exp-01-position-adapt", "irace", "ig-pos_test-inf-steps.rds"))
@@ -278,4 +279,94 @@ frdAllPairsNemenyiTest(
 )
 ```
 
+
+
+```{r adapt-ps-boxplots, fig.height=5}
+test_folder <- here("reports", "aos", "data", 'exp-03-adaptive_best_insertion', "perf")
+
+dt <- tibble(
+    algo = c(# "ig-adapt",
+             "ig-def",
+             "ig-adapt-replace", 
+             "ig-adapt-wo-replace"),
+    perf_file = file.path(test_folder, paste0(algo, "-perf.rds"))
+  ) %>%
+  filter(file.exists(perf_file)) %>%
+  mutate(perf = map(perf_file, read_rds)) %>%
+  unnest(perf) %>%
+  wrangle_perf() %>%
+  group_by(instance, objective) %>%
+  mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness))
+
+dt %>%
+  ggplot(aes(
+    x = objective,
+    y = arfp,
+    color = algo
+  )) +
+  # geom_violin(draw_quantiles = T, alpha = .5) +
+  geom_boxplot(alpha = .5) +
+  facet_wrap(~no_jobs)#+
+  # scale_y_continuous(trans = "pseudo_log") #+ 
+  # coord_trans(y = "pseudo_log")
+```
+
+
+```{r adapt-ps-boxplots, fig.height=5}
+test_folder <- here("reports", "aos", "data", 'exp-03-adaptive_best_insertion', "perf")
+
+dt <- crossing(
+    ig_variant = c("ig", "ig-lsps"),
+    algo = c('ts', 'pm', 'frrmab', 'linucb')
+  ) %>%
+  mutate(
+    perf_file = file.path(test_folder, 
+                          paste0(ig_variant, '-adaptive-bi-', algo, '-tuned-perf.rds'))
+  ) %>%
+  bind_rows(
+    tibble(
+     ig_variant = "ig",
+     algo = "def",
+     perf_file = file.path(test_folder, "ig-def-perf.rds")
+    )
+  ) %>%
+  filter(file.exists(perf_file)) %>%
+  mutate(perf = map(perf_file, read_rds)) %>%
+  unnest(perf) %>%
+  wrangle_perf() %>%
+  filter(objective == "FLOWTIME") %>%
+  group_by(instance, objective) %>%
+  mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness))
+
+dt %>%
+  ggplot(aes(
+    x = objective,
+    y = arfp,
+    fill = paste(algo)
+  )) +
+  # geom_violin(draw_quantiles = T, alpha = .5) +
+  geom_boxplot() +
+  facet_grid(~ig_variant)#+
+  # scale_y_continuous(trans = "pseudo_log") #+ 
+  # coord_trans(y = "pseudo_log")
+```
+
+
+
+```{r friedman-ss}
+friedmanTest(
+  dt$fitness,
+  dt$algo,
+  paste(dt$instance, dt$seed)
+)
+```
+
+
+```{r friendman-all-pairs-ss}
+frdAllPairsNemenyiTest(
+  dt$fitness,
+  dt$adapt_strategies,
+  paste(dt$instance, dt$seed)
+)
+```
 

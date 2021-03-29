@@ -89,15 +89,15 @@ class ProbabilityMatching : public OperatorSelection<OpT> {
   };
 
   ProbabilityMatching(const std::vector<OpT>& operators,
-                      const std::string& rew_type = "avgabs",
-                      const double alpha = 0.8,
+                      const std::string& rew_type = "extabs",
+                      const double alpha = 0.3,
                       const double p_min = 0.1,
                       const int updateWindow = 1)
       : ProbabilityMatching{operators, rewardTypeFromString(rew_type), alpha,
                             p_min, updateWindow} {}
 
   void reset(const double) final;
-  void feedback(const double) final;
+  void doFeedback(const double) final;
   void update() final;
 
   auto printOn(std::ostream& os) -> std::ostream& final {
@@ -141,7 +141,7 @@ void ProbabilityMatching<OpT>::reset(double best_f) {
 }
 
 template <typename OpT>
-void ProbabilityMatching<OpT>::feedback(double feedback) {
+void ProbabilityMatching<OpT>::doFeedback(double feedback) {
   if (chosen_strat == -1)
     return;
   S[chosen_strat] += feedback;

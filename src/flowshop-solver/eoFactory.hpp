@@ -7,11 +7,15 @@
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/MHParamsValues.hpp"
+#include "flowshop-solver/aos/adaptive_operator_selection.hpp"
+#include "flowshop-solver/aos/thompson_sampling.hpp"
 #include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
+#include "flowshop-solver/heuristics/AdaptiveBestInsertionExplorer.hpp"
 #include "flowshop-solver/heuristics/InitLocalSearch.hpp"
 #include "flowshop-solver/heuristics/falseContinuator.hpp"
 #include "flowshop-solver/problems/Problem.hpp"
 
+#include "aos/thompson_sampling.hpp"
 
 template <class Ngh>
 class myOrderNeighborhood : public moOrderNeighborhood<Ngh>,
@@ -38,6 +42,11 @@ class eoFactory : public eoFunctorStore {
   virtual auto domainNeighborhood() -> moIndexNeighborhood<Ngh>* {
     return nullptr;
   }
+
+  virtual auto domainLocalSearch() -> moLocalSearch<Ngh>* {
+    return nullptr;
+  }
+
   virtual auto domainPerturb() -> moPerturbation<Ngh>* { return nullptr; }
 
   virtual auto domainSolComparator() -> moSolComparator<Ngh>* {
@@ -162,6 +171,12 @@ class eoFactory : public eoFunctorStore {
                                   categorical(".LS.Single.Step") == 1);
   }
 
+  auto buildLOOperatorSelection() -> OperatorSelection<int>* {
+    /*std::vector<int> arms(_problem.size());
+    std::iota(arms.begin(), arms.end(), 0);*/
+    return &pack<ThompsonSampling<int>>({0,1,2,3});
+  }
+
   auto buildLocalSearchByName(const std::string& name, bool singleStep)
       -> moLocalSearch<Ngh>* {
     auto compNN = buildNeighborComparator();
@@ -192,7 +207,7 @@ class eoFactory : public eoFunctorStore {
           &pack<BestInsertionExplorer<EOT>>(nEval, nghCp, *compNN, *compSN);
       ret = &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);
     } else {
-      return nullptr;
+      ret = domainLocalSearch();
     }
 
     if (singleStep) {

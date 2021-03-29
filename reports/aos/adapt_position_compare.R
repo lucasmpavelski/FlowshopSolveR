@@ -7,6 +7,7 @@ library(furrr)
 # plan(remote, workers = rep("linode2", 1), persistent = TRUE)
 NCORES <- 8
 plan(multisession, workers = NCORES)
+# plan(sequential)
 
 print_cpp <- function(config, var = "params") {
   names(config) %>%

@@ -1,13 +1,16 @@
 #pragma once
 
+#include <algo/moLocalSearch.h>
 #include <continuator/moCombinedContinuator.h>
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
+#include <stdexcept>
 
 #include "flowshop-solver/MHParamsValues.hpp"
 #include "flowshop-solver/eoFactory.hpp"
 
 #include "flowshop-solver/global.hpp"
+#include "flowshop-solver/heuristics/AdaptiveBestInsertionExplorer.hpp"
 #include "flowshop-solver/heuristics/FitnessReward.hpp"
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
 #include "flowshop-solver/heuristics/perturb/DestructionConstruction.hpp"
@@ -54,6 +57,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   using Ngh = FSPNeighbor;
 
  protected:
+
   auto domainAcceptanceCriterion() -> moAcceptanceCriterion<Ngh>* override {
     const std::string name = categoricalName(".Accept");
     if (name == "temperature") {
@@ -170,14 +174,9 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
         *localSearch, *neighborhood,
         [this](int size) { return this->_problem.getNeighborhoodSize(size); });
   }
-
-  auto buildOperatorSelection(const std::string& prefix)
+  
+  auto buildOperatorSelection(const std::string& prefix, const std::vector<int>& options)
       -> OperatorSelection<int>* {
-    std::string opts = categoricalName(prefix + ".AOS.Options");
-    std::vector<std::string> opts_strs = tokenize(opts, '_');
-    std::vector<int> options(opts_strs.size());
-    std::transform(begin(opts_strs), end(opts_strs), begin(options),
-                   [](std::string& s) { return std::stoi(s); });
     const std::string name = categoricalName(prefix + ".AOS.Strategy");
     OperatorSelection<int>* strategy = nullptr;
     if (name == "probability_matching") {
@@ -227,9 +226,19 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     auto& warmUpContinuator =
         pack<moIterContinuator<OperatorSelection<int>::DummyNgh>>(
             warmUpProportion, false);
-    strategy->setWarmUp(warmUpContinuator, warmUpStrategy, 1);
+    strategy->setWarmUp(warmUpContinuator, warmUpStrategy, 0);
 
     return strategy;
+  }
+
+  auto buildOperatorSelection(const std::string& prefix)
+      -> OperatorSelection<int>* {
+    std::string opts = categoricalName(prefix + ".AOS.Options");
+    std::vector<std::string> opts_strs = tokenize(opts, '_');
+    std::vector<int> options(opts_strs.size());
+    std::transform(begin(opts_strs), end(opts_strs), begin(options),
+                   [](std::string& s) { return std::stoi(s); });
+    return buildOperatorSelection(prefix, options);
   }
 
   FitnessRewards<EOT>* cachedRewards = nullptr;
@@ -289,6 +298,45 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
       return &pack<IGLocalSearchPartialSolution<Ngh>>(
           *insertion, *destructionStrategy, *lspsLocalSearch);
     }
+    return nullptr;
+  }
+  
+
+  auto domainLocalSearch() -> moLocalSearch<Ngh>* override {
+    auto compNN = buildNeighborComparator();
+    auto compSN = buildSolNeighborComparator();
+
+    auto& eval = _problem.eval();
+    auto& nEval = _problem.neighborEval();
+    auto& cp = _problem.checkpoint();
+    auto& nghCp = _problem.neighborhoodCheckpoint();
+
+    std::string name = categoricalName(".Local.Search");
+    if (name == "adaptive_best_insertion") {
+      std::vector<int> options;
+      const std::string noArms = categoricalName(".AdaptiveBestInsertion.NoArms");
+      if (noArms == "no_jobs") {
+        options.resize(_problem.size());
+      } else if (noArms.find("fixed_") == 0) {
+        const int parsedNoArms = std::stoi(noArms.substr(6));
+        options.resize(parsedNoArms);
+      }
+      std::iota(options.begin(), options.end(), 1);
+      if (categoricalName(".AdaptiveBestInsertion.RandomArm") == "yes") {
+        options.push_back(0);
+      }
+      auto operatorSelection = buildOperatorSelection(".AdaptiveBestInsertion", options);
+      PositionSelector* positionSelector = nullptr;
+      if (categoricalName(".AdaptiveBestInsertion.Replace") == "yes") {
+        positionSelector = &pack<AdaptivePositionSelector>(*operatorSelection);
+      } else if (categoricalName(".AdaptiveBestInsertion.Replace") == "no") {
+        positionSelector = &pack<AdaptiveNoReplacementPositionSelector>(*operatorSelection);
+      }
+      auto explorer =
+          &pack<AdaptiveBestInsertionExplorer<EOT>>(*positionSelector, nEval, nghCp, *compNN, *compSN);
+      return &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);
+    }
+    throw std::runtime_error("Local search type not found: " + name + ".");
     return nullptr;
   }
 };
