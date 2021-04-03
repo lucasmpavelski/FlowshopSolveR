@@ -3,7 +3,7 @@
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
-#include "flowshop-solver/aos/adaptive_operator_selection.hpp"
+#include "flowshop-solver/position-selector/PositionSelector.hpp"
 #include "flowshop-solver/continuators/myTimeStat.hpp"
 #include "flowshop-solver/heuristics/FitnessReward.hpp"
 #include "flowshop-solver/heuristics/perturb/DestructionConstruction.hpp"
@@ -13,14 +13,14 @@ template <class EOT>
 class AdaptivePositionDestructionStrategy : public DestructionStrategy<EOT> {
   DestructionSize& destructionSize;
   FitnessRewards<EOT>& rewards;
-  OperatorSelection<int>& operatorSelection;
+  PositionSelector& positionSelector;
   int rewardType;
   bool printRewards;
   bool printChoices;
   int iteration = 0;
   myTimeStat<EOT> time;
 
-  auto choosePosition(int size) -> std::pair<int, int> {
+  auto choosePosition(EOT& sol) -> int {
     if (iteration > 2) {
       if (printRewards) {
         EOT sol;
@@ -29,20 +29,10 @@ class AdaptivePositionDestructionStrategy : public DestructionStrategy<EOT> {
                   << rewards.lastGlobal() << ',' << rewards.initialLocal()
                   << ',' << rewards.lastLocal() << '\n';
       }
-      operatorSelection.feedback(reward());
-      operatorSelection.update();
+      positionSelector.feedback(reward());
     }
     iteration++;
-    int option = operatorSelection.selectOperator();
-    if (option == 1) {
-      return {0, size / 3};
-    } else if (option == 2) {
-      return {size / 3 + 1, 2 * size / 3};
-    } else if (option == 3) {
-      return {2 * size / 3 + 1, size};
-    } else {
-      return {0, size};
-    }
+    return positionSelector.select(sol);
   }
 
   [[nodiscard]] auto reward() -> double {
@@ -72,27 +62,23 @@ class AdaptivePositionDestructionStrategy : public DestructionStrategy<EOT> {
   
  public:
   AdaptivePositionDestructionStrategy(DestructionSize& destructionSize,
-                                      OperatorSelection<int>& operatorSelection,
+                                      PositionSelector& positionSelector,
                                       FitnessRewards<EOT>& rewards,
                                       int rewardType,
                                       bool printRewards = false,
                                       bool printChoices = false)
       : destructionSize(destructionSize),
         rewards(rewards),
-        operatorSelection(operatorSelection),
+        positionSelector(positionSelector),
         rewardType(rewardType),
         printRewards(printRewards),
         printChoices(printChoices) {}
 
   auto operator()(EOT& sol) -> EOT override {
-    int n = sol.size();
-    std::pair<int, int> minMax = choosePosition(n);
+    int ds = std::min(destructionSize.value(), static_cast<int>(sol.size()));
     EOT removed;
-    int ds = std::min(destructionSize.value(), n);
     for (int k = 0; k < ds; k++) {
-      unsigned int index =
-          rng.random((minMax.second - minMax.first - k)) + minMax.first;
-      // std::cerr << minMax.first << ' ' << minMax.second << ' ' << index << '\n';
+      unsigned int index = choosePosition(sol);
       removed.push_back(sol[index]);
       sol.erase(sol.begin() + index);
     }

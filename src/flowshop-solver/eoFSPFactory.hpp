@@ -46,6 +46,10 @@
 
 #include "flowshop-solver/heuristics/AppendingNEH.hpp"
 
+#include "flowshop-solver/position-selector/PositionSelector.hpp"
+#include "flowshop-solver/position-selector/AdaptivePositionSelector.hpp"
+#include "flowshop-solver/position-selector/AdaptiveNoReplacementPositionSelector.hpp"
+
 class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   FSPProblem& _problem;
 
@@ -273,10 +277,10 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     if (destructionName == "random") {
       return &pack<RandomDestructionStrategy<FSP>>(*destructionSize);
     } else if (destructionName == "adaptive_position") {
-      auto operatorSelection = buildOperatorSelection(".AdaptivePosition");
+      auto positionSelector = buildPositionSelector(".AdaptivePosition");
       int rewardType = categorical(".AdaptivePosition.AOS.RewardType");
       return &pack<AdaptivePositionDestructionStrategy<FSP>>(
-          *destructionSize, *operatorSelection, *getRewards(), rewardType);
+          *destructionSize, *positionSelector, *getRewards(), rewardType);
     }
     return nullptr;
   }
@@ -301,6 +305,29 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     return nullptr;
   }
   
+  auto buildPositionSelector(const std::string& prefix) -> PositionSelector* {
+    std::vector<int> options;
+    const std::string noArms = categoricalName(prefix + ".NoArms");
+    if (noArms == "no_jobs") {
+      options.resize(_problem.size());
+    } else if (noArms.find("fixed_") == 0) {
+      const int parsedNoArms = std::stoi(noArms.substr(6));
+      options.resize(parsedNoArms);
+    }
+    std::iota(options.begin(), options.end(), 1);
+    if (categoricalName(prefix + ".RandomArm") == "yes") {
+      options.push_back(0);
+    }
+    auto operatorSelection = buildOperatorSelection(prefix, options);
+    auto replace = categoricalName(prefix + ".Replace");
+    if (replace == "yes") {
+      return &pack<AdaptivePositionSelector>(*operatorSelection);
+    } else if (replace == "no") {
+      return &pack<AdaptiveNoReplacementPositionSelector>(*operatorSelection);
+    }
+    assert(false);
+    return nullptr;
+  }
 
   auto domainLocalSearch() -> moLocalSearch<Ngh>* override {
     auto compNN = buildNeighborComparator();
@@ -313,25 +340,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
 
     std::string name = categoricalName(".Local.Search");
     if (name == "adaptive_best_insertion") {
-      std::vector<int> options;
-      const std::string noArms = categoricalName(".AdaptiveBestInsertion.NoArms");
-      if (noArms == "no_jobs") {
-        options.resize(_problem.size());
-      } else if (noArms.find("fixed_") == 0) {
-        const int parsedNoArms = std::stoi(noArms.substr(6));
-        options.resize(parsedNoArms);
-      }
-      std::iota(options.begin(), options.end(), 1);
-      if (categoricalName(".AdaptiveBestInsertion.RandomArm") == "yes") {
-        options.push_back(0);
-      }
-      auto operatorSelection = buildOperatorSelection(".AdaptiveBestInsertion", options);
-      PositionSelector* positionSelector = nullptr;
-      if (categoricalName(".AdaptiveBestInsertion.Replace") == "yes") {
-        positionSelector = &pack<AdaptivePositionSelector>(*operatorSelection);
-      } else if (categoricalName(".AdaptiveBestInsertion.Replace") == "no") {
-        positionSelector = &pack<AdaptiveNoReplacementPositionSelector>(*operatorSelection);
-      }
+      auto positionSelector = buildPositionSelector(".AdaptiveBestInsertion");
       auto explorer =
           &pack<AdaptiveBestInsertionExplorer<EOT>>(*positionSelector, nEval, nghCp, *compNN, *compSN);
       return &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);

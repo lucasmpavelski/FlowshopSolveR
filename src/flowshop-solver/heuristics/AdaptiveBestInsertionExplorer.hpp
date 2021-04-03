@@ -5,65 +5,11 @@
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/aos/adaptive_operator_selection.hpp"
-#include "flowshop-solver/global.hpp"
 #include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
 #include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 #include "flowshop-solver/problems/FSP.hpp"
 
-class PositionSelector : public eoFunctorBase {
-public:
-  virtual void init(const std::vector<int>&) {}
-  virtual auto select(const std::vector<int>&) -> int = 0;
-  virtual void feedback(const double) {};
-};
-
-class AdaptivePositionSelector : public PositionSelector {
-  OperatorSelection<int>& operatorSelection;
-
- public:
-  AdaptivePositionSelector(OperatorSelection<int>& operatorSelection)
-      : operatorSelection(operatorSelection) {}
-
-  auto select(const std::vector<int>& vec) -> int override {
-    const int n = vec.size();
-    const int k = operatorSelection.noOperators();
-    const int selected = operatorSelection.selectOperator();
-    if (selected == 0) {
-      return rng.random(n);
-    }
-    int poll_size = n / k;
-    if (selected == k && n % k > 0) {
-      poll_size++;
-    }
-    return rng.random(poll_size) + (selected - 1) * (n / k);
-  }
-
-  void feedback(const double reward) override {
-    operatorSelection.feedback(reward);
-    operatorSelection.update();
-  }
-};
-
-
-class AdaptiveNoReplacementPositionSelector : public AdaptivePositionSelector {
-   std::vector<int> unselectedPositions;
- 
- public:
-  AdaptiveNoReplacementPositionSelector(OperatorSelection<int>& operatorSelection)
-      : AdaptivePositionSelector(operatorSelection) {}
-
-  void init(const std::vector<int>& sol) override {
-    unselectedPositions = sol;
-  }
-
-  auto select(const std::vector<int>& sol) -> int override {
-    int pos = AdaptivePositionSelector::select(unselectedPositions);
-    int solPos = std::distance(sol.begin(), std::find(sol.begin(), sol.end(), unselectedPositions[pos]));
-    unselectedPositions.erase(unselectedPositions.begin() + pos);
-    return solPos;
-  }
-};
-
+#include "flowshop-solver/position-selector/PositionSelector.hpp"
 
 template <class EOT>
 class AdaptiveBestInsertionExplorer
@@ -75,7 +21,6 @@ class AdaptiveBestInsertionExplorer
   moSolNeighborComparator<Ngh>& solNeighborComparator;
 
   moEval<Ngh>& neighborEval;
-  const NeighborhoodType neighborhoodType;
 
   bool improve;
   bool LO;
@@ -95,7 +40,6 @@ class AdaptiveBestInsertionExplorer
         neighborComparator{neighborComparator},
         solNeighborComparator{solNeighborComparator},
         neighborEval{neighborEval},
-        neighborhoodType{neighborhoodType},
         positionSelector{positionSelector} {}
 
   void initParam(EOT& sol) final {

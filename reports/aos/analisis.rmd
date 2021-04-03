@@ -2,6 +2,8 @@
 title: "IG with adaptive operator selection for flowshop problems"
 output:
   pdf_document: default
+header-includes:
+  \usepackage{longtable}
 ---
 
 ```{r setup, include=FALSE}
@@ -89,12 +91,13 @@ filter_ig_default <- function(config) {
     "IG.AdaptivePosition.AOS.Options",
     "IG.AdaptivePosition.AOS.Strategy"
   )
-  config[str_detect(names(config), "AOS") & !(names(config) %in% remove_param)]
+  config[(str_detect(names(config), "AOS") | str_detect(names(config), "AdaptiveBestInsertion")) & !(names(config) %in% remove_param)]
 }
 
 format_config <- function(config) {
   param_names <- names(config) %>%
     str_remove("^IG\\.AdaptivePosition\\.AOS\\.") %>%
+    str_remove("^IG\\.AdaptiveBestInsertion\\.AOS\\.") %>%
     str_remove("^(PM|FRRMAB|LINUCB|TS)\\.")
   paste(param_names, config, sep = " = ")
 }
@@ -279,7 +282,7 @@ frdAllPairsNemenyiTest(
 )
 ```
 
-
+### Adaptive best-insertion local search
 
 ```{r adapt-ps-boxplots, fig.height=5}
 test_folder <- here("reports", "aos", "data", 'exp-03-adaptive_best_insertion', "perf")
@@ -302,7 +305,7 @@ dt %>%
   ggplot(aes(
     x = objective,
     y = arfp,
-    color = algo
+    fill = algo
   )) +
   # geom_violin(draw_quantiles = T, alpha = .5) +
   geom_boxplot(alpha = .5) +
@@ -311,8 +314,37 @@ dt %>%
   # coord_trans(y = "pseudo_log")
 ```
 
+With parameter tunning:
 
-```{r adapt-ps-boxplots, fig.height=5}
+```{r}
+irace_folder <- here("reports", "aos", "data", 'exp-03-adaptive_best_insertion', "irace")
+
+crossing(
+  ig_variant = c("ig", "ig-lsps"),
+  algo = c('ts', 'pm', 'frrmab', 'linucb')
+) %>%
+mutate(
+  irace_result_file = file.path(irace_folder, 
+                        paste0(ig_variant, '-adaptive-bi-', algo, '.rds'))
+) %>% 
+  filter(file.exists(irace_result_file)) %>%
+  mutate(
+    irace_result = map(irace_result_file, read_rds),
+    irace_result = map(irace_result, removeConfigurationsMetaData),
+    irace_result = map(irace_result, ~df_to_character(.x[1,]))
+  ) %>%
+  select(ig_variant, algo, irace_result) %>%
+  mutate(
+    irace_result = map(irace_result, filter_ig_default),
+    irace_result = map(irace_result, format_config)
+  ) %>%
+  unnest(irace_result) %>%
+  knitr::kable("latex", longtable = TRUE)
+  
+```
+
+
+```{r exp-03-adaptive_best_insertion, fig.height=5}
 test_folder <- here("reports", "aos", "data", 'exp-03-adaptive_best_insertion', "perf")
 
 dt <- crossing(
@@ -325,9 +357,78 @@ dt <- crossing(
   ) %>%
   bind_rows(
     tibble(
-     ig_variant = "ig",
+     ig_variant = c("ig", "ig-lsps"),
      algo = "def",
-     perf_file = file.path(test_folder, "ig-def-perf.rds")
+     perf_file = file.path(test_folder, 
+                           paste0(ig_variant, '-def-perf.rds'))
+    )
+  ) %>%
+  filter(file.exists(perf_file)) %>%
+  mutate(perf = map(perf_file, read_rds)) %>%
+  unnest(perf) %>%
+  wrangle_perf() %>%
+  filter(objective == "FLOWTIME") %>%
+  group_by(instance, objective) %>%
+  mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness))
+
+dt %>%
+  ggplot(aes(
+    x = objective,
+    y = arfp,
+    fill = paste(algo)
+  )) +
+  # geom_violin(draw_quantiles = T, alpha = .5) +
+  geom_boxplot() +
+  facet_grid(~no_jobs)#+
+  # scale_y_continuous(trans = "pseudo_log") #+ 
+  # coord_trans(y = "pseudo_log")
+```
+
+Statistical comparison:
+
+```{r friedman-exp-03-adaptive_best_insertion}
+testdt <- dt %>%
+  filter(ig_variant == 'ig-lsps')
+
+friedmanTest(
+  testdt$fitness,
+  testdt$algo,
+  paste(testdt$instance, testdt$seed)
+)
+```
+
+
+```{r friendman-all-pairs-exp-03-adaptive_best_insertion}
+frdAllPairsNemenyiTest(
+  testdt$fitness,
+  testdt$algo,
+  paste(testdt$instance, testdt$seed)
+)
+```
+
+
+### Adaptive destruction size:
+
+- Single step
+- Acceptance criterion: better
+
+```{r exp-04-adaptive_destruction_size, fig.height=5}
+test_folder <- here("reports", "aos", "data", 'exp-04-adaptive_destruction_size', "perf")
+
+dt <- crossing(
+    ig_variant = c("ig", "ig-lsps"),
+    algo = c('ts', 'pm', 'frrmab', 'linucb')
+  ) %>%
+  mutate(
+    perf_file = file.path(test_folder, 
+                          paste0(ig_variant, '-adaptive-ds-', algo, '-tuned-perf.rds'))
+  ) %>%
+  bind_rows(
+    tibble(
+     ig_variant = c("ig", "ig-lsps"),
+     algo = "def",
+     perf_file = file.path(test_folder, 
+                           paste0(ig_variant, '-def-perf.rds'))
     )
   ) %>%
   filter(file.exists(perf_file)) %>%
@@ -353,20 +454,47 @@ dt %>%
 
 
 
-```{r friedman-ss}
-friedmanTest(
-  dt$fitness,
-  dt$algo,
-  paste(dt$instance, dt$seed)
-)
+### Adaptive destruction size:
+
+- Single step
+- Acceptance criterion: better
+
+```{r exp-05-adaptive_size_position, fig.height=5}
+test_folder <- here("reports", "aos", "data", 'exp-05-adaptive_size_position', "perf")
+
+dt <- crossing(
+    ig_variant = c("ig", "ig-lsps"),
+    algo = c('ts') #, 'pm', 'frrmab', 'linucb')
+  ) %>%
+  mutate(
+    perf_file = file.path(test_folder, 
+                          paste0(ig_variant, '-adaptive-ds-', algo, '-tuned-perf.rds'))
+  ) %>%
+  bind_rows(
+    tibble(
+     ig_variant = c("ig", "ig-lsps"),
+     algo = "def",
+     perf_file = file.path(test_folder, 
+                           paste0(ig_variant, '-def-perf.rds'))
+    )
+  ) %>%
+  filter(file.exists(perf_file)) %>%
+  mutate(perf = map(perf_file, read_rds)) %>%
+  unnest(perf) %>%
+  wrangle_perf() %>%
+  filter(objective == "FLOWTIME") %>%
+  group_by(instance, objective) %>%
+  mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness))
+
+dt %>%
+  ggplot(aes(
+    x = objective,
+    y = arfp,
+    fill = paste(algo)
+  )) +
+  # geom_violin(draw_quantiles = T, alpha = .5) +
+  geom_boxplot() +
+  facet_grid(~ig_variant)#+
+  # scale_y_continuous(trans = "pseudo_log") #+ 
+  # coord_trans(y = "pseudo_log")
 ```
-
-
-```{r friendman-all-pairs-ss}
-frdAllPairsNemenyiTest(
-  dt$fitness,
-  dt$adapt_strategies,
-  paste(dt$instance, dt$seed)
-)
-```
-

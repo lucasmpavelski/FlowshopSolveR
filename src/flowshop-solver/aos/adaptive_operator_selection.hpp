@@ -87,6 +87,10 @@ private:
     return operators[op_idx];
   };
 
+  auto operatorsRef() const -> const std::vector<OpT>& {
+    return operators;
+  }
+
   // misc
   template <typename OpT2>
   friend auto operator<<(std::ostream& os, OperatorSelection<OpT2> const& aos)

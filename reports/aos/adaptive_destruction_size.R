@@ -13,26 +13,45 @@ irace_folder <- file.path(exp_folder, "irace")
 dir.create(perf_folder, recursive = T, showWarnings = F)
 dir.create(irace_folder, recursive = T, showWarnings = F)
 
+train_problems <- all_problems_df() %>%
+  filter(
+    problem %in% c('flowshop'),
+    budget == 'high',
+    type == 'PERM',
+    objective == 'FLOWTIME',
+    dist == 'uniform',
+    corr == 'random',
+    no_jobs %in% c(100, 200, 300)
+  ) %>%
+  mutate(
+    budget = 'med',
+    instances = map(instances, ~filter(.x, inst_n == 1))
+  ) %>%
+  mutate(problem_space = pmap(., as_metaopt_problem)) %>%
+  pull(problem_space)
+
+test_problems <- all_problems_df() %>%
+  filter(
+    problem %in% c('flowshop'),
+    budget == 'high',
+    type == 'PERM',
+    objective == 'FLOWTIME',
+    dist == 'uniform',
+    corr == 'random',
+    no_jobs %in% c(100, 200, 300)
+  ) %>%
+  mutate(
+    budget = 'med',
+    instances = map(instances, ~filter(.x, inst_n == 6))
+  ) %>%
+  mutate(problem_space = pmap(., as_metaopt_problem)) %>%
+  pull(problem_space)
+
 run_irace <- function(name, params) {
   set.seed(65487873)
   print(name)
   
-  problems <- all_problems_df() %>%
-    filter(
-      problem %in% c('flowshop'),
-      budget == 'high',
-      type == 'PERM',
-      objective == 'FLOWTIME',
-      dist == 'uniform',
-      corr == 'random',
-      no_jobs %in% c(100, 200, 300)
-    ) %>%
-    mutate(
-      budget = 'med',
-      instances = map(instances, ~filter(.x, inst_n == 1))
-    ) %>%
-    mutate(problem_space = pmap(., as_metaopt_problem)) %>%
-    pull(problem_space)
+  problems <- train_problems
   
   train_best_solver(
     problem_space = ProblemSpace(problems = problems),
@@ -119,6 +138,7 @@ strategy_params <- tribble(
           IG.Accept.Better.Comparison        "" c (strict)
           IG.Accept.Temperature              "" c (0.25)
           IG.Perturb.Insertion               "" c (first_best)
+          IG.Local.Search                    "" c (none)
           IG.Perturb                         "" c (lsps)
 
           IG.LSPS.Local.Search               "" c (best_insertion)
@@ -142,4 +162,83 @@ strategy_params <- tribble(
   mutate(best_config = map2(name, params, run_irace))
 
 
+strategy_params %>%
+  mutate(best_config = map(best_config, ~.x[1,])) %>%
+  mutate(perf = map2(name, best_config, function(name, config) {
+    set.seed(79879874)
+    sample_performance(
+      algorithm = get_algorithm("IG"),
+      problemSpace = ProblemSpace(problems = test_problems),
+      config = df_to_character(config),
+      solve_function = fsp_solver_performance,
+      no_samples = 10,
+      cache = file.path(perf_folder, paste0(name, "-tuned-perf.rds"))
+    )
+  }))
+
+
+
+set.seed(79879874)
+perfs <- sample_performance(
+  algorithm = get_algorithm("IG"),
+  problemSpace = ProblemSpace(problems = test_problems),
+  config = c(
+    IG.Init                            = "neh",
+    IG.Init.NEH.Ratio                  = "0",
+    IG.Init.NEH.Priority               = "sum_pij",
+    IG.Init.NEH.PriorityOrder          = "incr",
+    IG.Init.NEH.PriorityWeighted       = "no",
+    IG.Init.NEH.Insertion              = "last_best",
+    IG.Comp.Strat                      = "strict",
+    IG.Neighborhood.Size               = "1.0",
+    IG.Neighborhood.Strat              = "ordered",
+    IG.Local.Search                    = "best_insertion",
+    IG.LS.Single.Step                  = "0",
+    IG.Accept                          = "temperature",
+    IG.Accept.Better.Comparison        = "strict",
+    IG.Accept.Temperature              = "0.25",
+    IG.Perturb                         = "rs",
+    IG.Perturb.Insertion               = "random_best",
+    IG.Perturb.DestructionSizeStrategy = "fixed",
+    IG.Perturb.DestructionSize         = "4",
+    IG.DestructionStrategy             = "random"
+  ),
+  solve_function = fsp_solver_performance,
+  no_samples = 10,
+  cache = file.path(perf_folder, paste0("ig-def-perf.rds"))
+)
+
+
+
+set.seed(79879874)
+perfs <- sample_performance(
+  algorithm = get_algorithm("IG"),
+  problemSpace = ProblemSpace(problems = test_problems),
+  config = c(
+    IG.Init                            = "neh",
+    IG.Init.NEH.Ratio                  = "0",
+    IG.Init.NEH.Priority               = "sum_pij",
+    IG.Init.NEH.PriorityOrder          = "incr",
+    IG.Init.NEH.PriorityWeighted       = "no",
+    IG.Init.NEH.Insertion              = "last_best",
+    IG.Comp.Strat                      = "strict",
+    IG.Neighborhood.Size               = "1.0",
+    IG.Neighborhood.Strat              = "ordered",
+    IG.Local.Search                    = "best_insertion",
+    IG.LS.Single.Step                  = "0",
+    IG.Accept                          = "temperature",
+    IG.Accept.Better.Comparison        = "strict",
+    IG.Accept.Temperature              = "0.25",
+    IG.Perturb                         = "lsps",
+    IG.Perturb.Insertion               = "random_best",
+    IG.Perturb.DestructionSizeStrategy = "fixed",
+    IG.DestructionStrategy             = "random",
+    IG.Perturb.DestructionSize         = "2",
+    IG.LSPS.Local.Search               = "best_insertion",
+    IG.LSPS.Single.Step                = "0"
+  ),
+  solve_function = fsp_solver_performance,
+  no_samples = 10,
+  cache = file.path(perf_folder, paste0("ig-lsps-def-perf.rds"))
+)
 
