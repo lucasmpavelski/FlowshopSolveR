@@ -233,15 +233,15 @@ struct FSPProblem : public Problem<FSPNeighbor> {
                                  getData().noMachines() * mult);
   }
 
-  auto getFixedTime() -> unsigned {
-    auto split = stopping_criterion.find('_');
-    int multiplier = 1;
-    if (split != std::string::npos) {
-      auto times_str = stopping_criterion.substr(
-          split + 1, split + 1 - stopping_criterion.size());
-      multiplier = std::stoi(times_str);
-    }
-    return getData().noJobs() * getData().noMachines() * multiplier;
+  auto getFixedTime() -> unsigned { 
+    int mult = 0;
+    if (budget == "low")
+      mult = 30;
+    else if (budget == "med")
+      mult = 60;
+    else if (budget == "high")
+      mult = 120;
+    return getData().noJobs() * getData().noMachines() * mult;
   }
 
   auto getMaxFitness() -> double {

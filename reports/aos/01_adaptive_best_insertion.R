@@ -1,0 +1,142 @@
+library(FlowshopSolveR)
+library(tidyverse)
+library(here)
+library(wrapr)
+library(irace)
+library(furrr)
+
+run_irace <- function(name, params, problems, ...) {
+  dir.create(dirname(name), recursive = T, showWarnings = F)
+  set.seed(65487873)
+  train_best_solver(
+    problem_space = ProblemSpace(problems = problems$problem_space),
+    algorithm = Algorithm(
+      name = 'IG',
+      parameters = readParameters(text = params)
+    ),
+    solve_function = fsp_solver_performance,
+    irace_scenario = defaultScenario(list(
+      maxExperiments = 1000
+    )),
+    parallel = 0,
+    cache = name,
+    recover = T
+  )
+}
+
+ig_variants <-     tribble(
+  ~ig_variant, ~base_config,
+  'ig', '
+IG.Init                            "" c (neh)
+IG.Init.NEH.Ratio                  "" c (0)
+IG.Init.NEH.Priority               "" c (sum_pij)
+IG.Init.NEH.PriorityOrder          "" c (incr)
+IG.Init.NEH.PriorityWeighted       "" c (no)
+IG.Init.NEH.Insertion              "" c (first_best)
+IG.Comp.Strat                      "" c (strict)
+IG.Neighborhood.Size               "" c (1.0)
+IG.Neighborhood.Strat              "" c (ordered)
+IG.LS.Single.Step                  "" c (0)
+IG.Accept                          "" c (temperature)
+IG.Accept.Better.Comparison        "" c (strict)
+IG.Accept.Temperature              "" c (0.25)
+IG.Perturb.Insertion               "" c (random_best)
+IG.Perturb                         "" c (rs)
+
+IG.Perturb.DestructionSizeStrategy "" c (fixed)
+IG.Perturb.DestructionSize         "" c (4)
+IG.DestructionStrategy             "" c (random)
+
+IG.Local.Search                      "" c (adaptive_best_insertion)
+IG.AdaptiveBestInsertion.AOS.WarmUp  "" c (0,1000,10000,100000)
+IG.AdaptiveBestInsertion.AOS.WarmUp.Strategy "" c (random)
+IG.AdaptiveBestInsertion.Replace             "" c (yes,no)
+IG.AdaptiveBestInsertion.NoArms              "" c (fixed_3,fixed_10,fixed_50,no_jobs)
+IG.AdaptiveBestInsertion.RandomArm           "" c (yes,no)
+      ' #,
+  # 'ig-lsps', '
+  #     IG.Init                            "" c (neh)
+  #     IG.Init.NEH.Ratio                  "" c (0)
+  #     IG.Init.NEH.Priority               "" c (sum_pij)
+  #     IG.Init.NEH.PriorityOrder          "" c (incr)
+  #     IG.Init.NEH.PriorityWeighted       "" c (no)
+  #     IG.Init.NEH.Insertion              "" c (last_best)
+  #     IG.Comp.Strat                      "" c (strict)
+  #     IG.Neighborhood.Size               "" c (1.0)
+  #     IG.Neighborhood.Strat              "" c (ordered)
+  #     IG.LS.Single.Step                  "" c (0)
+  #     IG.Accept                          "" c (temperature)
+  #     IG.Accept.Better.Comparison        "" c (strict)
+  #     IG.Accept.Temperature              "" c (0.25)
+  #     IG.Perturb.Insertion               "" c (first_best)
+  #     IG.Perturb                         "" c (lsps)
+  # 
+  #     IG.Perturb.DestructionSizeStrategy "" c (fixed)
+  #     IG.Perturb.DestructionSize         "" c (2)
+  #     IG.DestructionStrategy             "" c (random)
+  # 
+  #     IG.LSPS.Local.Search               "" c (best_insertion)
+  #     IG.LSPS.Single.Step                "" c (0)
+  # 
+  #     IG.Local.Search                      "" c (adaptive_best_insertion)
+  #     IG.AdaptiveBestInsertion.AOS.Options "" c (0_1_2_3)
+  #     IG.AdaptiveBestInsertion.AOS.WarmUp  "" c (0,1000,10000,100000)
+  #     IG.AdaptiveBestInsertion.AOS.WarmUp.Strategy "" c (random)
+  #     IG.AdaptiveBestInsertion.Replace             "" c (yes,no)
+  #     IG.AdaptiveBestInsertion.NoArms              "" c (fixed_3,fixed_10,fixed_50,no_jobs)
+  #     IG.AdaptiveBestInsertion.RandomArm           "" c (yes,no)
+  # '
+)
+
+
+adapt_variants <- tribble(
+  ~adapt_variant, ~params,
+  'ts', '
+IG.AdaptiveBestInsertion.AOS.Strategy              "" c (thompson_sampling)
+IG.AdaptiveBestInsertion.AOS.TS.Strategy           "" c (static, dynamic)
+IG.AdaptiveBestInsertion.AOS.TS.C                  "" i (1,500)  | IG.AdaptiveBestInsertion.AOS.TS.Strategy == "dynamic"
+  ' ,
+  'pm', '
+  IG.AdaptiveBestInsertion.AOS.Strategy              "" c (probability_matching)
+  IG.AdaptiveBestInsertion.AOS.PM.RewardType         "" c (avgabs,avgnorm,extabs,extnorm)
+  IG.AdaptiveBestInsertion.AOS.PM.Alpha              "" r (0.1, 0.9)
+  IG.AdaptiveBestInsertion.AOS.PM.PMin               "" r (0.05, 0.2)
+  IG.AdaptiveBestInsertion.AOS.PM.UpdateWindow       "" i (1,500)
+  ',
+  'frrmab', '
+  IG.AdaptiveBestInsertion.AOS.Strategy              "" c (frrmab)
+  IG.AdaptiveBestInsertion.AOS.FRRMAB.WindowSize     "" i (10, 500)
+  IG.AdaptiveBestInsertion.AOS.FRRMAB.Scale          "" r (0.01, 100)
+  IG.AdaptiveBestInsertion.AOS.FRRMAB.Decay          "" r (0.25, 1.0)
+  ',
+  'linucb', '
+  IG.AdaptiveBestInsertion.AOS.Strategy              "" c (linucb)
+  IG.AdaptiveBestInsertion.AOS.LINUCB.Alpha          "" r (0.0, 1.5)
+  '
+)
+
+plan(multisession)
+# plan(sequential)
+
+exp_folder <- here("reports", "aos", "data", "01-adaptive_best_insertion")
+perf_folder <- file.path(exp_folder, "perf")
+irace_folder <- file.path(exp_folder, "irace")
+
+dir.create(perf_folder, recursive = T, showWarnings = F)
+dir.create(irace_folder, recursive = T, showWarnings = F)
+
+train_test_sets_df <- read_rds(here("reports", "aos", "data", "train_test_sets_df.rds"))
+
+strategy_params <- train_test_sets_df %>%
+  filter(set_type == "train") %>%
+  expand_grid(
+    ig_variants,
+    adapt_variants
+  ) %>%
+  mutate(
+    params = paste(base_config, params),
+    name = here(irace_folder, path, paste0(ig_variant, adapt_variant, ".rds"))
+  ) %>%
+  mutate(best_config = future_pmap(., run_irace,
+                                   .options = furrr_options(seed = TRUE)))
+
