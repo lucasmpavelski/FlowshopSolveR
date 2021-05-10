@@ -52,6 +52,100 @@ format_config <- function(config) {
     str_remove("^(PM|FRRMAB|LINUCB|TS)\\.")
   paste(param_names, config, sep = " = ")
 }
+
+load_perf <- function(path) {
+  perfs <- read_rds(path)
+  perfs %>%
+    wrangle_perf()
+}
+
+load_perfs <- function(perf_folder) {
+  test_problems %>%
+    mutate(full_path = file.path(perf_folder, path)) %>%
+    select(path, full_path) %>%
+    mutate(
+      perfs = map(full_path, function(path) {
+        tibble(
+          algo = dir(path),
+          perf = map(file.path(path, algo), load_perf)
+        )
+      })
+    ) %>%
+    unnest(perfs) %>%
+    unnest(perf) %>%
+    group_by(path, id) %>%
+    mutate(arfp = 100 * (fitness - min(fitness)) / min(fitness))
+}
+
+problems <- read_rds(here("reports", "aos", "data", "train_test_sets_df.rds"))
+
+train_problems <- problems %>%
+  filter(set_type == "train")
+
+test_problems <- problems %>%
+  filter(set_type == "test")
+```
+
+```{r}
+exp_folder <- here("reports", "aos", "data", "01-adaptive_destruction_size")
+perf_folder <- file.path(exp_folder, "perf")
+irace_folder <- file.path(exp_folder, "irace")
+
+algo_perfs <- load_perfs(perf_folder)
+
+algo_perfs %>%
+  ggplot(aes(x = algo, y = arfp)) +
+  geom_violin() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+```{r}
+algo_perfs %>%
+  group_by(algo) %>%
+  summarize(
+    q00 = quantile(arfp, 0.0),
+    q25 = quantile(arfp, 0.25),
+    q50 = quantile(arfp, 0.5),
+    mean = mean(arfp),
+    q75 = quantile(arfp, 0.75),
+    q100 = quantile(arfp, 1.00)
+  )
+```
+
+```{r}
+exp_folder <- here("reports", "aos", "data", "01-adaptive_destruction_size")
+perf_folder <- file.path(exp_folder, "perf")
+irace_folder <- file.path(exp_folder, "irace")
+
+algo_perfs <- load_perfs(perf_folder)
+
+algo_perfs %>%
+  ggplot(aes(x = algo, y = arfp)) +
+  geom_violin() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+```{r}
+friedmanTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed))
+```
+
+
+```{r}
+frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed))
+```
+
+```{r}
+plot(frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed)))
+```
+
+
+```{r}
+algo_perfs %>%
+  ggplot(aes(x = algo, y = arfp)) +
+  geom_boxplot() +
+  scale_y_log10() +
+  facet_wrap(~objective+type, scale = "free") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
 ```
 
 
@@ -507,35 +601,6 @@ dt %>%
 
 
 ```{r}
-problems <- read_rds(here("reports", "aos", "data", "train_test_sets_df.rds"))
-
-load_perf <- function(path) {
-  perfs <- read_rds(path)
-  perfs %>%
-    wrangle_perf()
-}
-
-load_perfs <- function(test_folder, test_problems) {
-  test_problems %>%
-    mutate(full_path = file.path(test_folder, path)) %>%
-    select(path, full_path) %>%
-    mutate(
-      perfs = map(full_path, function(path) {
-        tibble(
-          algo = dir(path),
-          perf = map(file.path(path, algo), load_perf)
-        )
-      })
-    ) %>%
-    unnest(perfs) %>%
-    unnest(perf) %>%
-    group_by(path, id) %>%
-    mutate(arfp = 100 * (fitness - min(fitness)) / min(fitness))
-}
-
-train_problems <- problems %>%
-  filter(set_type == "train")
-
 exp_folder <- here("reports", "aos", "data", "01-adaptive_best_insertion")
 
 algo_perfs <- load_perfs(
@@ -544,8 +609,11 @@ algo_perfs <- load_perfs(
 )
 
 
-  
-
+algo_perfs %>%
+  ggplot(aes(x = algo, y = arfp)) +
+  geom_boxplot() +
+  facet_wrap(~path, scales = "free", nrow = 3) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
 ```
 
 ```{r}

@@ -117,8 +117,8 @@ adapt_variants <- tribble(
 )
 
 # plan(remote, workers = 8)
-plan(remote, workers = rep("linode2", 8), persistent = TRUE)
-# plan(sequential)
+# plan(remote, workers = rep("linode2", 8), persistent = TRUE)
+plan(sequential)
 
 exp_folder <- here("reports", "aos", "data", "01-adaptive_destruction_size")
 perf_folder <- file.path(exp_folder, "perf")
