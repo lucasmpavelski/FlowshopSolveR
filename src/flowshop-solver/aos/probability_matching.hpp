@@ -3,6 +3,8 @@
 #include <cctype>
 #include <iostream>
 #include <limits>
+#include <vector>
+#include <cassert>
 
 #include "flowshop-solver/aos/adaptive_operator_selection.hpp"
 #include "flowshop-solver/global.hpp"

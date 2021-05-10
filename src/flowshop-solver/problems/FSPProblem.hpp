@@ -236,11 +236,11 @@ struct FSPProblem : public Problem<FSPNeighbor> {
   auto getFixedTime() -> unsigned { 
     int mult = 0;
     if (budget == "low")
-      mult = 30;
+      mult = 15;
     else if (budget == "med")
-      mult = 60;
+      mult = 30;
     else if (budget == "high")
-      mult = 120;
+      mult = 60;
     return getData().noJobs() * getData().noMachines() * mult;
   }
 

@@ -33,6 +33,25 @@ wrangle_perf <- function(dt) {
     unnest(prob_data) %>%
     mutate(fitness = map_dbl(result, ~.x$cost))
 }
+
+
+filter_ig_default <- function(config) {
+  remove_param <- c(
+    "IG.AdaptivePosition.AOS.WarmUp.Strategy",
+    "IG.AdaptivePosition.AOS.Options",
+    "IG.AdaptivePosition.AOS.Strategy"
+  )
+  config[(str_detect(names(config), "AOS") | str_detect(names(config), "AdaptiveBestInsertion")) & !(names(config) %in% remove_param)]
+}
+
+format_config <- function(config) {
+  param_names <- names(config) %>%
+    str_remove("^IG\\.AdaptivePosition\\.AOS\\.") %>%
+    str_remove("^IG\\.AdaptiveBestInsertion\\.AOS\\.") %>%
+    str_remove("^IG\\.AdaptiveBestInsertion\\.") %>%
+    str_remove("^(PM|FRRMAB|LINUCB|TS)\\.")
+  paste(param_names, config, sep = " = ")
+}
 ```
 
 
@@ -85,22 +104,6 @@ Problems:
 Best configurations found by irace (5000 configurations evaluation per adapt strategy):
 
 ```{r best-configurations}
-filter_ig_default <- function(config) {
-  remove_param <- c(
-    "IG.AdaptivePosition.AOS.WarmUp.Strategy",
-    "IG.AdaptivePosition.AOS.Options",
-    "IG.AdaptivePosition.AOS.Strategy"
-  )
-  config[(str_detect(names(config), "AOS") | str_detect(names(config), "AdaptiveBestInsertion")) & !(names(config) %in% remove_param)]
-}
-
-format_config <- function(config) {
-  param_names <- names(config) %>%
-    str_remove("^IG\\.AdaptivePosition\\.AOS\\.") %>%
-    str_remove("^IG\\.AdaptiveBestInsertion\\.AOS\\.") %>%
-    str_remove("^(PM|FRRMAB|LINUCB|TS)\\.")
-  paste(param_names, config, sep = " = ")
-}
 
 ig_pos_test %>%
   select(adapt_strategies, irace_result) %>%
@@ -497,4 +500,127 @@ dt %>%
   facet_grid(~ig_variant)#+
   # scale_y_continuous(trans = "pseudo_log") #+ 
   # coord_trans(y = "pseudo_log")
+```
+
+
+## Testing on different problems
+
+
+```{r}
+problems <- read_rds(here("reports", "aos", "data", "train_test_sets_df.rds"))
+
+load_perf <- function(path) {
+  perfs <- read_rds(path)
+  perfs %>%
+    wrangle_perf()
+}
+
+load_perfs <- function(test_folder, test_problems) {
+  test_problems %>%
+    mutate(full_path = file.path(test_folder, path)) %>%
+    select(path, full_path) %>%
+    mutate(
+      perfs = map(full_path, function(path) {
+        tibble(
+          algo = dir(path),
+          perf = map(file.path(path, algo), load_perf)
+        )
+      })
+    ) %>%
+    unnest(perfs) %>%
+    unnest(perf) %>%
+    group_by(path, id) %>%
+    mutate(arfp = 100 * (fitness - min(fitness)) / min(fitness))
+}
+
+train_problems <- problems %>%
+  filter(set_type == "train")
+
+exp_folder <- here("reports", "aos", "data", "01-adaptive_best_insertion")
+
+algo_perfs <- load_perfs(
+  file.path(exp_folder, "perf"), 
+  problems %>% filter(set_type == "test")
+)
+
+
+  
+
+```
+
+```{r}
+
+train_folder <- file.path(exp_folder, "irace")
+
+load_config <- function(path) {
+  read
+}
+
+problems %>%
+  filter(set_type == "train") %>%
+  mutate(full_path = file.path(train_folder, path)) %>%
+  select(path, full_path) %>%
+  mutate(algo = map(full_path, dir)) %>%
+  unnest(algo) %>%
+  filter(!str_detect(algo, "_log|_rec")) %>%
+  mutate(
+    config = map(
+      file.path(full_path, algo), 
+      compose(
+        read_rds,
+        ~.x[1,],
+        removeConfigurationsMetaData,
+        df_to_character,
+        filter_ig_default,
+        format_config,
+        .dir = "forward"
+      )
+    )
+  ) %>%
+  unnest_longer(config) %>%
+  select(path, algo, config) %>%
+  knitr::kable("latex", longtable = TRUE)
+```
+
+
+
+```{r fig.asp=2}
+algo_perfs %>%
+  ggplot(aes(x = algo, y = arfp)) +
+  geom_boxplot() +
+  facet_wrap(~path, scales = "free", nrow = 3) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+
+
+```{r}
+algo_perfs %>%
+  ggplot(aes(x = algo, y = arfp)) +
+  geom_violin() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+```{r friedman-exp-03-adaptive_best_insertion}
+testdt <- algo_perfs %>%
+  group_by(id, path, algo) %>%
+  summarise(arfp = mean(arfp), .groups = "drop")
+
+friedmanTest(
+  testdt$arfp,
+  testdt$algo,
+  paste(testdt$id, testdt$path)
+)
+```
+
+```{r friedman-exp-03-adaptive_best_insertion}
+testdt <- algo_perfs %>%
+  group_by(id, path, algo) %>%
+  summarise(arfp = mean(arfp), .groups = "drop")
+
+frdAllPairsExactTest(
+  testdt$arfp,
+  testdt$algo,
+  paste(testdt$id, testdt$path)
+)
 ```

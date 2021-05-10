@@ -18,7 +18,8 @@ IG_RS_CONFIG <- c(
   IG.Perturb                         = "rs",
   IG.Perturb.DestructionSizeStrategy = "fixed",
   IG.Perturb.DestructionSize         = "4",
-  IG.Perturb.Insertion               = "first_best"
+  IG.Perturb.Insertion               = "first_best",
+  IG.DestructionStrategy             = "random"
 )
 
 IG_LSPS_CONFIG <- c(
@@ -40,62 +41,86 @@ IG_LSPS_CONFIG <- c(
   IG.Perturb.DestructionSize         = "2",
   IG.Perturb.Insertion               = "first_best",
   IG.LSPS.Local.Search               = "best_insertion",
-  IG.LSPS.Single.Step                = "0"
+  IG.LSPS.Single.Step                = "0",
+  IG.DestructionStrategy             = "random"
 )
 
 problems <- all_problems_df() %>%
-  crossing(sample_n = 1:100) %>%
+  crossing(sample_n = 1:10) %>%
   filter(
     problem %in% c('vrf-small', 'vrf-large'),
     budget == 'low',
     type == 'PERM',
     objective == 'MAKESPAN',
-    no_jobs == 300
+    no_jobs <= 300
   ) %>%
+  mutate(stopping_criterion = 'FIXEDTIME') %>%
   mutate(metaopt_problem = pmap(., as_metaopt_problem))
 
 config_perf <- function(problem, instance, algorithm, config) {
   seed <- as.integer(runif(1) * 1000000)
-  print(instance)
-  fsp_solver_performance(algorithm, config, instance, problem, seed)$cost
+  cost <- fsp_solver_performance(algorithm, config, instance, problem, seed)$cost
+  # cat(
+  #   paste(
+  #     algorithm@name,
+  #     paste0(names(config), "=", config, collapse = "&"),
+  #     paste0(names(problem@data), "=", problem@data, collapse = "&"),
+  #     instance,
+  #     seed,
+  #     cost,
+  #     sep = ", "
+  #   ),
+  #   "\n"
+  # )
+  cost
 }
+# workers <- makeClusterPSOCK(workers = rep("localhost", 3), outfile = "log.txt")
+# plan(remote, workers = rep("localhost", 3), persistent = TRUE)
+plan(multisession, workers = 32)
+# plan(remote, workers = workers, homogeneous = F)
+# plan(sequential)
 
 set.seed(659878)
-perfs <- problems %>%
+perfs_ig <- problems %>%
   unnest(instances) %>%
   mutate(
-    ig_rs_perf = map2_dbl(
+    ig_rs_perf = future_map2_dbl(
       metaopt_problem, 
       instance,
       config_perf,
       algorithm = get_algorithm('IG'),
-      config = IG_RS_CONFIG
-    ),
-    ig_lsps_perf = map2_dbl(
-      metaopt_problem, 
-      instance,
-      config_perf,
-      algorithm = get_algorithm('IG'),
-      config = IG_LSPS_CONFIG
+      config = IG_RS_CONFIG,
+      .progress = F,
+      .options = furrr_options(
+        seed = T
+      )
     )
   )
 
-perfs_large <- perfs
-
-perfs <- read_rds(here('reports/lons_study/relative_perfs_all2.rds'))
-
-perfs <- bind_rows(perfs, perfs_large)
-
-
-best_fitness <- read_rds(here('reports/lons_study/best-fitness.rds')) %>%
-  mutate(budget = 'low', stopping_criterion = "TIME")
-
-relative_perfs <- perfs %>%
-  right_join(best_fitness) %>%
+perfs_lsps <- problems %>%
+  unnest(instances) %>%
   mutate(
-    ig_rs_rpd = 100 * ((ig_rs_perf - best_fitness) / best_fitness),
-    ig_lsps_rpd = 100 * ((ig_lsps_perf - best_fitness) / best_fitness)
+    ig_lsps_perf = future_map2_dbl(
+      metaopt_problem, 
+      instance,
+      config_perf,
+      algorithm = get_algorithm('IG'),
+      config = IG_LSPS_CONFIG,
+      .progress = T,
+      .options = furrr_options(
+        seed = T
+      )
+    )
   )
+
+perfs <- bind_rows(perfs_ig, perfs_lsps)
+
+# relative_perfs <- perfs %>%
+#   right_join(best_fitness) %>%
+#   mutate(
+#     ig_rs_rpd = 100 * ((ig_rs_perf - best_fitness) / best_fitness),
+#     ig_lsps_rpd = 100 * ((ig_lsps_perf - best_fitness) / best_fitness)
+#   )
 
 
 # lower_bounds <- bind_rows(
@@ -116,4 +141,4 @@ relative_perfs <- perfs %>%
 # 
 # # View(relative_perfs)
 # 
-saveRDS(relative_perfs, here('reports/lons_study/relative_perfs_best.rds'))
+saveRDS(perfs, here('reports/lons_study/perfs_fixedtime_low_10.rds'))

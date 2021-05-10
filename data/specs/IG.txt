@@ -56,7 +56,7 @@ IG.AOS.WarmUp                "" i (0,2000) | IG.Perturb.DestructionSizeStrategy 
 IG.AOS.WarmUp.Strategy       "" c (random, fixed) | IG.Perturb.DestructionSizeStrategy == "adaptive"
 
 IG.AOS.RewardType            "" c (0,1,2,3) | IG.Perturb.DestructionSizeStrategy == "adaptive"  & IG.AOS.Strategy != "random"
-IG.AOS.Options               "" c (1_2, 1_4, 1_2_4) | IG.Perturb.DestructionSizeStrategy == "adaptive" & IG.AOS.Strategy != "random"
+IG.AOS.Options               "" c (2_4, 4_6, 2_4_6, 4_8) | IG.Perturb.DestructionSizeStrategy == "adaptive" & IG.AOS.Strategy != "random"
 IG.AOS.PM.RewardType         "" c (avgabs,avgnorm,extabs,extnorm)  | IG.Perturb.DestructionSizeStrategy == "adaptive" & IG.AOS.Strategy == "probability_matching"
 IG.AOS.PM.Alpha              "" r (0.1, 0.9) | IG.Perturb.DestructionSizeStrategy == "adaptive" & IG.AOS.Strategy == "probability_matching"
 IG.AOS.PM.PMin               "" r (0.05, 0.2) | IG.Perturb.DestructionSizeStrategy == "adaptive" & IG.AOS.Strategy == "probability_matching"

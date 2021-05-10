@@ -115,32 +115,6 @@ histogram_machine <- function(dt) {
           text = element_text(size = 8))
 }
 
-boxplots <- function(dt, log_scale = F) {
-  plt <- dt %>%
-    mutate(
-      sample = paste0(local_search, perturbation)
-    ) %>%
-    ggplot() +
-      facet_wrap(~no_machines) +
-      geom_boxplot(aes(x = no_jobs, y = value, color = sample)) +
-      scale_fill_viridis(discrete = T) +
-      scale_color_viridis(discrete = T) +
-      theme_bw() +
-      theme(axis.title = element_blank(),
-            text = element_text(size = 8),
-            legend.position = 'right',
-            legend.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"),
-            plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"))
-  if (log_scale) {
-    if (all(dt$value > 0)) {
-      plt <- plt +  scale_y_log10()
-    } else {
-      plt <- plt +  scale_y_continuous(trans="pseudo_log")
-    }
-  }
-  plt
-}
-
 box_plot_hard_easy <- function(dt, fct_scales = "free_x", ...) {
   dt_easy <- dt %>%
   filter(
@@ -163,11 +137,49 @@ box_plot_hard_easy <- function(dt, fct_scales = "free_x", ...) {
 
 
 ```{r no_nodes_bp, echo=F, fig.asp=0.20}
+
+boxplots <- function(dt, log_scale = F) {
+  plt <- dt %>%
+    mutate(
+      sample = paste0(local_search, perturbation)
+    ) %>%
+    group_by(sample, no_jobs, no_machines) %>%
+    summarise(
+      mean = mean(value),
+      sd = sd(value)
+    ) %>%
+    ggplot() +
+      facet_wrap(~no_machines) +
+      # geom_boxplot(aes(x = no_jobs, y = value, fill = sample), outlier.shape = NA, lwd=0.3) +
+      # geom_pointrange(aes(x = no_jobs, y = mean, ymin = mean - sd, ymax = mean + sd, color = sample),
+      #               position = position_dodge(1), fatten = 1.2) +
+      geom_linerange(aes(x = no_jobs, y = mean, ymin = mean - sd, ymax = mean + sd, color = sample)) +
+      geom_line(aes(x = no_jobs, y = mean, color = sample, group = sample), size = 1) +
+      # geom_point(aes(x = no_jobs, y = mean, color = sample, group = sample),
+      #               position = "dodge") +
+      # scale_fill_viridis(discrete = T) +
+      # scale_color_viridis(discrete = T) +
+      theme_bw() +
+      theme(text = element_text(size = 8),
+            legend.position = 'right',
+            legend.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"),
+            plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"))
+  if (log_scale) {
+    if (all(dt$value > 0)) {
+      plt <- plt +  scale_y_log10()
+    } else {
+      plt <- plt +  scale_y_continuous(trans="pseudo_log")
+    }
+  }
+  plt
+}
 all_fla_tidy %>%
   filter(
     metric == 'no_nodes'
   ) %>%
   box_plot_hard_easy()
+
+
 ```
 
 
@@ -180,6 +192,12 @@ all_fla_tidy %>%
     box_plot_hard_easy()
 ```
 
+
+```{r clon_average_weight_of_self_loops_large, echo=F, fig.asp=0.20}
+all_fla_tidy %>%
+  filter(metric == 'clon_average_weight_of_self_loops') %>%
+  box_plot_hard_easy()
+```
 
 
 ```{r avarege_out_degree_bp, echo=F, fig.asp=0.20}
@@ -366,7 +384,6 @@ bind_rows(dt_easy, dt_hard) %>%
 
 
 
-
 ```{r graph_reciprocity_bp, echo=F, fig.asp=0.20}
 all_fla_tidy %>%
   mutate(value = value) %>%
@@ -400,4 +417,79 @@ all_fla_tidy %>%
 #  theme_graph()
 <!-- ``` -->
 
+
+
+```{r echo=F, fig.asp=0.50}
+presentation_plot <- function(plt_metric) {
+  dt <- all_fla_tidy %>%
+    mutate(
+      problem_set = ifelse(as.integer(as.character(no_jobs)) >= 100, 'large', 'small')
+    ) %>%
+    filter(
+      metric == plt_metric,
+    )
+  
+  dt_easy <- dt %>%
+    filter(
+      as.integer(as.character(no_jobs)) <= 60,
+      as.integer(as.character(no_machines)) <= 15
+    ) %>%
+    mutate(type = 'easy')
+  dt_hard <- dt %>%
+      filter(
+        as.integer(as.character(no_jobs)) >= 100,
+        as.integer(as.character(no_machines)) >= 20
+      ) %>%
+    mutate(type = 'hard')
+  
+  bind_rows(dt_easy, dt_hard) %>%
+    mutate(
+      sample = paste0(local_search, perturbation),
+      fct = sprintf("%s %02d", type, no_machines),
+      no_machines = factor(no_machines, unique(no_machines), labels = paste(unique(no_machines), "machines"))
+    ) %>%
+    group_by(type) %>%
+    mutate(maxval = max(value), minval = min(value)) %>%
+    boxplots() +
+    facet_wrap(
+      ~ no_machines, scales = 'free'
+    ) +
+      theme(text = element_text(size = 14),
+            legend.position = 'right',
+            legend.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt"),
+            plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt")) +
+    xlab("jobs") +
+    ylab("metric")
+}
+```
+
+```{r clon_clon_average_weight_of_self_loops_lg, echo=F, fig.asp=0.50}
+presentation_plot('clon_average_weight_of_self_loops') +
+    facet_wrap(
+      ~ no_machines, scales = 'free_x'
+    )
+```
+
+```{r clon_fitness_fitness_correlation_lg, echo=F, fig.asp=0.50}
+presentation_plot('clon_fitness_fitness_correlation') +
+    facet_wrap(
+      ~ no_machines, scales = 'free_x'
+    )
+```
+
+
+```{r md_shiftDistance_lg, echo=F, fig.asp=0.50}
+presentation_plot('md_shiftDistance') +
+    facet_wrap(
+      ~ no_machines, scales = 'free_x'
+    )
+```
+
+
+```{r clon_average_disparity_lg, echo=F, fig.asp=0.50}
+presentation_plot('clon_average_disparity') +
+    facet_wrap(
+      ~ no_machines, scales = 'free_x'
+    )
+```
 

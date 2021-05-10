@@ -16,9 +16,9 @@ run_irace <- function(name, params, problems, ...) {
     ),
     solve_function = fsp_solver_performance,
     irace_scenario = defaultScenario(list(
-      maxExperiments = 1000
+      maxExperiments = 5000
     )),
-    parallel = 0,
+    parallel = 8,
     cache = name,
     recover = T
   )
@@ -92,9 +92,9 @@ IG.AdaptiveBestInsertion.RandomArm           "" c (yes,no)
 adapt_variants <- tribble(
   ~adapt_variant, ~params,
   'ts', '
-IG.AdaptiveBestInsertion.AOS.Strategy              "" c (thompson_sampling)
-IG.AdaptiveBestInsertion.AOS.TS.Strategy           "" c (static, dynamic)
-IG.AdaptiveBestInsertion.AOS.TS.C                  "" i (1,500)  | IG.AdaptiveBestInsertion.AOS.TS.Strategy == "dynamic"
+  IG.AdaptiveBestInsertion.AOS.Strategy              "" c (thompson_sampling)
+  IG.AdaptiveBestInsertion.AOS.TS.Strategy           "" c (static, dynamic)
+  IG.AdaptiveBestInsertion.AOS.TS.C                  "" i (1,500)  | IG.AdaptiveBestInsertion.AOS.TS.Strategy == "dynamic"
   ' ,
   'pm', '
   IG.AdaptiveBestInsertion.AOS.Strategy              "" c (probability_matching)
@@ -115,10 +115,10 @@ IG.AdaptiveBestInsertion.AOS.TS.C                  "" i (1,500)  | IG.AdaptiveBe
   '
 )
 
-plan(multisession)
+plan(remote, workers = rep("linode2", 8), persistent = TRUE)
 # plan(sequential)
 
-exp_folder <- here("reports", "aos", "data", "01-adaptive_best_insertion")
+exp_folder <- here("reports", "aos", "data", "02-adaptive_best_insertion")
 perf_folder <- file.path(exp_folder, "perf")
 irace_folder <- file.path(exp_folder, "irace")
 
@@ -137,6 +137,64 @@ strategy_params <- train_test_sets_df %>%
     params = paste(base_config, params),
     name = here(irace_folder, path, paste0(ig_variant, adapt_variant, ".rds"))
   ) %>%
-  mutate(best_config = future_pmap(., run_irace,
+  mutate(best_config = pmap(., run_irace,
                                    .options = furrr_options(seed = TRUE)))
+# mutate(best_config = pmap(., run_irace))
 
+
+ig_default_configs <- tribble(
+  ~ig_variant, ~adapt_variant, ~best_config,
+  'ig', 'default', tibble(
+    IG.Init                            = "neh",
+    IG.Init.NEH.Ratio                  = "0",
+    IG.Init.NEH.Priority               = "sum_pij",
+    IG.Init.NEH.PriorityOrder          = "incr",
+    IG.Init.NEH.PriorityWeighted       = "no",
+    IG.Init.NEH.Insertion              = "first_best",
+    IG.Comp.Strat                      = "strict",
+    IG.Neighborhood.Size               = "1.0",
+    IG.Neighborhood.Strat              = "ordered",
+    IG.LS.Single.Step                  = "0",
+    IG.Accept                          = "temperature",
+    IG.Accept.Better.Comparison        = "strict",
+    IG.Accept.Temperature              = "0.25",
+    IG.Perturb.Insertion               = "random_best",
+    IG.Perturb                         = "rs",
+    IG.Perturb.DestructionSizeStrategy = "fixed",
+    IG.Perturb.DestructionSize         = "4",
+    IG.DestructionStrategy             = "random",
+    IG.Local.Search                    = "best_insertion"
+  )
+) %>% 
+  expand_grid(train_test_sets_df)
+
+test_configs <- strategy_params %>%
+  bind_rows(ig_default_configs)
+
+tuned_perf <- test_configs %>% 
+  select(path, best_config, ig_variant, adapt_variant) %>%
+  mutate(
+    best_config = map(best_config, removeConfigurationsMetaData),
+    best_config = map(best_config, ~df_to_character(.x[1,])),
+    name = here(perf_folder, path, paste0(ig_variant, adapt_variant, ".rds"))
+  ) %>%
+  inner_join(
+    train_test_sets_df %>%
+      filter(set_type == "test"),
+    by = "path"
+  ) %>%
+  mutate(
+    sampled_performance = pmap(., function(name, problems, best_config, ...) {
+      dir.create(dirname(name), recursive = T, showWarnings = F)
+      set.seed(79879874)
+      sample_performance(
+        algorithm = get_algorithm("IG"), 
+        problemSpace = ProblemSpace(problems = problems$problem_space),
+        config = best_config,
+        solve_function = fsp_solver_performance,
+        no_samples = 10,
+        cache = name
+      )
+    }
+    )
+  )

@@ -8,4 +8,4 @@ cd $install_dir
 export CC=clang-10
 export CCX=clang++-10
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
-ninja -j 1
+ninja
