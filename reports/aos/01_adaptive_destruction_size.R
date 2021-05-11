@@ -201,6 +201,35 @@ tuned_perf <- test_configs %>%
       }
     )
   )
+
+
+tuned_perf_extra <- test_configs %>%
+  select(path, best_config, ig_variant, adapt_variant) %>%
+  mutate(
+    best_config = map(best_config, removeConfigurationsMetaData),
+    best_config = map(best_config, ~df_to_character(.x[1,])),
+    name = here(perf_folder, path, paste0(ig_variant, adapt_variant, "-extra.rds"))
+  ) %>%
+  inner_join(
+    train_test_sets_df %>%
+      filter(set_type == "extra"),
+    by = "path"
+  ) %>%
+  mutate(
+    sampled_performance = pmap(., function(name, problems, best_config, ...) {
+      dir.create(dirname(name), recursive = T, showWarnings = F)
+      set.seed(79879874)
+      sample_performance(
+        algorithm = get_algorithm("IG"),
+        problemSpace = ProblemSpace(problems = problems$problem_space),
+        config = best_config,
+        solve_function = fsp_solver_performance,
+        no_samples = 10,
+        cache = name
+      )
+    }
+    )
+  )
   
 
 

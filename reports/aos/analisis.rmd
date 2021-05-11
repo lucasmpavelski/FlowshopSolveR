@@ -59,9 +59,20 @@ load_perf <- function(path) {
     wrangle_perf()
 }
 
-load_perfs <- function(perf_folder) {
-  test_problems %>%
-    mutate(full_path = file.path(perf_folder, path)) %>%
+
+problems <- read_rds(here("reports", "aos", "data", "train_test_sets_df.rds"))
+
+train_problems <- problems %>%
+  filter(set_type == "train")
+
+test_problems <- problems %>%
+  filter(set_type == "test")
+
+load_perfs <- function(perf_folder, path = "all") {
+  tibble(
+    path = path,
+    full_path = file.path(perf_folder, path)
+  ) %>%
     select(path, full_path) %>%
     mutate(
       perfs = map(full_path, function(path) {
@@ -77,13 +88,6 @@ load_perfs <- function(perf_folder) {
     mutate(arfp = 100 * (fitness - min(fitness)) / min(fitness))
 }
 
-problems <- read_rds(here("reports", "aos", "data", "train_test_sets_df.rds"))
-
-train_problems <- problems %>%
-  filter(set_type == "train")
-
-test_problems <- problems %>%
-  filter(set_type == "test")
 ```
 
 ```{r}
@@ -149,546 +153,602 @@ algo_perfs %>%
 ```
 
 
-```{r load}
-
-
-ig_pos_test <- read_rds(here("reports", "aos", "data", "exp-01-position-adapt", "irace", "ig-pos_test-inf-steps.rds"))
-
-ig_pos_perfs <- ig_pos_test %>% 
-  unnest(perf) %>%
-  wrangle_perf()
-
-ig_default_perfs <- read_rds(here("reports", "aos", "data", "exp-01-position-adapt", "perf", paste0("ig-def_test.rds"))) %>%
-  wrangle_perf()
-```
-
-
-## Proposal
-
-Adapt the IG destruction position during the optimization process in order to focus on more interesting parts of the jobs schedule.
-
-The base IG algorithms uses NEH initialization and (fast) best insertion local search. The adaptation algorithms are:
-
-- Probability matching
-- FRRMAB
-- LinUCB
-- Thompson Sampling
-
-Adicional parameters: reward type and warm-up period.
-
-## Methodology
-
-Tune the adapt parameters and compare with the base algorithm.
-
-## Results
-
-### Experiment 1: Adaptation of destruction postition
-
-Original IG framework:
-- Initialization: NEH
-- Local search: best insertion
-- Perturb: destruction size 4, with adaptive destruction position
-
-Problems:
-- 50 and 200 jobs
-- random-uniform processing times
-- Objective: makespan
-- Stopping criterion: $J^2 \times M \times 0.002$ ms  (medium)
-
-Best configurations found by irace (5000 configurations evaluation per adapt strategy):
-
-```{r best-configurations}
-
-ig_pos_test %>%
-  select(adapt_strategies, irace_result) %>%
-  mutate(
-    irace_result = map(irace_result, filter_ig_default),
-    irace_result = map(irace_result, format_config)
-  ) %>%
-  unnest(irace_result) %>%
-  knitr::kable("latex")
-```
-
-Relative fitness performance:
-
-
-```{r table-arfp}
-ig_pos_perfs %>%
-  bind_rows(
-    ig_default_perfs %>%
-      mutate(adapt_strategies = 'default')
-  ) %>%
-  group_by(instance) %>%
-  mutate(arfp = 100 * (fitness - min(fitness)) / min(fitness)) %>%
-  group_by(adapt_strategies) %>%
-  summarise(arfp = mean(arfp)) %>%
-  knitr::kable("latex")
-```
-
-```{r boxplot-compare-ranks}
-ig_pos_perfs %>%
-  bind_rows(
-    ig_default_perfs %>%
-      mutate(adapt_strategies = 'default')
-  ) %>%
-  group_by(instance) %>%
-  mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness)) %>%
-  ggplot(aes(
-    x = adapt_strategies,
-    y = arfp
-  )) +
-  geom_violin(draw_quantiles = T, alpha = .5) +
-  geom_boxplot(alpha = .5) +
-  scale_y_continuous(trans = "pseudo_log") + 
-  coord_trans(y = "pseudo_log")
-```
-
-Relative fitness performance per number of jobs:
-
-Statistical test:
-
-```{r friedman}
-test_dt <- ig_pos_perfs %>%
-  bind_rows(
-    ig_default_perfs %>%
-      mutate(adapt_strategies = 'default')
-  )
-
-
-
-friedmanTest(
-  test_dt$fitness,
-  test_dt$adapt_strategies,
-  paste(test_dt$instance, test_dt$seed)
-)
-```
-
-
-```{r friendman-all-pairs}
-frdAllPairsNemenyiTest(
-  test_dt$fitness,
-  test_dt$adapt_strategies,
-  paste(test_dt$instance, test_dt$seed)
-)
-```
-
-Conclusions:
-
-- Position adaptation its worse than random positions
-- Thompson sampling is the best adaptation strategy
-- There are few iterations
-
-### Experiment #2: single step IG-LSPS
-
-Motivation:
-- Single step local search leads to more iterations
-- LSPS destruction position can be more important
-- Extra option allowing destruction from any position
-
-Single-step LSPS framework:
-- Initialization: NEH
-- Local search: single step of best insertion
-- Perturb: destruction size 2 with adaptive position, followed by best insertion local search (also single step)
-
-Problems:
-- 100, 200, 300 jobs x 20, 40, 60 machines
-- random-uniform processing times
-- Objective: makespan
-- Stopping criterion: $J^2 \times M \times 0.02$ ms (high)
-
-Best configurations:
-
-```{r}
-crossing(
-    adapt_strategies = qc(probability_matching,frrmab,linucb,thompson_sampling),
-    adapt_type = qc(pos)
-  ) %>%
-  mutate(
-    irace_result_file = here("reports", "aos", "data", 'exp-02-single-step', "irace", 
-                             paste0("ig_ss_lsps-", adapt_type, "_", adapt_strategies, ".rds"))
-  ) %>%
-  filter(file.exists(irace_result_file)) %>%
-  mutate(
-    irace_result = map(irace_result_file, read_rds),
-    irace_result = map(irace_result, removeConfigurationsMetaData),
-    irace_result = map(irace_result, ~df_to_character(.x[1,]))
-  ) %>%
-  select(adapt_strategies, irace_result) %>%
-  mutate(
-    irace_result = map(irace_result, filter_ig_default),
-    irace_result = map(irace_result, format_config)
-  ) %>%
-  unnest(irace_result)
-```
-
-
-```{r}
-test_folder <- here("reports", "aos", "data", 'exp-02-single-step', "perf")
-
-dt <- crossing(
-    adapt_strategies = qc(probability_matching,frrmab,linucb,thompson_sampling),
-    adapt_type = qc(pos)
-  ) %>%
-  mutate(
-    irace_test_file = file.path(test_folder, adapt_type, adapt_strategies, "test.rds")
-  ) %>%
-  filter(file.exists(irace_test_file)) %>%
-  mutate(perf = map(irace_test_file, read_rds)) %>%
-  bind_rows(
-    tibble(
-      adapt_strategies = "default-ss",
-      adapt_type = qc(pos),
-      perf = list(read_rds(file.path(test_folder, "default", "test.rds")))
-    ),
-    tibble(
-      adapt_strategies = "default-orig",
-      adapt_type = qc(pos),
-      perf = list(read_rds(file.path(test_folder, "default-original", "test.rds")))
-    )
-  ) %>%
-  unnest(perf) %>%
-  wrangle_perf() %>%
-  group_by(instance) %>%
-  mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness))
-
-dt %>%
-  ggplot(aes(
-    x = adapt_strategies,
-    y = arfp
-  )) +
-  geom_violin(draw_quantiles = T, alpha = .5) +
-  geom_boxplot(alpha = .5) +
-  scale_y_continuous(trans = "pseudo_log") + 
-  coord_trans(y = "pseudo_log")
-```
-
-```{r friedman-ss}
-friedmanTest(
-  dt$fitness,
-  dt$adapt_strategies,
-  paste(dt$instance, dt$seed)
-)
-```
-
-
-```{r friendman-all-pairs-ss}
-frdAllPairsNemenyiTest(
-  dt$fitness,
-  dt$adapt_strategies,
-  paste(dt$instance, dt$seed)
-)
-```
-
-### Adaptive best-insertion local search
-
-```{r adapt-ps-boxplots, fig.height=5}
-test_folder <- here("reports", "aos", "data", 'exp-03-adaptive_best_insertion', "perf")
-
-dt <- tibble(
-    algo = c(# "ig-adapt",
-             "ig-def",
-             "ig-adapt-replace", 
-             "ig-adapt-wo-replace"),
-    perf_file = file.path(test_folder, paste0(algo, "-perf.rds"))
-  ) %>%
-  filter(file.exists(perf_file)) %>%
-  mutate(perf = map(perf_file, read_rds)) %>%
-  unnest(perf) %>%
-  wrangle_perf() %>%
-  group_by(instance, objective) %>%
-  mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness))
-
-dt %>%
-  ggplot(aes(
-    x = objective,
-    y = arfp,
-    fill = algo
-  )) +
-  # geom_violin(draw_quantiles = T, alpha = .5) +
-  geom_boxplot(alpha = .5) +
-  facet_wrap(~no_jobs)#+
-  # scale_y_continuous(trans = "pseudo_log") #+ 
-  # coord_trans(y = "pseudo_log")
-```
-
-With parameter tunning:
-
-```{r}
-irace_folder <- here("reports", "aos", "data", 'exp-03-adaptive_best_insertion', "irace")
-
-crossing(
-  ig_variant = c("ig", "ig-lsps"),
-  algo = c('ts', 'pm', 'frrmab', 'linucb')
-) %>%
-mutate(
-  irace_result_file = file.path(irace_folder, 
-                        paste0(ig_variant, '-adaptive-bi-', algo, '.rds'))
-) %>% 
-  filter(file.exists(irace_result_file)) %>%
-  mutate(
-    irace_result = map(irace_result_file, read_rds),
-    irace_result = map(irace_result, removeConfigurationsMetaData),
-    irace_result = map(irace_result, ~df_to_character(.x[1,]))
-  ) %>%
-  select(ig_variant, algo, irace_result) %>%
-  mutate(
-    irace_result = map(irace_result, filter_ig_default),
-    irace_result = map(irace_result, format_config)
-  ) %>%
-  unnest(irace_result) %>%
-  knitr::kable("latex", longtable = TRUE)
-  
-```
-
-
-```{r exp-03-adaptive_best_insertion, fig.height=5}
-test_folder <- here("reports", "aos", "data", 'exp-03-adaptive_best_insertion', "perf")
-
-dt <- crossing(
-    ig_variant = c("ig", "ig-lsps"),
-    algo = c('ts', 'pm', 'frrmab', 'linucb')
-  ) %>%
-  mutate(
-    perf_file = file.path(test_folder, 
-                          paste0(ig_variant, '-adaptive-bi-', algo, '-tuned-perf.rds'))
-  ) %>%
-  bind_rows(
-    tibble(
-     ig_variant = c("ig", "ig-lsps"),
-     algo = "def",
-     perf_file = file.path(test_folder, 
-                           paste0(ig_variant, '-def-perf.rds'))
-    )
-  ) %>%
-  filter(file.exists(perf_file)) %>%
-  mutate(perf = map(perf_file, read_rds)) %>%
-  unnest(perf) %>%
-  wrangle_perf() %>%
-  filter(objective == "FLOWTIME") %>%
-  group_by(instance, objective) %>%
-  mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness))
-
-dt %>%
-  ggplot(aes(
-    x = objective,
-    y = arfp,
-    fill = paste(algo)
-  )) +
-  # geom_violin(draw_quantiles = T, alpha = .5) +
-  geom_boxplot() +
-  facet_grid(~no_jobs)#+
-  # scale_y_continuous(trans = "pseudo_log") #+ 
-  # coord_trans(y = "pseudo_log")
-```
-
-Statistical comparison:
-
-```{r friedman-exp-03-adaptive_best_insertion}
-testdt <- dt %>%
-  filter(ig_variant == 'ig-lsps')
-
-friedmanTest(
-  testdt$fitness,
-  testdt$algo,
-  paste(testdt$instance, testdt$seed)
-)
-```
-
-
-```{r friendman-all-pairs-exp-03-adaptive_best_insertion}
-frdAllPairsNemenyiTest(
-  testdt$fitness,
-  testdt$algo,
-  paste(testdt$instance, testdt$seed)
-)
-```
-
-
-### Adaptive destruction size:
-
-- Single step
-- Acceptance criterion: better
-
-```{r exp-04-adaptive_destruction_size, fig.height=5}
-test_folder <- here("reports", "aos", "data", 'exp-04-adaptive_destruction_size', "perf")
-
-dt <- crossing(
-    ig_variant = c("ig", "ig-lsps"),
-    algo = c('ts', 'pm', 'frrmab', 'linucb')
-  ) %>%
-  mutate(
-    perf_file = file.path(test_folder, 
-                          paste0(ig_variant, '-adaptive-ds-', algo, '-tuned-perf.rds'))
-  ) %>%
-  bind_rows(
-    tibble(
-     ig_variant = c("ig", "ig-lsps"),
-     algo = "def",
-     perf_file = file.path(test_folder, 
-                           paste0(ig_variant, '-def-perf.rds'))
-    )
-  ) %>%
-  filter(file.exists(perf_file)) %>%
-  mutate(perf = map(perf_file, read_rds)) %>%
-  unnest(perf) %>%
-  wrangle_perf() %>%
-  filter(objective == "FLOWTIME") %>%
-  group_by(instance, objective) %>%
-  mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness))
-
-dt %>%
-  ggplot(aes(
-    x = objective,
-    y = arfp,
-    fill = paste(algo)
-  )) +
-  # geom_violin(draw_quantiles = T, alpha = .5) +
-  geom_boxplot() +
-  facet_grid(~ig_variant)#+
-  # scale_y_continuous(trans = "pseudo_log") #+ 
-  # coord_trans(y = "pseudo_log")
-```
-
-
-
-### Adaptive destruction size:
-
-- Single step
-- Acceptance criterion: better
-
-```{r exp-05-adaptive_size_position, fig.height=5}
-test_folder <- here("reports", "aos", "data", 'exp-05-adaptive_size_position', "perf")
-
-dt <- crossing(
-    ig_variant = c("ig", "ig-lsps"),
-    algo = c('ts') #, 'pm', 'frrmab', 'linucb')
-  ) %>%
-  mutate(
-    perf_file = file.path(test_folder, 
-                          paste0(ig_variant, '-adaptive-ds-', algo, '-tuned-perf.rds'))
-  ) %>%
-  bind_rows(
-    tibble(
-     ig_variant = c("ig", "ig-lsps"),
-     algo = "def",
-     perf_file = file.path(test_folder, 
-                           paste0(ig_variant, '-def-perf.rds'))
-    )
-  ) %>%
-  filter(file.exists(perf_file)) %>%
-  mutate(perf = map(perf_file, read_rds)) %>%
-  unnest(perf) %>%
-  wrangle_perf() %>%
-  filter(objective == "FLOWTIME") %>%
-  group_by(instance, objective) %>%
-  mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness))
-
-dt %>%
-  ggplot(aes(
-    x = objective,
-    y = arfp,
-    fill = paste(algo)
-  )) +
-  # geom_violin(draw_quantiles = T, alpha = .5) +
-  geom_boxplot() +
-  facet_grid(~ig_variant)#+
-  # scale_y_continuous(trans = "pseudo_log") #+ 
-  # coord_trans(y = "pseudo_log")
-```
-
-
-## Testing on different problems
-
-
-```{r}
-exp_folder <- here("reports", "aos", "data", "01-adaptive_best_insertion")
-
-algo_perfs <- load_perfs(
-  file.path(exp_folder, "perf"), 
-  problems %>% filter(set_type == "test")
-)
-
-
-algo_perfs %>%
-  ggplot(aes(x = algo, y = arfp)) +
-  geom_boxplot() +
-  facet_wrap(~path, scales = "free", nrow = 3) +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1))
-```
-
-```{r}
-
-train_folder <- file.path(exp_folder, "irace")
-
-load_config <- function(path) {
-  read
-}
-
-problems %>%
-  filter(set_type == "train") %>%
-  mutate(full_path = file.path(train_folder, path)) %>%
-  select(path, full_path) %>%
-  mutate(algo = map(full_path, dir)) %>%
-  unnest(algo) %>%
-  filter(!str_detect(algo, "_log|_rec")) %>%
-  mutate(
-    config = map(
-      file.path(full_path, algo), 
-      compose(
-        read_rds,
-        ~.x[1,],
-        removeConfigurationsMetaData,
-        df_to_character,
-        filter_ig_default,
-        format_config,
-        .dir = "forward"
-      )
-    )
-  ) %>%
-  unnest_longer(config) %>%
-  select(path, algo, config) %>%
-  knitr::kable("latex", longtable = TRUE)
-```
-
-
-
-```{r fig.asp=2}
-algo_perfs %>%
-  ggplot(aes(x = algo, y = arfp)) +
-  geom_boxplot() +
-  facet_wrap(~path, scales = "free", nrow = 3) +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1))
-```
 
 
 
 ```{r}
+exp_folder <- here("reports", "aos", "data", "02-adaptive_best_insertion")
+perf_folder <- file.path(exp_folder, "perf")
+irace_folder <- file.path(exp_folder, "irace")
+extra_folder <- file.path(exp_folder, "extra")
+
+algo_perfs <- load_perfs(extra_folder)
+
 algo_perfs %>%
   ggplot(aes(x = algo, y = arfp)) +
   geom_violin() +
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 ```
 
-```{r friedman-exp-03-adaptive_best_insertion}
-testdt <- algo_perfs %>%
-  group_by(id, path, algo) %>%
-  summarise(arfp = mean(arfp), .groups = "drop")
-
-friedmanTest(
-  testdt$arfp,
-  testdt$algo,
-  paste(testdt$id, testdt$path)
-)
+```{r}
+algo_perfs %>%
+  group_by(algo) %>%
+  summarize(
+    q00 = quantile(arfp, 0.0),
+    q25 = quantile(arfp, 0.25),
+    q50 = quantile(arfp, 0.5),
+    mean = mean(arfp),
+    q75 = quantile(arfp, 0.75),
+    q100 = quantile(arfp, 1.00)
+  )
 ```
 
-```{r friedman-exp-03-adaptive_best_insertion}
-testdt <- algo_perfs %>%
-  group_by(id, path, algo) %>%
-  summarise(arfp = mean(arfp), .groups = "drop")
 
-frdAllPairsExactTest(
-  testdt$arfp,
-  testdt$algo,
-  paste(testdt$id, testdt$path)
-)
+```{r}
+friedmanTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed))
 ```
+
+
+```{r}
+frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed))
+```
+
+```{r}
+plot(frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed)))
+```
+
+
+```{r}
+algo_perfs %>%
+  ggplot(aes(x = algo, y = arfp)) +
+  geom_boxplot() +
+  scale_y_continuous(trans = "pseudo_log") +
+  facet_wrap(~objective+type, scale = "free") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+
+
+<!-- ```{r load} -->
+
+
+<!-- ig_pos_test <- read_rds(here("reports", "aos", "data", "exp-01-position-adapt", "irace", "ig-pos_test-inf-steps.rds")) -->
+
+<!-- ig_pos_perfs <- ig_pos_test %>%  -->
+<!--   unnest(perf) %>% -->
+<!--   wrangle_perf() -->
+
+<!-- ig_default_perfs <- read_rds(here("reports", "aos", "data", "exp-01-position-adapt", "perf", paste0("ig-def_test.rds"))) %>% -->
+<!--   wrangle_perf() -->
+<!-- ``` -->
+
+
+<!-- ## Proposal -->
+
+<!-- Adapt the IG destruction position during the optimization process in order to focus on more interesting parts of the jobs schedule. -->
+
+<!-- The base IG algorithms uses NEH initialization and (fast) best insertion local search. The adaptation algorithms are: -->
+
+<!-- - Probability matching -->
+<!-- - FRRMAB -->
+<!-- - LinUCB -->
+<!-- - Thompson Sampling -->
+
+<!-- Adicional parameters: reward type and warm-up period. -->
+
+<!-- ## Methodology -->
+
+<!-- Tune the adapt parameters and compare with the base algorithm. -->
+
+<!-- ## Results -->
+
+<!-- ### Experiment 1: Adaptation of destruction postition -->
+
+<!-- Original IG framework: -->
+<!-- - Initialization: NEH -->
+<!-- - Local search: best insertion -->
+<!-- - Perturb: destruction size 4, with adaptive destruction position -->
+
+<!-- Problems: -->
+<!-- - 50 and 200 jobs -->
+<!-- - random-uniform processing times -->
+<!-- - Objective: makespan -->
+<!-- - Stopping criterion: $J^2 \times M \times 0.002$ ms  (medium) -->
+
+<!-- Best configurations found by irace (5000 configurations evaluation per adapt strategy): -->
+
+<!-- ```{r best-configurations} -->
+
+<!-- ig_pos_test %>% -->
+<!--   select(adapt_strategies, irace_result) %>% -->
+<!--   mutate( -->
+<!--     irace_result = map(irace_result, filter_ig_default), -->
+<!--     irace_result = map(irace_result, format_config) -->
+<!--   ) %>% -->
+<!--   unnest(irace_result) %>% -->
+<!--   knitr::kable("latex") -->
+<!-- ``` -->
+
+<!-- Relative fitness performance: -->
+
+
+<!-- ```{r table-arfp} -->
+<!-- ig_pos_perfs %>% -->
+<!--   bind_rows( -->
+<!--     ig_default_perfs %>% -->
+<!--       mutate(adapt_strategies = 'default') -->
+<!--   ) %>% -->
+<!--   group_by(instance) %>% -->
+<!--   mutate(arfp = 100 * (fitness - min(fitness)) / min(fitness)) %>% -->
+<!--   group_by(adapt_strategies) %>% -->
+<!--   summarise(arfp = mean(arfp)) %>% -->
+<!--   knitr::kable("latex") -->
+<!-- ``` -->
+
+<!-- ```{r boxplot-compare-ranks} -->
+<!-- ig_pos_perfs %>% -->
+<!--   bind_rows( -->
+<!--     ig_default_perfs %>% -->
+<!--       mutate(adapt_strategies = 'default') -->
+<!--   ) %>% -->
+<!--   group_by(instance) %>% -->
+<!--   mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness)) %>% -->
+<!--   ggplot(aes( -->
+<!--     x = adapt_strategies, -->
+<!--     y = arfp -->
+<!--   )) + -->
+<!--   geom_violin(draw_quantiles = T, alpha = .5) + -->
+<!--   geom_boxplot(alpha = .5) + -->
+<!--   scale_y_continuous(trans = "pseudo_log") +  -->
+<!--   coord_trans(y = "pseudo_log") -->
+<!-- ``` -->
+
+<!-- Relative fitness performance per number of jobs: -->
+
+<!-- Statistical test: -->
+
+<!-- ```{r friedman} -->
+<!-- test_dt <- ig_pos_perfs %>% -->
+<!--   bind_rows( -->
+<!--     ig_default_perfs %>% -->
+<!--       mutate(adapt_strategies = 'default') -->
+<!--   ) -->
+
+
+
+<!-- friedmanTest( -->
+<!--   test_dt$fitness, -->
+<!--   test_dt$adapt_strategies, -->
+<!--   paste(test_dt$instance, test_dt$seed) -->
+<!-- ) -->
+<!-- ``` -->
+
+
+<!-- ```{r friendman-all-pairs} -->
+<!-- frdAllPairsNemenyiTest( -->
+<!--   test_dt$fitness, -->
+<!--   test_dt$adapt_strategies, -->
+<!--   paste(test_dt$instance, test_dt$seed) -->
+<!-- ) -->
+<!-- ``` -->
+
+<!-- Conclusions: -->
+
+<!-- - Position adaptation its worse than random positions -->
+<!-- - Thompson sampling is the best adaptation strategy -->
+<!-- - There are few iterations -->
+
+<!-- ### Experiment #2: single step IG-LSPS -->
+
+<!-- Motivation: -->
+<!-- - Single step local search leads to more iterations -->
+<!-- - LSPS destruction position can be more important -->
+<!-- - Extra option allowing destruction from any position -->
+
+<!-- Single-step LSPS framework: -->
+<!-- - Initialization: NEH -->
+<!-- - Local search: single step of best insertion -->
+<!-- - Perturb: destruction size 2 with adaptive position, followed by best insertion local search (also single step) -->
+
+<!-- Problems: -->
+<!-- - 100, 200, 300 jobs x 20, 40, 60 machines -->
+<!-- - random-uniform processing times -->
+<!-- - Objective: makespan -->
+<!-- - Stopping criterion: $J^2 \times M \times 0.02$ ms (high) -->
+
+<!-- Best configurations: -->
+
+<!-- ```{r} -->
+<!-- crossing( -->
+<!--     adapt_strategies = qc(probability_matching,frrmab,linucb,thompson_sampling), -->
+<!--     adapt_type = qc(pos) -->
+<!--   ) %>% -->
+<!--   mutate( -->
+<!--     irace_result_file = here("reports", "aos", "data", 'exp-02-single-step', "irace",  -->
+<!--                              paste0("ig_ss_lsps-", adapt_type, "_", adapt_strategies, ".rds")) -->
+<!--   ) %>% -->
+<!--   filter(file.exists(irace_result_file)) %>% -->
+<!--   mutate( -->
+<!--     irace_result = map(irace_result_file, read_rds), -->
+<!--     irace_result = map(irace_result, removeConfigurationsMetaData), -->
+<!--     irace_result = map(irace_result, ~df_to_character(.x[1,])) -->
+<!--   ) %>% -->
+<!--   select(adapt_strategies, irace_result) %>% -->
+<!--   mutate( -->
+<!--     irace_result = map(irace_result, filter_ig_default), -->
+<!--     irace_result = map(irace_result, format_config) -->
+<!--   ) %>% -->
+<!--   unnest(irace_result) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- test_folder <- here("reports", "aos", "data", 'exp-02-single-step', "perf") -->
+
+<!-- dt <- crossing( -->
+<!--     adapt_strategies = qc(probability_matching,frrmab,linucb,thompson_sampling), -->
+<!--     adapt_type = qc(pos) -->
+<!--   ) %>% -->
+<!--   mutate( -->
+<!--     irace_test_file = file.path(test_folder, adapt_type, adapt_strategies, "test.rds") -->
+<!--   ) %>% -->
+<!--   filter(file.exists(irace_test_file)) %>% -->
+<!--   mutate(perf = map(irace_test_file, read_rds)) %>% -->
+<!--   bind_rows( -->
+<!--     tibble( -->
+<!--       adapt_strategies = "default-ss", -->
+<!--       adapt_type = qc(pos), -->
+<!--       perf = list(read_rds(file.path(test_folder, "default", "test.rds"))) -->
+<!--     ), -->
+<!--     tibble( -->
+<!--       adapt_strategies = "default-orig", -->
+<!--       adapt_type = qc(pos), -->
+<!--       perf = list(read_rds(file.path(test_folder, "default-original", "test.rds"))) -->
+<!--     ) -->
+<!--   ) %>% -->
+<!--   unnest(perf) %>% -->
+<!--   wrangle_perf() %>% -->
+<!--   group_by(instance) %>% -->
+<!--   mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness)) -->
+
+<!-- dt %>% -->
+<!--   ggplot(aes( -->
+<!--     x = adapt_strategies, -->
+<!--     y = arfp -->
+<!--   )) + -->
+<!--   geom_violin(draw_quantiles = T, alpha = .5) + -->
+<!--   geom_boxplot(alpha = .5) + -->
+<!--   scale_y_continuous(trans = "pseudo_log") +  -->
+<!--   coord_trans(y = "pseudo_log") -->
+<!-- ``` -->
+
+<!-- ```{r friedman-ss} -->
+<!-- friedmanTest( -->
+<!--   dt$fitness, -->
+<!--   dt$adapt_strategies, -->
+<!--   paste(dt$instance, dt$seed) -->
+<!-- ) -->
+<!-- ``` -->
+
+
+<!-- ```{r friendman-all-pairs-ss} -->
+<!-- frdAllPairsNemenyiTest( -->
+<!--   dt$fitness, -->
+<!--   dt$adapt_strategies, -->
+<!--   paste(dt$instance, dt$seed) -->
+<!-- ) -->
+<!-- ``` -->
+
+<!-- ### Adaptive best-insertion local search -->
+
+<!-- ```{r adapt-ps-boxplots, fig.height=5} -->
+<!-- test_folder <- here("reports", "aos", "data", 'exp-03-adaptive_best_insertion', "perf") -->
+
+<!-- dt <- tibble( -->
+<!--     algo = c(# "ig-adapt", -->
+<!--              "ig-def", -->
+<!--              "ig-adapt-replace",  -->
+<!--              "ig-adapt-wo-replace"), -->
+<!--     perf_file = file.path(test_folder, paste0(algo, "-perf.rds")) -->
+<!--   ) %>% -->
+<!--   filter(file.exists(perf_file)) %>% -->
+<!--   mutate(perf = map(perf_file, read_rds)) %>% -->
+<!--   unnest(perf) %>% -->
+<!--   wrangle_perf() %>% -->
+<!--   group_by(instance, objective) %>% -->
+<!--   mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness)) -->
+
+<!-- dt %>% -->
+<!--   ggplot(aes( -->
+<!--     x = objective, -->
+<!--     y = arfp, -->
+<!--     fill = algo -->
+<!--   )) + -->
+<!--   # geom_violin(draw_quantiles = T, alpha = .5) + -->
+<!--   geom_boxplot(alpha = .5) + -->
+<!--   facet_wrap(~no_jobs)#+ -->
+<!--   # scale_y_continuous(trans = "pseudo_log") #+  -->
+<!--   # coord_trans(y = "pseudo_log") -->
+<!-- ``` -->
+
+<!-- With parameter tunning: -->
+
+<!-- ```{r} -->
+<!-- irace_folder <- here("reports", "aos", "data", 'exp-03-adaptive_best_insertion', "irace") -->
+
+<!-- crossing( -->
+<!--   ig_variant = c("ig", "ig-lsps"), -->
+<!--   algo = c('ts', 'pm', 'frrmab', 'linucb') -->
+<!-- ) %>% -->
+<!-- mutate( -->
+<!--   irace_result_file = file.path(irace_folder,  -->
+<!--                         paste0(ig_variant, '-adaptive-bi-', algo, '.rds')) -->
+<!-- ) %>%  -->
+<!--   filter(file.exists(irace_result_file)) %>% -->
+<!--   mutate( -->
+<!--     irace_result = map(irace_result_file, read_rds), -->
+<!--     irace_result = map(irace_result, removeConfigurationsMetaData), -->
+<!--     irace_result = map(irace_result, ~df_to_character(.x[1,])) -->
+<!--   ) %>% -->
+<!--   select(ig_variant, algo, irace_result) %>% -->
+<!--   mutate( -->
+<!--     irace_result = map(irace_result, filter_ig_default), -->
+<!--     irace_result = map(irace_result, format_config) -->
+<!--   ) %>% -->
+<!--   unnest(irace_result) %>% -->
+<!--   knitr::kable("latex", longtable = TRUE) -->
+
+<!-- ``` -->
+
+
+<!-- ```{r exp-03-adaptive_best_insertion, fig.height=5} -->
+<!-- test_folder <- here("reports", "aos", "data", 'exp-03-adaptive_best_insertion', "perf") -->
+
+<!-- dt <- crossing( -->
+<!--     ig_variant = c("ig", "ig-lsps"), -->
+<!--     algo = c('ts', 'pm', 'frrmab', 'linucb') -->
+<!--   ) %>% -->
+<!--   mutate( -->
+<!--     perf_file = file.path(test_folder,  -->
+<!--                           paste0(ig_variant, '-adaptive-bi-', algo, '-tuned-perf.rds')) -->
+<!--   ) %>% -->
+<!--   bind_rows( -->
+<!--     tibble( -->
+<!--      ig_variant = c("ig", "ig-lsps"), -->
+<!--      algo = "def", -->
+<!--      perf_file = file.path(test_folder,  -->
+<!--                            paste0(ig_variant, '-def-perf.rds')) -->
+<!--     ) -->
+<!--   ) %>% -->
+<!--   filter(file.exists(perf_file)) %>% -->
+<!--   mutate(perf = map(perf_file, read_rds)) %>% -->
+<!--   unnest(perf) %>% -->
+<!--   wrangle_perf() %>% -->
+<!--   filter(objective == "FLOWTIME") %>% -->
+<!--   group_by(instance, objective) %>% -->
+<!--   mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness)) -->
+
+<!-- dt %>% -->
+<!--   ggplot(aes( -->
+<!--     x = objective, -->
+<!--     y = arfp, -->
+<!--     fill = paste(algo) -->
+<!--   )) + -->
+<!--   # geom_violin(draw_quantiles = T, alpha = .5) + -->
+<!--   geom_boxplot() + -->
+<!--   facet_grid(~no_jobs)#+ -->
+<!--   # scale_y_continuous(trans = "pseudo_log") #+  -->
+<!--   # coord_trans(y = "pseudo_log") -->
+<!-- ``` -->
+
+<!-- Statistical comparison: -->
+
+<!-- ```{r friedman-exp-03-adaptive_best_insertion} -->
+<!-- testdt <- dt %>% -->
+<!--   filter(ig_variant == 'ig-lsps') -->
+
+<!-- friedmanTest( -->
+<!--   testdt$fitness, -->
+<!--   testdt$algo, -->
+<!--   paste(testdt$instance, testdt$seed) -->
+<!-- ) -->
+<!-- ``` -->
+
+
+<!-- ```{r friendman-all-pairs-exp-03-adaptive_best_insertion} -->
+<!-- frdAllPairsNemenyiTest( -->
+<!--   testdt$fitness, -->
+<!--   testdt$algo, -->
+<!--   paste(testdt$instance, testdt$seed) -->
+<!-- ) -->
+<!-- ``` -->
+
+
+<!-- ### Adaptive destruction size: -->
+
+<!-- - Single step -->
+<!-- - Acceptance criterion: better -->
+
+<!-- ```{r exp-04-adaptive_destruction_size, fig.height=5} -->
+<!-- test_folder <- here("reports", "aos", "data", 'exp-04-adaptive_destruction_size', "perf") -->
+
+<!-- dt <- crossing( -->
+<!--     ig_variant = c("ig", "ig-lsps"), -->
+<!--     algo = c('ts', 'pm', 'frrmab', 'linucb') -->
+<!--   ) %>% -->
+<!--   mutate( -->
+<!--     perf_file = file.path(test_folder,  -->
+<!--                           paste0(ig_variant, '-adaptive-ds-', algo, '-tuned-perf.rds')) -->
+<!--   ) %>% -->
+<!--   bind_rows( -->
+<!--     tibble( -->
+<!--      ig_variant = c("ig", "ig-lsps"), -->
+<!--      algo = "def", -->
+<!--      perf_file = file.path(test_folder,  -->
+<!--                            paste0(ig_variant, '-def-perf.rds')) -->
+<!--     ) -->
+<!--   ) %>% -->
+<!--   filter(file.exists(perf_file)) %>% -->
+<!--   mutate(perf = map(perf_file, read_rds)) %>% -->
+<!--   unnest(perf) %>% -->
+<!--   wrangle_perf() %>% -->
+<!--   filter(objective == "FLOWTIME") %>% -->
+<!--   group_by(instance, objective) %>% -->
+<!--   mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness)) -->
+
+<!-- dt %>% -->
+<!--   ggplot(aes( -->
+<!--     x = objective, -->
+<!--     y = arfp, -->
+<!--     fill = paste(algo) -->
+<!--   )) + -->
+<!--   # geom_violin(draw_quantiles = T, alpha = .5) + -->
+<!--   geom_boxplot() + -->
+<!--   facet_grid(~ig_variant)#+ -->
+<!--   # scale_y_continuous(trans = "pseudo_log") #+  -->
+<!--   # coord_trans(y = "pseudo_log") -->
+<!-- ``` -->
+
+
+
+<!-- ### Adaptive destruction size: -->
+
+<!-- - Single step -->
+<!-- - Acceptance criterion: better -->
+
+<!-- ```{r exp-05-adaptive_size_position, fig.height=5} -->
+<!-- test_folder <- here("reports", "aos", "data", 'exp-05-adaptive_size_position', "perf") -->
+
+<!-- dt <- crossing( -->
+<!--     ig_variant = c("ig", "ig-lsps"), -->
+<!--     algo = c('ts') #, 'pm', 'frrmab', 'linucb') -->
+<!--   ) %>% -->
+<!--   mutate( -->
+<!--     perf_file = file.path(test_folder,  -->
+<!--                           paste0(ig_variant, '-adaptive-ds-', algo, '-tuned-perf.rds')) -->
+<!--   ) %>% -->
+<!--   bind_rows( -->
+<!--     tibble( -->
+<!--      ig_variant = c("ig", "ig-lsps"), -->
+<!--      algo = "def", -->
+<!--      perf_file = file.path(test_folder,  -->
+<!--                            paste0(ig_variant, '-def-perf.rds')) -->
+<!--     ) -->
+<!--   ) %>% -->
+<!--   filter(file.exists(perf_file)) %>% -->
+<!--   mutate(perf = map(perf_file, read_rds)) %>% -->
+<!--   unnest(perf) %>% -->
+<!--   wrangle_perf() %>% -->
+<!--   filter(objective == "FLOWTIME") %>% -->
+<!--   group_by(instance, objective) %>% -->
+<!--   mutate(arfp = 100 * ( fitness - min(fitness)) / min(fitness)) -->
+
+<!-- dt %>% -->
+<!--   ggplot(aes( -->
+<!--     x = objective, -->
+<!--     y = arfp, -->
+<!--     fill = paste(algo) -->
+<!--   )) + -->
+<!--   # geom_violin(draw_quantiles = T, alpha = .5) + -->
+<!--   geom_boxplot() + -->
+<!--   facet_grid(~ig_variant)#+ -->
+<!--   # scale_y_continuous(trans = "pseudo_log") #+  -->
+<!--   # coord_trans(y = "pseudo_log") -->
+<!-- ``` -->
+
+
+<!-- ## Testing on different problems -->
+
+
+<!-- ```{r} -->
+<!-- exp_folder <- here("reports", "aos", "data", "01-adaptive_best_insertion") -->
+
+<!-- algo_perfs <- load_perfs( -->
+<!--   file.path(exp_folder, "perf"),  -->
+<!--   problems %>% filter(set_type == "test") -->
+<!-- ) -->
+
+
+<!-- algo_perfs %>% -->
+<!--   ggplot(aes(x = algo, y = arfp)) + -->
+<!--   geom_boxplot() + -->
+<!--   facet_wrap(~path, scales = "free", nrow = 3) + -->
+<!--   theme(axis.text.x = element_text(angle = 30, hjust = 1)) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+
+<!-- train_folder <- file.path(exp_folder, "irace") -->
+
+<!-- load_config <- function(path) { -->
+<!--   read -->
+<!-- } -->
+
+<!-- problems %>% -->
+<!--   filter(set_type == "train") %>% -->
+<!--   mutate(full_path = file.path(train_folder, path)) %>% -->
+<!--   select(path, full_path) %>% -->
+<!--   mutate(algo = map(full_path, dir)) %>% -->
+<!--   unnest(algo) %>% -->
+<!--   filter(!str_detect(algo, "_log|_rec")) %>% -->
+<!--   mutate( -->
+<!--     config = map( -->
+<!--       file.path(full_path, algo),  -->
+<!--       compose( -->
+<!--         read_rds, -->
+<!--         ~.x[1,], -->
+<!--         removeConfigurationsMetaData, -->
+<!--         df_to_character, -->
+<!--         filter_ig_default, -->
+<!--         format_config, -->
+<!--         .dir = "forward" -->
+<!--       ) -->
+<!--     ) -->
+<!--   ) %>% -->
+<!--   unnest_longer(config) %>% -->
+<!--   select(path, algo, config) %>% -->
+<!--   knitr::kable("latex", longtable = TRUE) -->
+<!-- ``` -->
+
+
+
+<!-- ```{r fig.asp=2} -->
+<!-- algo_perfs %>% -->
+<!--   ggplot(aes(x = algo, y = arfp)) + -->
+<!--   geom_boxplot() + -->
+<!--   facet_wrap(~path, scales = "free", nrow = 3) + -->
+<!--   theme(axis.text.x = element_text(angle = 30, hjust = 1)) -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+<!-- algo_perfs %>% -->
+<!--   ggplot(aes(x = algo, y = arfp)) + -->
+<!--   geom_violin() + -->
+<!--   theme(axis.text.x = element_text(angle = 30, hjust = 1)) -->
+<!-- ``` -->
+
+<!-- ```{r friedman-exp-03-adaptive_best_insertion} -->
+<!-- testdt <- algo_perfs %>% -->
+<!--   group_by(id, path, algo) %>% -->
+<!--   summarise(arfp = mean(arfp), .groups = "drop") -->
+
+<!-- friedmanTest( -->
+<!--   testdt$arfp, -->
+<!--   testdt$algo, -->
+<!--   paste(testdt$id, testdt$path) -->
+<!-- ) -->
+<!-- ``` -->
+
+<!-- ```{r friedman-exp-03-adaptive_best_insertion} -->
+<!-- testdt <- algo_perfs %>% -->
+<!--   group_by(id, path, algo) %>% -->
+<!--   summarise(arfp = mean(arfp), .groups = "drop") -->
+
+<!-- frdAllPairsExactTest( -->
+<!--   testdt$arfp, -->
+<!--   testdt$algo, -->
+<!--   paste(testdt$id, testdt$path) -->
+<!-- ) -->
+<!-- ``` -->

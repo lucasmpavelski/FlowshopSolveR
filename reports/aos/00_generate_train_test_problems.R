@@ -16,19 +16,36 @@ all_problems <- all_problems_df() %>%
     budget = "low"
   )
 
+extra_problems <- all_problems_df() %>%
+  filter(
+    problem %in% c("flowshop"),
+    budget == "high",
+    dist %in% c("exponential", "uniform"),
+    # corr == "random",
+    no_jobs %in% c(100),
+    no_machines %in% c(20)
+  ) %>%
+  mutate(
+    stopping_criterion = "FIXEDTIME",
+    budget = "low"
+  )
+
 
 train_test_sets <- bind_rows(
   all_problems %>%
     mutate(
       instances = map(instances, ~filter(.x, inst_n %in% c(1))),
-      set_type = "train",
-      budget = "low"
+      set_type = "train"
     ),
   all_problems %>%
     mutate(
       instances = map(instances, ~filter(.x, inst_n %in% c(6))),
-      set_type = "test",
-      budget = "low"
+      set_type = "test"
+    ),
+  extra_problems %>%
+    mutate(
+      instances = map(instances, ~filter(.x, inst_n %in% c(6))),
+      set_type = "extra"
     )
 )
 
@@ -37,7 +54,7 @@ train_test_sets <- train_test_sets[sample(nrow(train_test_sets)),]
 train_test_sets_df <- train_test_sets %>%
   mutate(
     problem_space = pmap(., as_metaopt_problem),
-    path = file.path("all")
+    path = "all"
   ) %>%
   group_nest(set_type, path) %>%
   rename(problems = data)

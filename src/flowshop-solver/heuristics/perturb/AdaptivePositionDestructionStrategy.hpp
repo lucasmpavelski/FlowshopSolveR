@@ -21,7 +21,7 @@ class AdaptivePositionDestructionStrategy : public DestructionStrategy<EOT> {
   myTimeStat<EOT> time;
 
   auto choosePosition(EOT& sol) -> int {
-    if (iteration > 2) {
+    if (iteration > 9) {
       if (printRewards) {
         EOT sol;
         time(sol);
@@ -77,6 +77,7 @@ class AdaptivePositionDestructionStrategy : public DestructionStrategy<EOT> {
   auto operator()(EOT& sol) -> EOT override {
     int ds = std::min(destructionSize.value(), static_cast<int>(sol.size()));
     EOT removed;
+    positionSelector.init(sol);
     for (int k = 0; k < ds; k++) {
       unsigned int index = choosePosition(sol);
       removed.push_back(sol[index]);

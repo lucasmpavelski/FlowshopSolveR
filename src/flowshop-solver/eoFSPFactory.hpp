@@ -278,7 +278,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
       return &pack<RandomDestructionStrategy<FSP>>(*destructionSize);
     } else if (destructionName == "adaptive_position") {
       auto positionSelector = buildPositionSelector(".AdaptivePosition");
-      int rewardType = categorical(".AdaptivePosition.AOS.RewardType");
+      int rewardType = categorical(".AdaptivePosition.RewardType");
       return &pack<AdaptivePositionDestructionStrategy<FSP>>(
           *destructionSize, *positionSelector, *getRewards(), rewardType);
     }

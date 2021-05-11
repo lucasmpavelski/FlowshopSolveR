@@ -73,14 +73,16 @@ IG.DestructionStrategy        "" c (random,adaptive_position)
 IG.AdaptivePosition.AOS.Strategy              "" c (probability_matching,frrmab,linucb,thompson_sampling,random) | IG.DestructionStrategy == "adaptive_position"
 
 
-IG.AdaptivePosition.Replace                   "" c (yes,no)
-IG.AdaptivePosition.NoArms                    "" c (fixed_3,fixed_10,fixed_50,no_jobs)
-IG.AdaptivePosition.RandomArm                 "" c (yes,no)
+IG.AdaptivePosition.Replace                   "" c (yes,no) | IG.DestructionStrategy == "adaptive_position"  & IG.AdaptivePosition.AOS.Strategy != "random"
+IG.AdaptivePosition.NoArms                    "" c (fixed_3,fixed_10,fixed_50,no_jobs) | IG.DestructionStrategy == "adaptive_position"  & IG.AdaptivePosition.AOS.Strategy != "random"
+IG.AdaptivePosition.RandomArm                 "" c (yes,no) | IG.DestructionStrategy == "adaptive_position"  & IG.AdaptivePosition.AOS.Strategy != "random"
+IG.AdaptivePosition.RewardType                "" c (0,1,2,3) | IG.DestructionStrategy == "adaptive_position"  & IG.AdaptivePosition.AOS.Strategy != "random"
 
 IG.AdaptivePosition.AOS.WarmUp                "" i (0,2000) | IG.DestructionStrategy == "adaptive_position"
 IG.AdaptivePosition.AOS.WarmUp.Strategy       "" c (random, fixed) | IG.DestructionStrategy == "adaptive_position"
 IG.AdaptivePosition.AOS.RewardType            "" c (0,1,2,3) | IG.DestructionStrategy == "adaptive_position"  & IG.AdaptivePosition.AOS.Strategy != "random"
-IG.AdaptivePosition.AOS.Options               "" c (0_1_2_3) | IG.DestructionStrategy == "adaptive_position" & IG.AdaptivePosition.AOS.Strategy != "random"
+IG.AdaptivePosition.AOS.NoArms                "" c (fixed_3,fixed_10,fixed_50,no_jobs) | IG.DestructionStrategy == "adaptive_position" & IG.AdaptivePosition.AOS.Strategy != "random"
+
 IG.AdaptivePosition.AOS.PM.RewardType         "" c (avgabs,avgnorm,extabs,extnorm)  | IG.DestructionStrategy == "adaptive_position" & IG.AdaptivePosition.AOS.Strategy == "probability_matching"
 IG.AdaptivePosition.AOS.PM.Alpha              "" r (0.1, 0.9) | IG.DestructionStrategy == "adaptive_position" & IG.AdaptivePosition.AOS.Strategy == "probability_matching"
 IG.AdaptivePosition.AOS.PM.PMin               "" r (0.05, 0.2) | IG.DestructionStrategy == "adaptive_position" & IG.AdaptivePosition.AOS.Strategy == "probability_matching"
