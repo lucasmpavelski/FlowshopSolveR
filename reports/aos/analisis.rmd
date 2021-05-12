@@ -170,6 +170,22 @@ algo_perfs %>%
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 ```
 
+
+
+```{r}
+exp_folder <- here("reports", "aos", "data", "03-adaptive_destruction_position")
+perf_folder <- file.path(exp_folder, "perf")
+irace_folder <- file.path(exp_folder, "irace")
+extra_folder <- file.path(exp_folder, "extra")
+
+algo_perfs <- load_perfs(perf_folder)
+
+algo_perfs %>%
+  ggplot(aes(x = algo, y = arfp)) +
+  geom_violin() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
 ```{r}
 algo_perfs %>%
   group_by(algo) %>%

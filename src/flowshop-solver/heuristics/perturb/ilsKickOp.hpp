@@ -25,22 +25,18 @@ class ilsKickOp : public eoMonOp<Chrom> {
    */
   bool operator()(Chrom& chrom) {
     const unsigned n = chrom.size();
-
+    unsigned i, j;
     for (unsigned int swap = 0; swap < howManySwaps; swap++) {
       // generate two different indices
-      unsigned i, j, diff = n * strength;
-      do {
-        i = eo::rng.random(n);
-        j = eo::rng.random(diff * 2) - diff;
-        if (j >= 0)
-          j = i + j + 1;
-        else
-          j = i + j;
-      } while (j < 0 || j >= n);
-
+      i = eo::rng.random(n);
+      j = (i + 1) % n;
       // swap
       std::swap(chrom[i], chrom[j]);
     }
+    i = eo::rng.random(n);
+    j = (i + eo::rng.random(std::max<int>(n / 5, 30))) % n;
+    std::swap(chrom[i], chrom[j]);
+    chrom.invalidate();
     return true;
   }
 

@@ -82,8 +82,8 @@ auto runExperiment(eoInit<EOT>& init,
 
   });
   Result res;
-  res.fitness = std::min(prob.bestSoFar().value().fitness(),
-                         prob.bestLocalSoFar().value().fitness());
+  res.fitness = std::min(sol.fitness(), std::min(prob.bestSoFar().value().fitness(),
+                         prob.bestLocalSoFar().value().fitness()));
   res.time = time;
   res.no_evals = prob.noEvals();
   if (options.printLastFitness) {

@@ -83,4 +83,29 @@ class FitnessRewards : public eoFunctorBase {
   [[nodiscard]] auto lastGlobal() const -> double {
     return throwIfInvalid(global.value().first);
   }
+
+  [[nodiscard]] auto reward(int rewardType) -> double {
+    double pf, cf;
+    switch (rewardType) {
+      case 0:
+        pf = initialGlobal();
+        cf = lastGlobal();
+        break;
+      case 1:
+        pf = initialGlobal();
+        cf = lastLocal();
+        break;
+      case 2:
+        pf = initialLocal();
+        cf = lastGlobal();
+        break;
+      case 3:
+        pf = initialLocal();
+        cf = lastLocal();
+        break;
+      default:
+        throw std::runtime_error{"invalid rewardType"};
+    }
+    return (pf - cf) / pf;
+  }
 };

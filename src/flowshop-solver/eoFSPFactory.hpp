@@ -2,6 +2,8 @@
 
 #include <algo/moLocalSearch.h>
 #include <continuator/moCombinedContinuator.h>
+#include <paradiseo/mo/algo/moLocalSearch.h>
+#include <paradiseo/mo/perturb/moPerturbation.h>
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 #include <stdexcept>
@@ -30,6 +32,8 @@
 
 #include "flowshop-solver/heuristics/perturb/perturb.hpp"
 
+#include "flowshop-solver/heuristics/AdaptiveLocalSearch.hpp"
+#include "flowshop-solver/heuristics/AdaptivePerturb.hpp"
 #include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
 #include "flowshop-solver/heuristics/perturb/IGLocalSearchPartialSolution.hpp"
 
@@ -46,9 +50,9 @@
 
 #include "flowshop-solver/heuristics/AppendingNEH.hpp"
 
-#include "flowshop-solver/position-selector/PositionSelector.hpp"
-#include "flowshop-solver/position-selector/AdaptivePositionSelector.hpp"
 #include "flowshop-solver/position-selector/AdaptiveNoReplacementPositionSelector.hpp"
+#include "flowshop-solver/position-selector/AdaptivePositionSelector.hpp"
+#include "flowshop-solver/position-selector/PositionSelector.hpp"
 
 class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   FSPProblem& _problem;
@@ -61,7 +65,6 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   using Ngh = FSPNeighbor;
 
  protected:
-
   auto domainAcceptanceCriterion() -> moAcceptanceCriterion<Ngh>* override {
     const std::string name = categoricalName(".Accept");
     if (name == "temperature") {
@@ -178,8 +181,9 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
         *localSearch, *neighborhood,
         [this](int size) { return this->_problem.getNeighborhoodSize(size); });
   }
-  
-  auto buildOperatorSelection(const std::string& prefix, const std::vector<int>& options)
+
+  auto buildOperatorSelection(const std::string& prefix,
+                              const std::vector<int>& options)
       -> OperatorSelection<int>* {
     const std::string name = categoricalName(prefix + ".AOS.Strategy");
     OperatorSelection<int>* strategy = nullptr;
@@ -286,25 +290,50 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   }
 
   auto domainPerturb() -> moPerturbation<Ngh>* override {
-    auto insertionName = categoricalName(".Perturb.Insertion");
-    auto insertion =
-        buildInsertionStrategy(insertionName, _problem.neighborEval())
-            .release();
-    storeFunctor(insertion);
-    auto destructionStrategy = buildDestructionStrategy();
-
     const std::string name = categoricalName(".Perturb");
+    return domainPerturbByName(name);
+  }
+
+  auto domainPerturbByName(const std::string& name) -> moPerturbation<Ngh>* {
+    auto& eval = _problem.eval();
     if (name == "rs") {
+      auto insertionName = categoricalName(".Perturb.Insertion");
+      auto insertion =
+          buildInsertionStrategy(insertionName, _problem.neighborEval())
+              .release();
+      storeFunctor(insertion);
+      auto destructionStrategy = buildDestructionStrategy();
       return &pack<DestructionConstruction<Ngh>>(*insertion,
                                                  *destructionStrategy);
     } else if (name == "lsps") {
+      auto insertionName = categoricalName(".Perturb.Insertion");
+      auto insertion =
+          buildInsertionStrategy(insertionName, _problem.neighborEval())
+              .release();
+      storeFunctor(insertion);
+      auto destructionStrategy = buildDestructionStrategy();
       auto lspsLocalSearch = buildLSPSLocalSearch();
       return &pack<IGLocalSearchPartialSolution<Ngh>>(
           *insertion, *destructionStrategy, *lspsLocalSearch);
+    } else if (name == "swap") {
+      auto kickPerturb = &pack<ilsKickOp<EOT>>(2, 0);
+      return &pack<moMonOpPerturb<Ngh>>(*kickPerturb, eval);
+    } else if (name == "adaptive") {
+      std::vector<moPerturbation<Ngh>*> perturbations = {
+          domainPerturbByName("rs"),
+          domainPerturbByName("lsps"),
+          domainPerturbByName("swap")};
+      std::vector<int> options = {0, 1, 2};
+      auto operatorSelection =
+          buildOperatorSelection(".AdaptivePerturb", options);
+      int rewardType = categorical(".AdaptivePerturb.AOS.RewardType");
+      auto op = &pack<AdaptivePerturb<Ngh>>(perturbations, *getRewards(),
+                                             rewardType, *operatorSelection);
+      return &pack<moMonOpPerturb<Ngh>>(*op, eval);
     }
     return nullptr;
   }
-  
+
   auto buildPositionSelector(const std::string& prefix) -> PositionSelector* {
     std::vector<int> options;
     const std::string noArms = categoricalName(prefix + ".NoArms");
@@ -339,10 +368,23 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
     auto& nghCp = _problem.neighborhoodCheckpoint();
 
     std::string name = categoricalName(".Local.Search");
-    if (name == "adaptive_best_insertion") {
+    if (name == "adaptive") {
+      std::vector<moLocalSearch<Ngh>*> localSearches = {
+          buildLocalSearchByName("first_improvement", false),
+          buildLocalSearchByName("best_improvement", false),
+          buildLocalSearchByName("random_best_improvement", false),
+          buildLocalSearchByName("best_insertion", false)};
+      std::vector<int> options = {0, 1, 2, 3};
+      auto operatorSelection =
+          buildOperatorSelection(".AdaptiveLocalSearch", options);
+      int rewardType = categorical(".AdaptiveLocalSearch.AOS.RewardType");
+      return &pack<AdaptiveLocalSearch<Ngh>>(localSearches, *getRewards(),
+                                             rewardType, *operatorSelection, cp,
+                                             eval);
+    } else if (name == "adaptive_best_insertion") {
       auto positionSelector = buildPositionSelector(".AdaptiveBestInsertion");
-      auto explorer =
-          &pack<AdaptiveBestInsertionExplorer<EOT>>(*positionSelector, nEval, nghCp, *compNN, *compSN);
+      auto explorer = &pack<AdaptiveBestInsertionExplorer<EOT>>(
+          *positionSelector, nEval, nghCp, *compNN, *compSN);
       return &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);
     }
     throw std::runtime_error("Local search type not found: " + name + ".");
