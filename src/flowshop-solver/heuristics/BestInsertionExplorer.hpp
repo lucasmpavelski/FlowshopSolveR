@@ -7,6 +7,7 @@
 #include "flowshop-solver/global.hpp"
 #include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 #include "flowshop-solver/problems/FSP.hpp"
+// #include "flowshop-solver/neighborhood-size/NeighborhoodSize.hpp"
 
 enum class NeighborhoodType { random, ordered };
 
@@ -36,6 +37,7 @@ class BestInsertionExplorer
   bool LO;
   std::vector<int> RandJOB;
   unsigned k;
+  // NeighborhoodSize& neighborhoodSize;
 
  public:
   BestInsertionExplorer(
@@ -43,12 +45,14 @@ class BestInsertionExplorer
       NeigborhoodCheckpoint<Ngh>& neighborhoodCheckpoint,
       moNeighborComparator<Ngh>& neighborComparator,
       moSolNeighborComparator<Ngh>& solNeighborComparator,
+      NeighborhoodSize& neighborhoodSize,
       NeighborhoodType neighborhoodType = NeighborhoodType::random)
       : moNeighborhoodExplorer<Ngh>{},
         neighborhoodCheckpoint{neighborhoodCheckpoint},
         neighborComparator{neighborComparator},
         solNeighborComparator{solNeighborComparator},
         neighborEval{neighborEval},
+        // neighborhoodSize(neighborhoodSize),
         neighborhoodType{neighborhoodType} {}
 
   void initParam(EOT& _solution) final {
@@ -59,6 +63,7 @@ class BestInsertionExplorer
       std::shuffle(RandJOB.begin(), RandJOB.end(),
                    ParadiseoRNGFunctor<unsigned int>());
     }
+    // RandJOB.resize(neighborhoodSize.getSize());
     k = 0;
   }
 
@@ -72,6 +77,7 @@ class BestInsertionExplorer
           std::shuffle(RandJOB.begin(), RandJOB.end(),
                        ParadiseoRNGFunctor<unsigned int>());
         }
+        // RandJOB.resize(neighborhoodSize.getSize());
         improve = false;
       } else {
         LO = true;

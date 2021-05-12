@@ -9,6 +9,7 @@
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
 
+#include "flowshop-solver/problems/FSPProblem.hpp"
 #include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
 #include "flowshop-solver/heuristics/IGexplorer.hpp"
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"

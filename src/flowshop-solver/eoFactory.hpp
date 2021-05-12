@@ -1,6 +1,5 @@
 #pragma once
 
-#include <algo/moLocalSearch.h>
 #include <type_traits>
 
 #include <paradiseo/eo/eo>
@@ -9,11 +8,15 @@
 #include "flowshop-solver/MHParamsValues.hpp"
 #include "flowshop-solver/aos/adaptive_operator_selection.hpp"
 #include "flowshop-solver/aos/thompson_sampling.hpp"
-#include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
 #include "flowshop-solver/heuristics/AdaptiveBestInsertionExplorer.hpp"
+// #include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
 #include "flowshop-solver/heuristics/InitLocalSearch.hpp"
 #include "flowshop-solver/heuristics/falseContinuator.hpp"
 #include "flowshop-solver/problems/Problem.hpp"
+
+// #include "flowshop-solver/neighborhood-size/NeighborhoodSize.hpp"
+// #include "flowshop-solver/neighborhood-size/FixedNeighborhoodSize.hpp"
+// #include "flowshop-solver/neighborhood-size/AdaptiveNeighborhoodSize.hpp"
 
 #include "aos/thompson_sampling.hpp"
 
@@ -43,9 +46,7 @@ class eoFactory : public eoFunctorStore {
     return nullptr;
   }
 
-  virtual auto domainLocalSearch() -> moLocalSearch<Ngh>* {
-    return nullptr;
-  }
+  virtual auto domainLocalSearch() -> moLocalSearch<Ngh>* { return nullptr; }
 
   virtual auto domainPerturb() -> moPerturbation<Ngh>* { return nullptr; }
 
@@ -97,10 +98,10 @@ class eoFactory : public eoFunctorStore {
       init = domainInit();
     }
     return init;
-  //  auto initLocalSearch = buildLocalSearchByName(
-  //      categoricalName(".Init.LocalSearch"),
-  //      categorical(".Init.LocalSearch.SingleStep") == 1);
-  //  return &pack<InitLocalSearch<Ngh>>(*init, *initLocalSearch);
+    //  auto initLocalSearch = buildLocalSearchByName(
+    //      categoricalName(".Init.LocalSearch"),
+    //      categorical(".Init.LocalSearch.SingleStep") == 1);
+    //  return &pack<InitLocalSearch<Ngh>>(*init, *initLocalSearch);
   }
 
   auto buildAcceptanceCriterion() -> moAcceptanceCriterion<Ngh>* {
@@ -171,11 +172,23 @@ class eoFactory : public eoFunctorStore {
                                   categorical(".LS.Single.Step") == 1);
   }
 
-  auto buildLOOperatorSelection() -> OperatorSelection<int>* {
-    /*std::vector<int> arms(_problem.size());
-    std::iota(arms.begin(), arms.end(), 0);*/
-    return &pack<ThompsonSampling<int>>({0,1,2,3});
-  }
+  // auto buildNeighborhoodSize() -> NeighborhoodSize* {
+  //   const std::string name = categoricalName(".Neighborhood.Strat");
+  //   if (name == "random" || name == "ordered") {
+  //     const int size = _problem.size(0) * real(".Neighborhood.Size");
+  //     return &pack<FixedNeighborhoodSize>(size);
+  //   } else if (name == "adaptive") {
+  //       int noPartitions = categorical(".AdaptiveNeighborhood.AOS.NoArms");
+  //       std::vector<int> options(noPartitions);
+  //       std::iota(options.begin(), options.end(), 1);
+  //       int rewardType = categorical(".AdaptiveNeighborhood.AOS.RewardType");
+  //       auto operatorSelection =
+  //           buildOperatorSelection(".AdaptiveNeighborhood", options);
+  //       return &pack<AdaptiveNeighborhoodSize<EOT>>(
+  //           _problem.size(0), operatorSelection, *getRewards(), rewardType);
+  //     }
+  //   return nullptr;
+  // }
 
   auto buildLocalSearchByName(const std::string& name, bool singleStep)
       -> moLocalSearch<Ngh>* {
@@ -203,8 +216,9 @@ class eoFactory : public eoFunctorStore {
       ret = &pack<moRandomBestHC<Ngh>>(*neighborhood, eval, nEval, cp, *compNN,
                                        *compSN);
     } else if (name == "best_insertion") {
-      auto explorer =
-          &pack<BestInsertionExplorer<EOT>>(nEval, nghCp, *compNN, *compSN);
+      // auto neighborhoodSize = buildNeighborhoodSize();
+      auto explorer = &pack<BestInsertionExplorer<EOT>>(
+          nEval, nghCp, *compNN, *compSN); //, neighborhoodSize);
       ret = &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);
     } else {
       ret = domainLocalSearch();
@@ -213,11 +227,89 @@ class eoFactory : public eoFunctorStore {
     if (singleStep) {
       auto falseCont = &pack<falseContinuator<Ngh>>();
       cp.add(*falseCont);
-      //ret->setContinuator(*singleStepContinuator);
+      // ret->setContinuator(*singleStepContinuator);
     }
 
     return ret;
   }
 
   auto buildPerturb() -> moPerturbation<Ngh>* { return domainPerturb(); }
+
+  auto buildOperatorSelection(const std::string& prefix,
+                              const std::vector<int>& options)
+      -> OperatorSelection<int>* {
+    const std::string name = categoricalName(prefix + ".AOS.Strategy");
+    OperatorSelection<int>* strategy = nullptr;
+    if (name == "probability_matching") {
+      strategy = &pack<ProbabilityMatching<int>>(
+          options, categoricalName(prefix + ".AOS.PM.RewardType"),
+          real(prefix + ".AOS.PM.Alpha"), real(prefix + ".AOS.PM.PMin"),
+          integer(prefix + ".AOS.PM.UpdateWindow"));
+    } else if (name == "frrmab") {
+      strategy = &pack<FRRMAB<int>>(options,
+                                    integer(prefix + ".AOS.FRRMAB.WindowSize"),
+                                    real(prefix + ".AOS.FRRMAB.Scale"),
+                                    real(prefix + ".AOS.FRRMAB.Decay"));
+    } else if (name == "linucb") {
+      auto& fitnessHistory = pack<FitnessHistory<EOT>>();
+      auto& awSize = pack<AdaptiveWalkLengthFLA<EOT>>(fitnessHistory,
+                                                      1.0 / _problem.size());
+      auto& autocorr = pack<AutocorrelationFLA<EOT>>(fitnessHistory);
+      auto& fdc = pack<FitnessDistanceCorrelationFLA<EOT>>(fitnessHistory);
+      auto& neutralityFLA = pack<NeutralityFLA<Ngh>>();
+
+      _problem.checkpoint().add(fitnessHistory);
+      _problem.neighborhoodCheckpoint().add(neutralityFLA);
+      _problem.checkpoint().add(_problem.neighborhoodCheckpoint());
+      _problem.checkpoint().add(neutralityFLA);
+
+      auto& context = pack<ProblemContext>();
+      context.add(awSize);
+      context.add(neutralityFLA);
+      context.add(autocorr);
+      context.add(fdc);
+
+      strategy = &pack<LinUCB<int>>(options, context,
+                                    real(prefix + ".AOS.LINUCB.Alpha"));
+    } else if (name == "thompson_sampling") {
+      if (categoricalName(prefix + ".AOS.TS.Strategy") == "static") {
+        strategy = &pack<ThompsonSampling<int>>(options);
+      } else if (categoricalName(prefix + ".AOS.TS.Strategy") == "dynamic") {
+        strategy = &pack<DynamicThompsonSampling<int>>(
+            options, integer(prefix + ".AOS.TS.C"));
+      }
+    } else if (name == "random") {
+      strategy = &pack<Random<int>>(options);
+    }
+
+    auto warmUpProportion = integer(prefix + ".AOS.WarmUp");
+    auto warmUpStrategy = categoricalName(prefix + ".AOS.WarmUp.Strategy");
+    auto& warmUpContinuator =
+        pack<moIterContinuator<OperatorSelection<int>::DummyNgh>>(
+            warmUpProportion, false);
+    strategy->setWarmUp(warmUpContinuator, warmUpStrategy, 0);
+
+    return strategy;
+  }
+
+  FitnessRewards<EOT>* cachedRewards = nullptr;
+  auto getRewards() -> FitnessRewards<FSP>* {
+    if (cachedRewards != nullptr)
+      return cachedRewards;
+    auto& rewards = pack<FitnessRewards<EOT>>();
+    _problem.checkpoint().add(rewards.localStat());
+    _problem.checkpointGlobal().add(rewards.globalStat());
+    this->cachedRewards = &rewards;
+    return &rewards;
+  }
+
+  auto buildOperatorSelection(const std::string& prefix)
+      -> OperatorSelection<int>* {
+    std::string opts = categoricalName(prefix + ".AOS.Options");
+    std::vector<std::string> opts_strs = tokenize(opts, '_');
+    std::vector<int> options(opts_strs.size());
+    std::transform(begin(opts_strs), end(opts_strs), begin(options),
+                   [](std::string& s) { return std::stoi(s); });
+    return buildOperatorSelection(prefix, options);
+  }
 };
