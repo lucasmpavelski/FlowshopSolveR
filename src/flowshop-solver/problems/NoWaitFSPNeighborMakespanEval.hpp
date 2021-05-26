@@ -17,7 +17,7 @@
  */
 class NoWaitFSPNeighborMakespanEval : public moEval<FSPNeighbor> {
   const FSPData& fspData;
-  [[maybe_unused]] NoWaitFSPEval& fullEval;
+  NoWaitFSPEval& fullEval;
 
   auto partialMakespan(FSP& sol, unsigned j) -> int {
     if (sol.invalid()) {

@@ -6,6 +6,7 @@ library(irace)
 library(furrr)
 
 plan(remote, workers = rep("linode2", 8), persistent = TRUE)
+# plan(sequential)
 
 run_irace <- function(name, params, problems, ...) {
   dir.create(dirname(name), recursive = T, showWarnings = F)
@@ -37,7 +38,6 @@ IG.Init.NEH.PriorityWeighted       "" c (no)
 IG.Init.NEH.Insertion              "" c (first_best)
 IG.Comp.Strat                      "" c (strict)
 IG.Neighborhood.Size               "" c (1.0)
-IG.Neighborhood.Strat              "" c (ordered)
 IG.LS.Single.Step                  "" c (0)
 IG.Accept                          "" c (temperature)
 IG.Accept.Better.Comparison        "" c (strict)
@@ -47,14 +47,14 @@ IG.Perturb.DestructionSizeStrategy "" c (fixed)
 IG.Perturb.DestructionSize         "" c (4)
 IG.DestructionStrategy             "" c (random)
 IG.Local.Search                    "" c (best_insertion)
-IG.LSPS.Local.Search               "" c (best_insertion)
-IG.LSPS.Single.Step                "" c (0)
+IG.Perturb                         "" c (rs)
 
-IG.Perturb                         "" c (adaptive)
+IG.Neighborhood.Strat              "" c (adaptive)
 
-IG.AdaptivePerturb.AOS.WarmUp          "" c (0,1000,2000)
-IG.AdaptivePerturb.AOS.WarmUp.Strategy "" c (random)
-IG.AdaptivePerturb.AOS.RewardType      "" c (0,1,2,3)
+IG.AdaptiveNeighborhoodSize.AOS.NoArms          "" c (2,3,5,10)
+IG.AdaptiveNeighborhoodSize.AOS.WarmUp          "" c (0,1000,2000)
+IG.AdaptiveNeighborhoodSize.AOS.WarmUp.Strategy "" c (random)
+IG.AdaptiveNeighborhoodSize.AOS.RewardType      "" c (0,1,2,3)
       '
 )
 
@@ -62,32 +62,31 @@ IG.AdaptivePerturb.AOS.RewardType      "" c (0,1,2,3)
 adapt_variants <- tribble(
   ~adapt_variant, ~params,
   'ts', '
-  IG.AdaptivePerturb.AOS.Strategy              "" c (thompson_sampling)
-  IG.AdaptivePerturb.AOS.TS.Strategy           "" c (static, dynamic)
-  IG.AdaptivePerturb.AOS.TS.C                  "" i (1,500)  | IG.AdaptivePerturb.AOS.TS.Strategy == "dynamic"
+  IG.AdaptiveNeighborhoodSize.AOS.Strategy              "" c (thompson_sampling)
+  IG.AdaptiveNeighborhoodSize.AOS.TS.Strategy           "" c (static, dynamic)
+  IG.AdaptiveNeighborhoodSize.AOS.TS.C                  "" i (1,500)  | IG.AdaptiveNeighborhoodSize.AOS.TS.Strategy == "dynamic"
   ' ,
   'pm', '
-  IG.AdaptivePerturb.AOS.Strategy              "" c (probability_matching)
-  IG.AdaptivePerturb.AOS.PM.RewardType         "" c (avgabs,avgnorm,extabs,extnorm)
-  IG.AdaptivePerturb.AOS.PM.Alpha              "" r (0.1, 0.9)
-  IG.AdaptivePerturb.AOS.PM.PMin               "" r (0.05, 0.2)
-  IG.AdaptivePerturb.AOS.PM.UpdateWindow       "" i (1,500)
+  IG.AdaptiveNeighborhoodSize.AOS.Strategy              "" c (probability_matching)
+  IG.AdaptiveNeighborhoodSize.AOS.PM.RewardType         "" c (avgabs,avgnorm,extabs,extnorm)
+  IG.AdaptiveNeighborhoodSize.AOS.PM.Alpha              "" r (0.1, 0.9)
+  IG.AdaptiveNeighborhoodSize.AOS.PM.PMin               "" r (0.05, 0.2)
+  IG.AdaptiveNeighborhoodSize.AOS.PM.UpdateWindow       "" i (1,500)
   ',
   'frrmab', '
-  IG.AdaptivePerturb.AOS.Strategy              "" c (frrmab)
-  IG.AdaptivePerturb.AOS.FRRMAB.WindowSize     "" i (10, 500)
-  IG.AdaptivePerturb.AOS.FRRMAB.Scale          "" r (0.01, 100)
-  IG.AdaptivePerturb.AOS.FRRMAB.Decay          "" r (0.25, 1.0)
+  IG.AdaptiveNeighborhoodSize.AOS.Strategy              "" c (frrmab)
+  IG.AdaptiveNeighborhoodSize.AOS.FRRMAB.WindowSize     "" i (10, 500)
+  IG.AdaptiveNeighborhoodSize.AOS.FRRMAB.Scale          "" r (0.01, 100)
+  IG.AdaptiveNeighborhoodSize.AOS.FRRMAB.Decay          "" r (0.25, 1.0)
   ',
   'linucb', '
-  IG.AdaptivePerturb.AOS.Strategy              "" c (linucb)
-  IG.AdaptivePerturb.AOS.LINUCB.Alpha          "" r (0.0, 1.5)
+  IG.AdaptiveNeighborhoodSize.AOS.Strategy              "" c (linucb)
+  IG.AdaptiveNeighborhoodSize.AOS.LINUCB.Alpha          "" r (0.0, 1.5)
   '
 )
 
-# plan(sequential)
 
-exp_folder <- here("reports", "aos", "data", "05-adaptive_perturb")
+exp_folder <- here("reports", "aos", "data", "06-adaptive_neighborhood_size")
 perf_folder <- file.path(exp_folder, "perf")
 irace_folder <- file.path(exp_folder, "irace")
 extra_folder <- file.path(exp_folder, "extra")
@@ -169,34 +168,3 @@ tuned_perf <- test_configs %>%
     }
     )
   )
-
-
-# print("Computing extras")
-# 
-# tuned_perf_extra <- test_configs %>%
-#   select(path, best_config, ig_variant, adapt_variant) %>%
-#   mutate(
-#     best_config = map(best_config, removeConfigurationsMetaData),
-#     best_config = map(best_config, ~df_to_character(.x[1,])),
-#     name = here(extra_folder, path, paste0(ig_variant, adapt_variant, ".rds"))
-#   ) %>%
-#   inner_join(
-#     train_test_sets_df %>%
-#       filter(set_type == "extra"),
-#     by = "path"
-#   ) %>%
-#   mutate(
-#     sampled_performance = pmap(., function(name, problems, best_config, ...) {
-#       dir.create(dirname(name), recursive = T, showWarnings = F)
-#       set.seed(79879874)
-#       sample_performance(
-#         algorithm = get_algorithm("IG"),
-#         problemSpace = ProblemSpace(problems = problems$problem_space),
-#         config = best_config,
-#         solve_function = fsp_solver_performance,
-#         no_samples = 10,
-#         cache = name
-#       )
-#     }
-#     )
-#   )

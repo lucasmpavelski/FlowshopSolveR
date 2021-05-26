@@ -16,6 +16,7 @@
 #include "flowshop-solver/heuristics/op_cooling_schedule.hpp"
 
 #include "flowshop-solver/heuristics/perturb/perturb.hpp"
+#include "flowshop-solver/number-of-swaps/FixedNumberOfSwaps.hpp"
 
 template <class Ngh, class EOT = typename Problem<Ngh>::EOT>
 auto solveWithILS(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
@@ -198,8 +199,8 @@ auto solveWithILS(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   // params.integer("ILS.Perturb.Destruction.Size")); moMonOpPerturb<Ngh>
   // perturb1(OpPerturb, fullEval);
   // Kick perturbation with Exhange
-  ilsKickOp<EOT> kickPerturb(params.integer("ILS.Perturb.No.Kick"),
-                             params.real("ILS.Perturb.Kick.Strength"));
+  FixedNumberOfSwaps noSwaps(params.integer("ILS.Perturb.No.Kick"));
+  ilsKickOp<EOT> kickPerturb(noSwaps);
   moMonOpPerturb<Ngh> perturb1(kickPerturb, fullEval);
 
   // init -> monOp in order to use it in nilsPerturb framework

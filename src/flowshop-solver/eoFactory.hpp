@@ -1,6 +1,8 @@
 #pragma once
 
+#include <stdexcept>
 #include <type_traits>
+#include <exception>
 
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
@@ -14,11 +16,33 @@
 #include "flowshop-solver/heuristics/falseContinuator.hpp"
 #include "flowshop-solver/problems/Problem.hpp"
 
-// #include "flowshop-solver/neighborhood-size/NeighborhoodSize.hpp"
-// #include "flowshop-solver/neighborhood-size/FixedNeighborhoodSize.hpp"
-// #include "flowshop-solver/neighborhood-size/AdaptiveNeighborhoodSize.hpp"
+
+// AOS
+#include "flowshop-solver/aos/frrmab.hpp"
+#include "flowshop-solver/aos/lin_ucb.hpp"
+#include "flowshop-solver/aos/probability_matching.hpp"
+#include "flowshop-solver/aos/random.hpp"
+#include "flowshop-solver/aos/thompson_sampling.hpp"
+
+// Online FLA
+#include "flowshop-solver/fla/AdaptiveWalkLengthFLA.hpp"
+#include "flowshop-solver/fla/AutocorrelationFLA.hpp"
+#include "flowshop-solver/fla/FitnessDistanceCorrelationFLA.hpp"
+#include "flowshop-solver/fla/FitnessHistory.hpp"
+#include "flowshop-solver/fla/NeutralityFLA.hpp"
+
+#include "flowshop-solver/neighborhood-size/NeighborhoodSize.hpp"
+#include "flowshop-solver/neighborhood-size/FixedNeighborhoodSize.hpp"
+#include "flowshop-solver/neighborhood-size/AdaptiveNeighborhoodSize.hpp"
 
 #include "aos/thompson_sampling.hpp"
+
+
+#include "flowshop-solver/heuristics/AdaptiveLocalSearch.hpp"
+
+#include "flowshop-solver/position-selector/AdaptiveNoReplacementPositionSelector.hpp"
+#include "flowshop-solver/position-selector/AdaptivePositionSelector.hpp"
+#include "flowshop-solver/position-selector/PositionSelector.hpp"
 
 template <class Ngh>
 class myOrderNeighborhood : public moOrderNeighborhood<Ngh>,
@@ -43,6 +67,7 @@ class eoFactory : public eoFunctorStore {
     return nullptr;
   }
   virtual auto domainNeighborhood() -> moIndexNeighborhood<Ngh>* {
+    throw std::runtime_error("unknown neigborhood type");
     return nullptr;
   }
 
@@ -131,7 +156,7 @@ class eoFactory : public eoFunctorStore {
     const std::string name = categoricalName(".Neighborhood.Strat");
     if (name == "ordered") {
       return &pack<myOrderNeighborhood<Ngh>>(size);
-    } else if (name == "random") {
+    } else if (name == "random" || name == "adaptive") {
       return &pack<myRndWithoutReplNeighborhood<Ngh>>(size);
     }
     return domainNeighborhood();
@@ -167,28 +192,52 @@ class eoFactory : public eoFunctorStore {
       return domainNeighborComparator();
   }
 
+  auto buildPositionSelector(const std::string& prefix) -> PositionSelector* {
+    std::vector<int> options;
+    const std::string noArms = categoricalName(prefix + ".NoArms");
+    if (noArms == "no_jobs") {
+      options.resize(_problem.size());
+    } else if (noArms.find("fixed_") == 0) {
+      const int parsedNoArms = std::stoi(noArms.substr(6));
+      options.resize(parsedNoArms);
+    }
+    std::iota(options.begin(), options.end(), 1);
+    if (categoricalName(prefix + ".RandomArm") == "yes") {
+      options.push_back(0);
+    }
+    auto operatorSelection = buildOperatorSelection(prefix, options);
+    auto replace = categoricalName(prefix + ".Replace");
+    if (replace == "yes") {
+      return &pack<AdaptivePositionSelector>(*operatorSelection);
+    } else if (replace == "no") {
+      return &pack<AdaptiveNoReplacementPositionSelector>(*operatorSelection);
+    }
+    assert(false);
+    return nullptr;
+  }
+
   auto buildLocalSearch() -> moLocalSearch<Ngh>* {
     return buildLocalSearchByName(categoricalName(".Local.Search"),
                                   categorical(".LS.Single.Step") == 1);
   }
 
-  // auto buildNeighborhoodSize() -> NeighborhoodSize* {
-  //   const std::string name = categoricalName(".Neighborhood.Strat");
-  //   if (name == "random" || name == "ordered") {
-  //     const int size = _problem.size(0) * real(".Neighborhood.Size");
-  //     return &pack<FixedNeighborhoodSize>(size);
-  //   } else if (name == "adaptive") {
-  //       int noPartitions = categorical(".AdaptiveNeighborhood.AOS.NoArms");
-  //       std::vector<int> options(noPartitions);
-  //       std::iota(options.begin(), options.end(), 1);
-  //       int rewardType = categorical(".AdaptiveNeighborhood.AOS.RewardType");
-  //       auto operatorSelection =
-  //           buildOperatorSelection(".AdaptiveNeighborhood", options);
-  //       return &pack<AdaptiveNeighborhoodSize<EOT>>(
-  //           _problem.size(0), operatorSelection, *getRewards(), rewardType);
-  //     }
-  //   return nullptr;
-  // }
+  auto buildNeighborhoodSize() -> NeighborhoodSize* {
+    const std::string name = categoricalName(".Neighborhood.Strat");
+    if (name == "random" || name == "ordered") {
+      const int size = _problem.size(0) * real(".Neighborhood.Size");
+      return &pack<FixedNeighborhoodSize>(size);
+    } else if (name == "adaptive") {
+        int noPartitions = integer(".AdaptiveNeighborhoodSize.AOS.NoArms");
+        std::vector<int> options(noPartitions);
+        std::iota(options.begin(), options.end(), 1);
+        int rewardType = categorical(".AdaptiveNeighborhoodSize.AOS.RewardType");
+        auto operatorSelection =
+            buildOperatorSelection(".AdaptiveNeighborhoodSize", options);
+        return &pack<AdaptiveNeighborhoodSize<EOT>>(
+            _problem.size(0), *operatorSelection, *getRewards(), rewardType);
+      }
+    return nullptr;
+  }
 
   auto buildLocalSearchByName(const std::string& name, bool singleStep)
       -> moLocalSearch<Ngh>* {
@@ -216,12 +265,44 @@ class eoFactory : public eoFunctorStore {
       ret = &pack<moRandomBestHC<Ngh>>(*neighborhood, eval, nEval, cp, *compNN,
                                        *compSN);
     } else if (name == "best_insertion") {
-      // auto neighborhoodSize = buildNeighborhoodSize();
+      auto neighborhoodSize = buildNeighborhoodSize();
       auto explorer = &pack<BestInsertionExplorer<EOT>>(
-          nEval, nghCp, *compNN, *compSN); //, neighborhoodSize);
+          nEval, nghCp, *compNN, *compSN, *neighborhoodSize);
       ret = &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);
+    } else if (name == "adaptive") {
+      std::vector<moLocalSearch<Ngh>*> localSearches = {
+          buildLocalSearchByName("first_improvement", false),
+          buildLocalSearchByName("best_improvement", false),
+          buildLocalSearchByName("random_best_improvement", false),
+          buildLocalSearchByName("best_insertion", false)};
+      std::vector<int> options = {0, 1, 2, 3};
+      auto operatorSelection =
+          buildOperatorSelection(".AdaptiveLocalSearch", options);
+      int rewardType = categorical(".AdaptiveLocalSearch.AOS.RewardType");
+      return &pack<AdaptiveLocalSearch<Ngh>>(localSearches, *getRewards(),
+                                             rewardType, *operatorSelection, cp,
+                                             eval);
+    } else if (name == "adaptive_best_insertion") {
+      auto positionSelector = buildPositionSelector(".AdaptiveBestInsertion");
+      auto explorer = &pack<AdaptiveBestInsertionExplorer<EOT>>(
+          *positionSelector, nEval, nghCp, *compNN, *compSN);
+      return &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);
+    } else if (name == "adaptive_with_adaptive_best_insertion") {
+      std::vector<moLocalSearch<Ngh>*> localSearches = {
+          buildLocalSearchByName("first_improvement", false),
+          buildLocalSearchByName("best_improvement", false),
+          buildLocalSearchByName("random_best_improvement", false),
+          buildLocalSearchByName("best_insertion", false),
+          buildLocalSearchByName("adaptive_best_insertion" , false)};
+      std::vector<int> options = {0, 1, 2, 3, 4};
+      auto operatorSelection =
+          buildOperatorSelection(".AdaptiveLocalSearch", options);
+      int rewardType = categorical(".AdaptiveLocalSearch.AOS.RewardType");
+      return &pack<AdaptiveLocalSearch<Ngh>>(localSearches, *getRewards(),
+                                             rewardType, *operatorSelection, cp,
+                                             eval);
     } else {
-      ret = domainLocalSearch();
+      return domainLocalSearch();
     }
 
     if (singleStep) {

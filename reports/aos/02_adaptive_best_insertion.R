@@ -51,7 +51,7 @@ IG.Local.Search                      "" c (adaptive_best_insertion)
 IG.AdaptiveBestInsertion.AOS.WarmUp  "" c (0,1000,10000,100000)
 IG.AdaptiveBestInsertion.AOS.WarmUp.Strategy "" c (random)
 IG.AdaptiveBestInsertion.Replace             "" c (yes,no)
-IG.AdaptiveBestInsertion.NoArms              "" c (fixed_3,fixed_10,fixed_50,no_jobs)
+IG.AdaptiveBestInsertion.NoArms              "" c (fixed_3,fixed_10,no_jobs)
 IG.AdaptiveBestInsertion.RandomArm           "" c (yes,no)
       ' #,
   # 'ig-lsps', '

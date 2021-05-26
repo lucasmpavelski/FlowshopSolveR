@@ -18,6 +18,7 @@
 #include "flowshop-solver/problems/NoWaitFSPEval.hpp"
 #include "flowshop-solver/problems/NoWaitFSPNeighborMakespanEval.hpp"
 #include "flowshop-solver/problems/PermFSPEval.hpp"
+#include "flowshop-solver/neighborhood-size/FixedNeighborhoodSize.hpp"
 
 #ifdef NDEBUG
 #undef NDEBUG
@@ -188,8 +189,9 @@ TEST(TaillardAcceleration, BestInsertionNeighborhood) {
   NeigborhoodCheckpoint<FSPNeighbor> neighborhoodCheckpoint{tc};
   moNeighborComparator<FSPNeighbor> compNN;
   moSolNeighborComparator<FSPNeighbor> compSN;
+  FixedNeighborhoodSize ns(no_jobs);
   BestInsertionExplorer<FSP> igexplorer(ne, neighborhoodCheckpoint, compNN,
-                                        compSN);
+                                        compSN, ns);
 
   rng.reseed(65465l);
   fullEval(sol);
@@ -197,7 +199,7 @@ TEST(TaillardAcceleration, BestInsertionNeighborhood) {
   igexplorer(sol);
 
   BestInsertionExplorer<FSP> igexplorerFull(fullNe, neighborhoodCheckpoint,
-                                            compNN, compSN);
+                                            compNN, compSN, ns);
 
   rng.reseed(65465l);
   fullEval(sol2);

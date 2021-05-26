@@ -1,13 +1,14 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/global.hpp"
 #include "flowshop-solver/heuristics/neighborhood_checkpoint.hpp"
 #include "flowshop-solver/problems/FSP.hpp"
-// #include "flowshop-solver/neighborhood-size/NeighborhoodSize.hpp"
+#include "flowshop-solver/neighborhood-size/NeighborhoodSize.hpp"
 
 enum class NeighborhoodType { random, ordered };
 
@@ -31,13 +32,13 @@ class BestInsertionExplorer
   moSolNeighborComparator<Ngh>& solNeighborComparator;
 
   moEval<Ngh>& neighborEval;
-  const NeighborhoodType neighborhoodType;
 
   bool improve;
   bool LO;
   std::vector<int> RandJOB;
   unsigned k;
-  // NeighborhoodSize& neighborhoodSize;
+  NeighborhoodSize& neighborhoodSize;
+  const NeighborhoodType neighborhoodType;
 
  public:
   BestInsertionExplorer(
@@ -52,7 +53,7 @@ class BestInsertionExplorer
         neighborComparator{neighborComparator},
         solNeighborComparator{solNeighborComparator},
         neighborEval{neighborEval},
-        // neighborhoodSize(neighborhoodSize),
+        neighborhoodSize(neighborhoodSize),
         neighborhoodType{neighborhoodType} {}
 
   void initParam(EOT& _solution) final {
@@ -63,7 +64,7 @@ class BestInsertionExplorer
       std::shuffle(RandJOB.begin(), RandJOB.end(),
                    ParadiseoRNGFunctor<unsigned int>());
     }
-    // RandJOB.resize(neighborhoodSize.getSize());
+    RandJOB.resize(std::min<int>(_solution.size(), neighborhoodSize.getSize()));
     k = 0;
   }
 
@@ -77,7 +78,6 @@ class BestInsertionExplorer
           std::shuffle(RandJOB.begin(), RandJOB.end(),
                        ParadiseoRNGFunctor<unsigned int>());
         }
-        // RandJOB.resize(neighborhoodSize.getSize());
         improve = false;
       } else {
         LO = true;
@@ -89,6 +89,7 @@ class BestInsertionExplorer
     const auto n = static_cast<int>(_solution.size());
     EOT tmp = _solution;
     auto insertPtr = std::find(tmp.begin(), tmp.end(), RandJOB[k]);
+    
     int insertPosition = std::distance(tmp.begin(), insertPtr);
     // std::rotate(tmp.begin(), insertPosition, insertPosition + 1);
 

@@ -15,9 +15,9 @@ IG.Init.LocalSearch.SingleStep     "" c (0, 1) | IG.Init.LocalSearch != "none"
 IG.Comp.Strat                "" c (strict,equal)
 
 IG.Neighborhood.Size         "" r (0.0,1.0)
-IG.Neighborhood.Strat        "" c (ordered,random)
+IG.Neighborhood.Strat        "" c (ordered,random,adaptive)
 
-IG.Local.Search              "" c (none,first_improvement,best_improvement,random_best_improvement,best_insertion,adaptive_best_insertion,adaptive)
+IG.Local.Search              "" c (none,first_improvement,best_improvement,random_best_improvement,best_insertion,adaptive_best_insertion,adaptive,adaptive_with_adaptive_best_insertion)
 IG.LS.Single.Step            "" c (0, 1)
 
 IG.AdaptiveBestInsertion.Replace                   "" c (yes,no)
@@ -128,5 +128,22 @@ IG.AdaptivePerturb.AOS.FRRMAB.Decay          "" r (0.25, 1.0) | IG.Perturb == "a
 IG.AdaptivePerturb.AOS.LINUCB.Alpha          "" r (0.0, 1.5) | IG.Perturb == "adaptive" & IG.AdaptiveLocalSearch.AOS.Strategy == "linucb"
 IG.AdaptivePerturb.AOS.TS.Strategy           "" c (static, dynamic) | IG.Perturb == "adaptive" & IG.AdaptiveLocalSearch.AOS.Strategy == "thompson_sampling"
 IG.AdaptivePerturb.AOS.TS.C                  "" i (1,500)  | IG.Perturb == "adaptive" & IG.AdaptiveLocalSearch.AOS.Strategy == "thompson_sampling" & IG.AOS.TS.Strategy == "dynamic"
+
+IG.AdaptiveNeighborhoodSize.AOS.Strategy          "" c (probability_matching,frrmab,linucb,thompson_sampling,random) | IG.Perturb == "adaptive"
+IG.AdaptiveNeighborhoodSize.AOS.NoArms            "" i (2,10) | IG.Neighborhood.Strat == "adaptive" & IG.AdaptiveNeighborhoodSize.AOS.Strategy != "random"
+IG.AdaptiveNeighborhoodSize.AOS.RewardType        "" c (0,1,2,3) | IG.Neighborhood.Strat == "adaptive"  & IG.AdaptiveNeighborhoodSize.AOS.Strategy != "random"
+IG.AdaptiveNeighborhoodSize.AOS.WarmUp            "" i (0, 2000) | IG.Neighborhood.Strat == "adaptive"
+IG.AdaptiveNeighborhoodSize.AOS.WarmUp.Strategy   "" c (random, fixed) | IG.Neighborhood.Strat == "adaptive"
+IG.AdaptiveNeighborhoodSize.AOS.PM.RewardType     "" c (avgabs,avgnorm,extabs,extnorm)  | IG.Neighborhood.Strat == "adaptive" & IG.AdaptiveNeighborhoodSize.AOS.Strategy == "probability_matching"
+IG.AdaptiveNeighborhoodSize.AOS.PM.Alpha          "" r (0.1, 0.9) | IG.Neighborhood.Strat == "adaptive" & IG.AdaptiveNeighborhoodSize.AOS.Strategy == "probability_matching"
+IG.AdaptiveNeighborhoodSize.AOS.PM.PMin           "" r (0.05, 0.2) | IG.Neighborhood.Strat == "adaptive" & IG.AdaptiveNeighborhoodSize.AOS.Strategy == "probability_matching"
+IG.AdaptiveNeighborhoodSize.AOS.PM.UpdateWindow   "" i (1,500) | IG.Neighborhood.Strat == "adaptive" & IG.AdaptiveNeighborhoodSize.AOS.Strategy == "probability_matching"
+IG.AdaptiveNeighborhoodSize.AOS.FRRMAB.WindowSize "" i (10, 500) | IG.Neighborhood.Strat == "adaptive" & IG.AdaptiveNeighborhoodSize.AOS.Strategy == "frrmab"
+IG.AdaptiveNeighborhoodSize.AOS.FRRMAB.Scale      "" r (0.01, 100) | IG.Neighborhood.Strat == "adaptive" & IG.AdaptiveNeighborhoodSize.AOS.Strategy == "frrmab"
+IG.AdaptiveNeighborhoodSize.AOS.FRRMAB.Decay      "" r (0.25, 1.0) | IG.Neighborhood.Strat == "adaptive" & IG.AdaptiveNeighborhoodSize.AOS.Strategy == "frrmab"
+IG.AdaptiveNeighborhoodSize.AOS.LINUCB.Alpha      "" r (0.0, 1.5) | IG.Neighborhood.Strat == "adaptive" & IG.AdaptiveNeighborhoodSize.AOS.Strategy == "linucb"
+IG.AdaptiveNeighborhoodSize.AOS.TS.Strategy       "" c (static, dynamic) | IG.Neighborhood.Strat == "adaptive" & IG.AdaptiveNeighborhoodSize.AOS.Strategy == "thompson_sampling"
+IG.AdaptiveNeighborhoodSize.AOS.TS.C              "" i (1,500)  | IG.Neighborhood.Strat == "adaptive" & IG.AdaptiveNeighborhoodSize.AOS.Strategy == "thompson_sampling" & IG.AOS.TS.Strategy == "dynamic"
+
 
 

@@ -1,0 +1,528 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={IG with adaptive operator selection for flowshop problems},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{longtable} \usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{longtable}
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{IG with adaptive operator selection for flowshop problems}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+\begin{center}\includegraphics[width=1\linewidth]{graphics/knitr-adaptive_destruction_size-plt-1} \end{center}
+
+\begin{center}\includegraphics[width=1\linewidth]{graphics/knitr-unnamed-chunk-1-1} \end{center}
+
+\begin{tabular}{lrrrrrr}
+\toprule
+algo & q00 & q25 & q50 & mean & q75 & q100\\
+\midrule
+default & 0 & 0 & 0 & 0.2487175 & 0.3141249 & 3.500637\\
+frrmab & 0 & 0 & 0 & 0.2023804 & 0.1239635 & 4.375514\\
+linucb & 0 & 0 & 0 & 0.1955558 & 0.1914414 & 3.511542\\
+pm & 0 & 0 & 0 & 0.2100649 & 0.2437682 & 2.987298\\
+ts & 0 & 0 & 0 & 0.1864350 & 0.1414237 & 3.702038\\
+\bottomrule
+\end{tabular}
+
+\begin{verbatim}
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> data: y, groups and blocks
+#>        default frrmab linucb pm    
+#> frrmab 0.0078  -      -      -     
+#> linucb 0.1242  0.8733 -      -     
+#> pm     0.5689  0.3521 0.9052 -     
+#> ts     0.0181  0.9991 0.9556 0.5090
+#> 
+#> P value adjustment method: single-step
+\end{verbatim}
+
+\begin{center}\includegraphics[width=1\linewidth]{graphics/knitr-adaptive_best_insertion-plt-1} \end{center}
+
+\begin{tabular}{lrrrrrr}
+\toprule
+algo & q00 & q25 & q50 & mean & q75 & q100\\
+\midrule
+default & 0 & 0 & 0 & 0.2315858 & 0.2539808 & 3.500637\\
+frrmab & 0 & 0 & 0 & 0.2421545 & 0.2872928 & 2.935335\\
+linucb & 0 & 0 & 0 & 0.2453474 & 0.2872928 & 3.459420\\
+pm & 0 & 0 & 0 & 0.2482136 & 0.2900451 & 3.446446\\
+ts & 0 & 0 & 0 & 0.2435388 & 0.2872928 & 2.935335\\
+\bottomrule
+\end{tabular}
+
+\begin{verbatim}
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> data: y, groups and blocks
+#>        default frrmab linucb pm  
+#> frrmab 1.00    -      -      -   
+#> linucb 0.99    1.00   -      -   
+#> pm     0.95    0.97   1.00   -   
+#> ts     1.00    1.00   1.00   0.99
+#> 
+#> P value adjustment method: single-step
+\end{verbatim}
+
+\begin{center}\includegraphics[width=1\linewidth]{graphics/knitr-adaptive_destruction_position-plt-1} \end{center}
+
+\begin{tabular}{lrrrrrr}
+\toprule
+algo & q00 & q25 & q50 & mean & q75 & q100\\
+\midrule
+default & 0 & 0 & 0.0000000 & 0.2284714 & 0.2872928 & 3.505321\\
+frrmab & 0 & 0 & 0.0000000 & 0.2456871 & 0.2872928 & 4.825145\\
+linucb & 0 & 0 & 0.0552995 & 0.3705503 & 0.6527876 & 3.041629\\
+pm & 0 & 0 & 0.0000000 & 0.2513894 & 0.3673791 & 4.825145\\
+ts & 0 & 0 & 0.0000000 & 0.2380990 & 0.3176427 & 3.616794\\
+\bottomrule
+\end{tabular}
+
+\begin{verbatim}
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> data: y, groups and blocks
+#>        default frrmab  linucb  pm     
+#> frrmab 0.99855 -       -       -      
+#> linucb 1.6e-05 3.7e-06 -       -      
+#> pm     0.90880 0.77791 0.00081 -      
+#> ts     0.94583 0.84116 0.00049 0.99995
+#> 
+#> P value adjustment method: single-step
+\end{verbatim}
+
+\begin{center}\includegraphics[width=1\linewidth]{graphics/knitr-adaptive_local_search-plt-1} \end{center}
+
+\begin{tabular}{lrrrrrr}
+\toprule
+algo & q00 & q25 & q50 & mean & q75 & q100\\
+\midrule
+default & 0 & 0 & 0 & 0.2452028 & 0.2825501 & 3.505321\\
+frrmab & 0 & 0 & 0 & 0.2821655 & 0.2872928 & 3.846298\\
+linucb & 0 & 0 & 0 & 0.3043836 & 0.3748646 & 4.181655\\
+pm & 0 & 0 & 0 & 0.3023975 & 0.2872928 & 5.489358\\
+ts & 0 & 0 & 0 & 0.2683547 & 0.2825926 & 4.744986\\
+\bottomrule
+\end{tabular}
+
+\begin{verbatim}
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> data: y, groups and blocks
+#>        default frrmab linucb pm  
+#> frrmab 0.92    -      -      -   
+#> linucb 0.83    1.00   -      -   
+#> pm     0.77    1.00   1.00   -   
+#> ts     1.00    0.94   0.87   0.82
+#> 
+#> P value adjustment method: single-step
+\end{verbatim}
+
+\begin{center}\includegraphics[width=1\linewidth]{graphics/knitr-adaptive_perturb-plt-1} \end{center}
+
+\begin{tabular}{lrrrrrr}
+\toprule
+algo & q00 & q25 & q50 & mean & q75 & q100\\
+\midrule
+default & 0 & 0 & 0 & 0.2714384 & 0.3316383 & 3.505321\\
+frrmab & 0 & 0 & 0 & 0.1770575 & 0.1238390 & 3.906250\\
+linucb & 0 & 0 & 0 & 0.2011731 & 0.1871306 & 3.085656\\
+pm & 0 & 0 & 0 & 0.2014616 & 0.1742107 & 3.944657\\
+ts & 0 & 0 & 0 & 0.1914636 & 0.1637431 & 3.374176\\
+\bottomrule
+\end{tabular}
+
+\begin{verbatim}
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> data: y, groups and blocks
+#>        default frrmab linucb pm    
+#> frrmab 3.9e-06 -      -      -     
+#> linucb 0.0033  0.5622 -      -     
+#> pm     0.0017  0.6744 0.9998 -     
+#> ts     0.0093  0.3757 0.9983 0.9901
+#> 
+#> P value adjustment method: single-step
+\end{verbatim}
+
+\begin{center}\includegraphics[width=1\linewidth]{graphics/knitr-adaptive_neighborhood_size-plt-1} \end{center}
+
+\begin{tabular}{lrrrrrr}
+\toprule
+algo & q00 & q25 & q50 & mean & q75 & q100\\
+\midrule
+default & 0 & 0 & 0 & 0.2278605 & 0.2484577 & 3.505321\\
+frrmab & 0 & 0 & 0 & 0.2468417 & 0.2690306 & 3.593375\\
+linucb & 0 & 0 & 0 & 0.2476344 & 0.2690306 & 3.593375\\
+pm & 0 & 0 & 0 & 0.2671157 & 0.3047105 & 3.593686\\
+ts & 0 & 0 & 0 & 0.2620608 & 0.2872928 & 3.593375\\
+\bottomrule
+\end{tabular}
+
+\begin{verbatim}
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> data: y, groups and blocks
+#>        default frrmab linucb pm  
+#> frrmab 1.00    -      -      -   
+#> linucb 1.00    1.00   -      -   
+#> pm     0.72    0.86   0.75   -   
+#> ts     0.81    0.92   0.83   1.00
+#> 
+#> P value adjustment method: single-step
+\end{verbatim}
+
+\begin{verbatim}
+#> `summarise()` has grouped output by 'experiment'. You can override using the `.groups` argument.
+\end{verbatim}
+
+\begin{tabular}{llllllll}
+\toprule
+experiment & default & frrmab & linucb & pm & ts & adapt-all & adapt-perturb-ds\\
+\midrule
+01-adaptive\_destruction\_size & 0.249 (0.487) & 0.202 (0.492) & 0.196 (0.407) & 0.210 (0.408) & 0.186 (0.430) & NA & NA\\
+02-adaptive\_best\_insertion & 0.232 (0.485) & 0.242 (0.472) & 0.245 (0.476) & 0.248 (0.470) & 0.244 (0.470) & NA & NA\\
+03-adaptive\_destruction\_position & 0.228 (0.464) & 0.246 (0.498) & 0.371 (0.537) & 0.251 (0.486) & 0.238 (0.448) & NA & NA\\
+04-adaptive\_local\_search & 0.245 (0.507) & 0.282 (0.575) & 0.304 (0.615) & 0.302 (0.691) & 0.268 (0.596) & NA & NA\\
+05-adaptive\_perturb & 0.271 (0.528) & 0.177 (0.423) & 0.201 (0.434) & 0.201 (0.457) & 0.191 (0.407) & NA & NA\\
+\addlinespace
+06-adaptive\_neighborhood\_size & 0.228 (0.476) & 0.247 (0.505) & 0.248 (0.510) & 0.267 (0.538) & 0.262 (0.524) & NA & NA\\
+09-final\_comparison & 0.250 (0.484) & NA & NA & NA & NA & 0.180 (0.422) & 0.188 (0.431)\\
+\bottomrule
+\end{tabular}
+
+\captionsetup[table]{labelformat=empty,skip=1pt}
+\begin{longtable}{lllll}
+\toprule
+  &    &     &      &       \\ 
+\midrule
+ & igfrrmab.rds & iglinucb.rds & igpm.rds & igts.rds \\ 
+01-adaptive\_destruction\_size & 4\_8 & 4\_8 & 4\_6 & 4\_8 \\ 
+\bottomrule
+\end{longtable}
+
+\captionsetup[table]{labelformat=empty,skip=1pt}
+\begin{longtable}{lllll}
+\toprule
+  &    &     &      &       \\ 
+\midrule
+ & igfrrmab.rds & iglinucb.rds & igpm.rds & igts.rds \\ 
+02-adaptive\_best\_insertion & fixed\_10 & fixed\_3 & no\_jobs & fixed\_10 \\ 
+03-adaptive\_destruction\_position & fixed\_3 & fixed\_3 & fixed\_3 & fixed\_10 \\ 
+06-adaptive\_neighborhood\_size & 2 & 2 & 3 & 2 \\ 
+\bottomrule
+\end{longtable}
+
+\captionsetup[table]{labelformat=empty,skip=1pt}
+\begin{longtable}{llll}
+\toprule
+  &    &     &      \\ 
+\midrule
+ & igfrrmab.rds & igpm.rds & igts.rds \\ 
+01-adaptive\_destruction\_size & 406 & 128 & NA \\ 
+02-adaptive\_best\_insertion & 271 & 125 & 299 \\ 
+03-adaptive\_destruction\_position & 350 & 357 & NA \\ 
+04-adaptive\_local\_search & 188 & 283 & 414 \\ 
+05-adaptive\_perturb & 59 & 283 & 21 \\ 
+06-adaptive\_neighborhood\_size & 32 & 340 & 358 \\ 
+\bottomrule
+\end{longtable}
+
+\begin{center}\includegraphics[width=1\linewidth]{graphics/knitr-final_comparison-plt-1} \end{center}
+
+\begin{verbatim}
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> data: y, groups and blocks
+#>                  adapt-all adapt-perturb-ds
+#> adapt-perturb-ds 0.18932   -               
+#> default          0.00021   0.06671
+#> 
+#> P value adjustment method: single-step
+\end{verbatim}
+
+\begin{verbatim}
+#> `summarise()` has grouped output by 'experiment'. You can override using the `.groups` argument.
+\end{verbatim}
+
+\begin{tabular}{llll}
+\toprule
+experiment & adapt-all & adapt-perturb-ds & default\\
+\midrule
+09-final\_comparison & 0.180 (0.422) & 0.188 (0.431) & 0.250 (0.484)\\
+\bottomrule
+\end{tabular}
+
+\begin{verbatim}
+#> `summarise()` has grouped output by 'experiment', 'algo'. You can override using the `.groups` argument.
+\end{verbatim}
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule
+experiment & objective & adapt-all & adapt-perturb-ds & default \\
+\midrule
+\endhead
+09-final\_comparison & FLOWTIME & 0.259 (0.556) & 0.257 (0.561) & 0.333
+(0.610) \\
+09-final\_comparison & MAKESPAN & 0.100 (0.186) & 0.119 (0.220) & 0.167
+(0.292) \\
+\bottomrule
+\end{longtable}
+
+\begin{verbatim}
+#> Note: Using an external vector in selections is ambiguous.
+#> i Use `all_of(group_var)` instead of `group_var` to silence this message.
+#> i See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.
+#> This message is displayed once per session.
+#> [[1]]
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> data: y, groups and blocks
+#>                           adapt-all FLOWTIME adapt-perturb-ds FLOWTIME
+#> adapt-perturb-ds FLOWTIME 0.5454             -                        
+#> default FLOWTIME          0.0032             0.0689
+#> 
+#> P value adjustment method: single-step
+#> 
+#> [[2]]
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> 
+#> data: y, groups and blocks
+#>                           adapt-all MAKESPAN adapt-perturb-ds MAKESPAN
+#> adapt-perturb-ds MAKESPAN 0.333              -                        
+#> default MAKESPAN          0.049              0.618
+#> 
+#> P value adjustment method: single-step
+\end{verbatim}
+
+\begin{verbatim}
+#> `summarise()` has grouped output by 'experiment', 'algo'. You can override using the `.groups` argument.
+\end{verbatim}
+
+\begin{tabular}{lllll}
+\toprule
+experiment & type & adapt-all & adapt-perturb-ds & default\\
+\midrule
+09-final\_comparison & NOIDLE & 0.404 (0.634) & 0.356 (0.637) & 0.432 (0.666)\\
+09-final\_comparison & NOWAIT & 0.053 (0.091) & 0.103 (0.198) & 0.179 (0.321)\\
+09-final\_comparison & PERM & 0.082 (0.224) & 0.105 (0.267) & 0.139 (0.331)\\
+\bottomrule
+\end{tabular}
+
+\begin{verbatim}
+#> [[1]]
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> data: y, groups and blocks
+#>                         adapt-all NOIDLE adapt-perturb-ds NOIDLE
+#> adapt-perturb-ds NOIDLE 0.97             -                      
+#> default NOIDLE          0.64             0.50
+#> 
+#> P value adjustment method: single-step
+#> 
+#> [[2]]
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> 
+#> data: y, groups and blocks
+#>                         adapt-all NOWAIT adapt-perturb-ds NOWAIT
+#> adapt-perturb-ds NOWAIT 0.16404          -                      
+#> default NOWAIT          0.00021          0.07964
+#> 
+#> P value adjustment method: single-step
+#> 
+#> [[3]]
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> 
+#> data: y, groups and blocks
+#>                       adapt-all PERM adapt-perturb-ds PERM
+#> adapt-perturb-ds PERM 0.33           -                    
+#> default PERM          0.11           0.83
+#> 
+#> P value adjustment method: single-step
+\end{verbatim}
+
+\begin{verbatim}
+#> `summarise()` has grouped output by 'experiment', 'algo', 'dist'. You can override using the `.groups` argument.
+\end{verbatim}
+
+\begin{tabular}{llllll}
+\toprule
+experiment & dist & corr & adapt-all & adapt-perturb-ds & default\\
+\midrule
+09-final\_comparison & exponential & random & 0.288 (0.497) & 0.277 (0.471) & 0.458 (0.583)\\
+09-final\_comparison & uniform & job-correlated & 0.094 (0.208) & 0.110 (0.238) & 0.113 (0.244)\\
+09-final\_comparison & uniform & machine-correlated & 0.003 (0.017) & 0.004 (0.016) & 0.006 (0.019)\\
+09-final\_comparison & uniform & random & 0.333 (0.593) & 0.362 (0.625) & 0.424 (0.626)\\
+\bottomrule
+\end{tabular}
+
+\begin{verbatim}
+#> [[1]]
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> data: y, groups and blocks
+#>                                     adapt-all exponential random
+#> adapt-perturb-ds exponential random 0.813                       
+#> default exponential random          0.020                       
+#>                                     adapt-perturb-ds exponential random
+#> adapt-perturb-ds exponential random -                                  
+#> default exponential random          0.097
+#> 
+#> P value adjustment method: single-step
+#> 
+#> [[2]]
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> 
+#> data: y, groups and blocks
+#>                                         adapt-all uniform job-correlated
+#> adapt-perturb-ds uniform job-correlated 0.40                            
+#> default uniform job-correlated          0.50                            
+#>                                         adapt-perturb-ds uniform job-correlated
+#> adapt-perturb-ds uniform job-correlated -                                      
+#> default uniform job-correlated          0.99
+#> 
+#> P value adjustment method: single-step
+#> 
+#> [[3]]
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> 
+#> data: y, groups and blocks
+#>                                             adapt-all uniform machine-correlated
+#> adapt-perturb-ds uniform machine-correlated 1.00                                
+#> default uniform machine-correlated          0.56                                
+#>                                             adapt-perturb-ds uniform machine-correlated
+#> adapt-perturb-ds uniform machine-correlated -                                          
+#> default uniform machine-correlated          0.58
+#> 
+#> P value adjustment method: single-step
+#> 
+#> [[4]]
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> 
+#> data: y, groups and blocks
+#>                                 adapt-all uniform random
+#> adapt-perturb-ds uniform random 0.2680                  
+#> default uniform random          0.0055                  
+#>                                 adapt-perturb-ds uniform random
+#> adapt-perturb-ds uniform random -                              
+#> default uniform random          0.2680
+#> 
+#> P value adjustment method: single-step
+\end{verbatim}
+
+\begin{verbatim}
+#> `summarise()` has grouped output by 'experiment', 'algo'. You can override using the `.groups` argument.
+#> # A tibble: 2 x 5
+#> # Groups:   experiment [1]
+#>   experiment          no_jobs `adapt-all`   `adapt-perturb-ds` default      
+#>   <chr>                 <dbl> <chr>         <chr>              <chr>        
+#> 1 09-final_comparison      20 0.076 (0.202) 0.045 (0.152)      0.108 (0.305)
+#> 2 09-final_comparison      50 0.283 (0.542) 0.331 (0.555)      0.392 (0.580)
+\end{verbatim}
+
+\begin{verbatim}
+#> [[1]]
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> data: y, groups and blocks
+#>                     adapt-all 20 adapt-perturb-ds 20
+#> adapt-perturb-ds 20 0.96         -                  
+#> default 20          0.43         0.29
+#> 
+#> P value adjustment method: single-step
+#> 
+#> [[2]]
+#> 
+#>  Pairwise comparisons using Nemenyi-Wilcoxon-Wilcox all-pairs test for a two-way balanced complete block design
+#> 
+#> data: y, groups and blocks
+#>                     adapt-all 50 adapt-perturb-ds 50
+#> adapt-perturb-ds 50 0.017        -                  
+#> default 50          3.5e-05      0.228
+#> 
+#> P value adjustment method: single-step
+\end{verbatim}
+
+\end{document}

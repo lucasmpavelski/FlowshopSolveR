@@ -25,8 +25,7 @@ struct FitnessPair : public moStat<EOT, std::pair<double, double>> {
     value().first = sol.fitness();
   }
 
-  void operator()(EOT&) final {
-  }
+  void operator()(EOT&) final {}
 
   void lastCall(EOT& sol) final {
     if (sol.invalid())
@@ -34,7 +33,6 @@ struct FitnessPair : public moStat<EOT, std::pair<double, double>> {
     value().second = sol.fitness();
   }
 };
-
 
 template <class EOT>
 struct FitnessPairTime : public moStat<EOT, std::pair<double, double>> {
@@ -44,7 +42,6 @@ struct FitnessPairTime : public moStat<EOT, std::pair<double, double>> {
             "Pair of the initial and final fitness"} {}
 
   using moStat<EOT, std::pair<double, double>>::value;
-
 
   void operator()(EOT& sol) final {
     value().second = value().first;
@@ -84,22 +81,22 @@ class FitnessRewards : public eoFunctorBase {
     return throwIfInvalid(global.value().first);
   }
 
-  [[nodiscard]] auto reward(int rewardType) -> double {
+  [[nodiscard]] auto reward(int rewardType) const -> double {
     double pf, cf;
     switch (rewardType) {
-      case 0:
+      case 0: // II
         pf = initialGlobal();
         cf = lastGlobal();
         break;
-      case 1:
+      case 1: // IL
         pf = initialGlobal();
         cf = lastLocal();
         break;
-      case 2:
+      case 2: // LI
         pf = initialLocal();
         cf = lastGlobal();
         break;
-      case 3:
+      case 3: // LL
         pf = initialLocal();
         cf = lastLocal();
         break;
@@ -107,5 +104,10 @@ class FitnessRewards : public eoFunctorBase {
         throw std::runtime_error{"invalid rewardType"};
     }
     return (pf - cf) / pf;
+  }
+
+  [[nodiscard]] auto available() const -> bool {
+    return local.value().first >= 0 && local.value().second >= 0 &&
+           global.value().first >= 0 && global.value().second >= 0;
   }
 };

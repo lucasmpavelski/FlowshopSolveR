@@ -38,6 +38,7 @@ fsp_solver_performance_debug <- function(algorithm, config, instance, problem, s
   cat("seed = ", seed, ";\n")
   print_cpp(config, "params")
   print_cpp(prob, "prob")
+  browser()
   res <- solveFSP(
     mh = algorithm@name,
     rproblem = prob,

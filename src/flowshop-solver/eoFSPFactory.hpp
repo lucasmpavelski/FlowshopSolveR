@@ -1,5 +1,8 @@
 #pragma once
 
+#include <exception>
+
+
 #include <algo/moLocalSearch.h>
 #include <continuator/moCombinedContinuator.h>
 #include <paradiseo/mo/algo/moLocalSearch.h>
@@ -32,27 +35,15 @@
 
 #include "flowshop-solver/heuristics/perturb/perturb.hpp"
 
-#include "flowshop-solver/heuristics/AdaptiveLocalSearch.hpp"
 #include "flowshop-solver/heuristics/AdaptivePerturb.hpp"
 #include "flowshop-solver/heuristics/BestInsertionExplorer.hpp"
 #include "flowshop-solver/heuristics/perturb/IGLocalSearchPartialSolution.hpp"
 
-#include "flowshop-solver/aos/frrmab.hpp"
-#include "flowshop-solver/aos/lin_ucb.hpp"
-#include "flowshop-solver/aos/probability_matching.hpp"
-#include "flowshop-solver/aos/random.hpp"
-#include "flowshop-solver/aos/thompson_sampling.hpp"
-#include "flowshop-solver/fla/AdaptiveWalkLengthFLA.hpp"
-#include "flowshop-solver/fla/AutocorrelationFLA.hpp"
-#include "flowshop-solver/fla/FitnessDistanceCorrelationFLA.hpp"
-#include "flowshop-solver/fla/FitnessHistory.hpp"
-#include "flowshop-solver/fla/NeutralityFLA.hpp"
-
 #include "flowshop-solver/heuristics/AppendingNEH.hpp"
 
-#include "flowshop-solver/position-selector/AdaptiveNoReplacementPositionSelector.hpp"
-#include "flowshop-solver/position-selector/AdaptivePositionSelector.hpp"
-#include "flowshop-solver/position-selector/PositionSelector.hpp"
+#include "flowshop-solver/number-of-swaps/NumberOfSwaps.hpp"
+#include "flowshop-solver/number-of-swaps/FixedNumberOfSwaps.hpp"
+#include "flowshop-solver/number-of-swaps/AdaptiveNumberOfSwaps.hpp"
 
 class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
   FSPProblem& _problem;
@@ -165,8 +156,10 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
       localSearch = &pack<moRandomBestHC<Ngh>>(*neighborhood, eval, nEval, cp,
                                                *compNN, *compSN);
     } else if (name == "best_insertion") {
-      auto explorer =
-          &pack<BestInsertionExplorer<EOT>>(nEval, nghCp, *compNN, *compSN);
+      const int size = _problem.size(0) * real(".Neighborhood.Size");
+      auto neighborhoodSize = &pack<FixedNeighborhoodSize>(size);
+      auto explorer = &pack<BestInsertionExplorer<EOT>>(
+          nEval, nghCp, *compNN, *compSN, *neighborhoodSize);
       localSearch = &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);
     }
 
@@ -192,6 +185,22 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
       auto operator_selection = buildOperatorSelection("");
       int rewardType = categorical(".AOS.RewardType");
       return &pack<AdaptiveDestructionSize<Ngh>>(*operator_selection,
+                                                 *getRewards(), rewardType);
+    }
+    throw std::runtime_error("unknown destruction size type: " + name);
+    return nullptr;
+  }
+
+  auto buildNumberOfSwaps() -> NumberOfSwaps* {
+    const std::string name =
+        categoricalName(".Perturb.NumberOfSwapsStrategy");
+    if (name == "fixed") {
+      const int fixedDs = integer(".Perturb.NumberOfSwaps");
+      return &pack<FixedNumberOfSwaps>(fixedDs);
+    } else if (name == "adaptive") {
+      auto operator_selection = buildOperatorSelection(".AdaptiveNumberOfSwaps");
+      int rewardType = categorical(".AdaptiveNumberOfSwaps.RewardType");
+      return &pack<AdaptiveNumberOfSwaps<EOT>>(*operator_selection,
                                                  *getRewards(), rewardType);
     }
     return nullptr;
@@ -238,78 +247,22 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
       return &pack<IGLocalSearchPartialSolution<Ngh>>(
           *insertion, *destructionStrategy, *lspsLocalSearch);
     } else if (name == "swap") {
-      auto kickPerturb = &pack<ilsKickOp<EOT>>(2, 0);
+      auto noSwaps = &pack<FixedNumberOfSwaps>(2);
+      auto kickPerturb = &pack<ilsKickOp<EOT>>(*noSwaps);
       return &pack<moMonOpPerturb<Ngh>>(*kickPerturb, eval);
     } else if (name == "adaptive") {
       std::vector<moPerturbation<Ngh>*> perturbations = {
-          domainPerturbByName("rs"),
-          domainPerturbByName("lsps"),
+          domainPerturbByName("rs"), domainPerturbByName("lsps"),
           domainPerturbByName("swap")};
       std::vector<int> options = {0, 1, 2};
       auto operatorSelection =
           buildOperatorSelection(".AdaptivePerturb", options);
       int rewardType = categorical(".AdaptivePerturb.AOS.RewardType");
       auto op = &pack<AdaptivePerturb<Ngh>>(perturbations, *getRewards(),
-                                             rewardType, *operatorSelection);
+                                            rewardType, *operatorSelection);
       return &pack<moMonOpPerturb<Ngh>>(*op, eval);
     }
     return nullptr;
   }
 
-  auto buildPositionSelector(const std::string& prefix) -> PositionSelector* {
-    std::vector<int> options;
-    const std::string noArms = categoricalName(prefix + ".NoArms");
-    if (noArms == "no_jobs") {
-      options.resize(_problem.size());
-    } else if (noArms.find("fixed_") == 0) {
-      const int parsedNoArms = std::stoi(noArms.substr(6));
-      options.resize(parsedNoArms);
-    }
-    std::iota(options.begin(), options.end(), 1);
-    if (categoricalName(prefix + ".RandomArm") == "yes") {
-      options.push_back(0);
-    }
-    auto operatorSelection = buildOperatorSelection(prefix, options);
-    auto replace = categoricalName(prefix + ".Replace");
-    if (replace == "yes") {
-      return &pack<AdaptivePositionSelector>(*operatorSelection);
-    } else if (replace == "no") {
-      return &pack<AdaptiveNoReplacementPositionSelector>(*operatorSelection);
-    }
-    assert(false);
-    return nullptr;
-  }
-
-  auto domainLocalSearch() -> moLocalSearch<Ngh>* override {
-    auto compNN = buildNeighborComparator();
-    auto compSN = buildSolNeighborComparator();
-
-    auto& eval = _problem.eval();
-    auto& nEval = _problem.neighborEval();
-    auto& cp = _problem.checkpoint();
-    auto& nghCp = _problem.neighborhoodCheckpoint();
-
-    std::string name = categoricalName(".Local.Search");
-    if (name == "adaptive") {
-      std::vector<moLocalSearch<Ngh>*> localSearches = {
-          buildLocalSearchByName("first_improvement", false),
-          buildLocalSearchByName("best_improvement", false),
-          buildLocalSearchByName("random_best_improvement", false),
-          buildLocalSearchByName("best_insertion", false)};
-      std::vector<int> options = {0, 1, 2, 3};
-      auto operatorSelection =
-          buildOperatorSelection(".AdaptiveLocalSearch", options);
-      int rewardType = categorical(".AdaptiveLocalSearch.AOS.RewardType");
-      return &pack<AdaptiveLocalSearch<Ngh>>(localSearches, *getRewards(),
-                                             rewardType, *operatorSelection, cp,
-                                             eval);
-    } else if (name == "adaptive_best_insertion") {
-      auto positionSelector = buildPositionSelector(".AdaptiveBestInsertion");
-      auto explorer = &pack<AdaptiveBestInsertionExplorer<EOT>>(
-          *positionSelector, nEval, nghCp, *compNN, *compSN);
-      return &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);
-    }
-    throw std::runtime_error("Local search type not found: " + name + ".");
-    return nullptr;
-  }
 };

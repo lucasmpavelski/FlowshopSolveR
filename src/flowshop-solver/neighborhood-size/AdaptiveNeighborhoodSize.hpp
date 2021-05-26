@@ -4,6 +4,8 @@
 #include <paradiseo/mo/mo>
 
 #include "flowshop-solver/neighborhood-size/NeighborhoodSize.hpp"
+#include "flowshop-solver/heuristics/FitnessReward.hpp"
+#include "flowshop-solver/aos/adaptive_operator_selection.hpp"
 
 template <class EOT>
 class AdaptiveNeighborhoodSize : public NeighborhoodSize {
@@ -11,10 +13,11 @@ class AdaptiveNeighborhoodSize : public NeighborhoodSize {
   OperatorSelection<int>& operatorSelection;
   FitnessRewards<EOT>& rewards;
   int rewardType;
+  int lastSelected;
 
  public:
   AdaptiveNeighborhoodSize(int size,
-                           OperatorSelection<int> operatorSelection,
+                           OperatorSelection<int>& operatorSelection,
                            FitnessRewards<EOT>& rewards,
                            int rewardType)
       : size(size),
@@ -24,9 +27,11 @@ class AdaptiveNeighborhoodSize : public NeighborhoodSize {
 
   auto getSize() -> int override {
     if (rewards.available()) {
-      operatorSelection.feedback(rewards.reward(rewardType));
+      operatorSelection.feedback(rewards.reward(rewardType) * lastSelected);
       operatorSelection.update();
     }
-    return (1.0 / operatorSelection.selectOperator()) * size;
+    int selected = operatorSelection.selectOperator();
+    lastSelected = selected;
+    return (1.0 / selected) * size;
   }
 };
