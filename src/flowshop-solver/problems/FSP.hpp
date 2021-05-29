@@ -24,6 +24,8 @@ class myShiftNeighbor : public moIndexNeighbor<EOT, Fitness> {
       unsigned int tmp;
       size = _sol.size();
       translate(key + 1);
+      assert(first < size);
+      assert(second <= size);
       // keep the first component to change
       tmp = _sol[first];
       // shift

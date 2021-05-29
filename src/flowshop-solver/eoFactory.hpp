@@ -148,11 +148,11 @@ class eoFactory : public eoFunctorStore {
   }
 
   auto buildNeighborhood() -> moIndexNeighborhood<Ngh>* {
-    return buildNeighborhood(_problem.maxNeighborhoodSize());
+    return buildNeighborhood(_problem.maxNeighborhoodSize() * real(".Neighborhood.Size"));
   }
 
   auto buildNeighborhood(const int max_size) -> moIndexNeighborhood<Ngh>* {
-    const int size = max_size * real(".Neighborhood.Size");
+    const int size = max_size;
     const std::string name = categoricalName(".Neighborhood.Strat");
     if (name == "ordered") {
       return &pack<myOrderNeighborhood<Ngh>>(size);
