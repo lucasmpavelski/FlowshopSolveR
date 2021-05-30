@@ -64,7 +64,7 @@ class BestInsertionExplorer
       std::shuffle(RandJOB.begin(), RandJOB.end(),
                    ParadiseoRNGFunctor<unsigned int>());
     }
-    RandJOB.resize(std::min<int>(_solution.size(), neighborhoodSize.getSize()));
+    RandJOB.resize(std::min<int>(_solution.size(), std::max(neighborhoodSize.getSize(), 1)));
     k = 0;
   }
 

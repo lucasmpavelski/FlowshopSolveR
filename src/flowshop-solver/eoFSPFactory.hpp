@@ -163,7 +163,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
       localSearch = &pack<moLocalSearch<Ngh>>(*explorer, cp, eval);
     }
 
-    if (categoricalName(".LSPS.Single.Step") == "1") {
+    if (name != "none" && categoricalName(".LSPS.Single.Step") == "1") {
       auto singleStepContinuator = &pack<moCombinedContinuator<Ngh>>(cp);
       auto falseCont = &pack<falseContinuator<Ngh>>();
       singleStepContinuator->add(*falseCont);
