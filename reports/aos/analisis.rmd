@@ -98,9 +98,7 @@ names(perfs) <- perf_experiments
 
 
 ```{r adaptive_destruction_size-plt}
-algo_perfs <- perfs[["01-adaptive_destruction_size"]]
-
-algo_perfs %>%
+perfs[["01-adaptive_destruction_size"]] %>%
   ggplot(aes(x = algo, fill = algo, y = arfp)) +
   geom_violin() + 
   labs(x = NULL) +
@@ -111,7 +109,7 @@ algo_perfs %>%
 
 
 ```{r}
-algo_perfs %>%
+perfs[["01-adaptive_destruction_size"]] %>%
   group_by(id) %>%
   mutate(rank = rank(fitness)) %>%
   select(algo, id, rank) %>%
@@ -124,7 +122,7 @@ algo_perfs %>%
 
 
 ```{r}
-algo_perfs %>%
+perfs[["01-adaptive_destruction_size"]] %>%
   group_by(algo) %>%
   summarize(
     q00 = quantile(arfp, 0.0),
@@ -133,18 +131,17 @@ algo_perfs %>%
     mean = mean(arfp),
     q75 = quantile(arfp, 0.75),
     q100 = quantile(arfp, 1.00)
-  ) %>% knitr::kable("latex", booktabs = TRUE)
+  ) %>% knitr::kable(booktabs = TRUE)
 ```
 
 
 ```{r}
+algo_perfs <- perfs[["01-adaptive_destruction_size"]]
 frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed))
 ```
 
 ```{r adaptive_best_insertion-plt}
-algo_perfs <- perfs[["02-adaptive_best_insertion"]]
-
-algo_perfs %>%
+perfs[["02-adaptive_best_insertion"]] %>%
   ggplot(aes(x = algo, fill = algo, y = arfp)) +
   geom_violin() + 
   labs(x = NULL) +
@@ -155,7 +152,7 @@ algo_perfs %>%
 
 
 ```{r}
-algo_perfs %>%
+perfs[["02-adaptive_best_insertion"]] %>%
   group_by(algo) %>%
   summarize(
     q00 = quantile(arfp, 0.0),
@@ -164,10 +161,11 @@ algo_perfs %>%
     mean = mean(arfp),
     q75 = quantile(arfp, 0.75),
     q100 = quantile(arfp, 1.00)
-  ) %>% knitr::kable("latex", booktabs = TRUE)
+  ) %>% knitr::kable(booktabs = TRUE)
 ```
 
 ```{r}
+algo_perfs <- perfs[["02-adaptive_best_insertion"]]
 frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed))
 ```
 
@@ -198,7 +196,7 @@ algo_perfs %>%
     mean = mean(arfp),
     q75 = quantile(arfp, 0.75),
     q100 = quantile(arfp, 1.00)
-  ) %>% knitr::kable("latex", booktabs = TRUE)
+  ) %>% knitr::kable(booktabs = TRUE)
 ```
 
 ```{r}
@@ -232,7 +230,7 @@ algo_perfs %>%
     mean = mean(arfp),
     q75 = quantile(arfp, 0.75),
     q100 = quantile(arfp, 1.00)
-  ) %>% knitr::kable("latex", booktabs = TRUE)
+  ) %>% knitr::kable(booktabs = TRUE)
 ```
 
 ```{r}
@@ -265,7 +263,7 @@ algo_perfs %>%
     mean = mean(arfp),
     q75 = quantile(arfp, 0.75),
     q100 = quantile(arfp, 1.00)
-  ) %>% knitr::kable("latex", booktabs = TRUE)
+  ) %>% knitr::kable(booktabs = TRUE)
 ```
 
 ```{r}
@@ -295,7 +293,7 @@ algo_perfs %>%
     mean = mean(arfp),
     q75 = quantile(arfp, 0.75),
     q100 = quantile(arfp, 1.00)
-  ) %>% knitr::kable("latex", booktabs = TRUE)
+  ) %>% knitr::kable(booktabs = TRUE)
 ```
 
 ```{r}
@@ -312,7 +310,7 @@ perfs %>%
     arfp = sprintf("%.3f (%.3f)", mean(arfp), sd(arfp))
   ) %>%
   pivot_wider(names_from = "algo", values_from = "arfp") %>%
-  knitr::kable("latex", booktabs = TRUE)
+  knitr::kable(booktabs = TRUE)
 ```
 
 ```{r}
@@ -451,6 +449,11 @@ perfs[["09-final_comparison"]] %>%
   ) %>%
   pivot_wider(names_from = "algo", values_from = "arfp") %>%
   knitr::kable("latex", booktabs = TRUE)
+```
+
+
+```{r}
+frdAllPairsNemenyiTest(perfs[["09-final_comparison"]]$arfp, perfs[["09-final_comparison"]]$algo, paste(perfs[["09-final_comparison"]]$id, "-", algo_perfs$seed))
 ```
 
 

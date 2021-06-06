@@ -25,7 +25,8 @@ fsp_solver_performance <- function(algorithm, config, instance, problem, seed, .
   )
   list(
     cost = res$fitness,
-    time = res$time
+    time = res$time,
+    no_evals = res$no_evals
   )
 }
 
@@ -48,7 +49,8 @@ fsp_solver_performance_print <- function(algorithm, config, instance, problem, s
   )
   list(
     cost = res$fitness,
-    time = res$time
+    time = res$time,
+    no_evals = res$no_evals
   )
 }
 
@@ -72,6 +74,7 @@ fsp_solver_performance_debug <- function(algorithm, config, instance, problem, s
   )
   list(
     cost = res$fitness,
-    time = res$time
+    time = res$time,
+    no_evals = res$no_evals
   )
 }

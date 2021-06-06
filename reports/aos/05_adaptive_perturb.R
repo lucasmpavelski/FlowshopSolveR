@@ -82,6 +82,10 @@ adapt_variants <- tribble(
   'linucb', '
   IG.AdaptivePerturb.AOS.Strategy              "" c (linucb)
   IG.AdaptivePerturb.AOS.LINUCB.Alpha          "" r (0.0, 1.5)
+  ',
+  'epsilon_greedy', '
+  IG.AdaptivePerturb.AOS.Strategy              "" c (epsilon_greedy)
+  IG.AdaptivePerturb.AOS.EpsilonGreedy.Epsilon "" r (0.0, 1.0)
   '
 )
 
@@ -134,7 +138,36 @@ ig_default_configs <- tribble(
     IG.Perturb.DestructionSizeStrategy = "fixed",
     IG.Perturb.DestructionSize         = "4",
     IG.DestructionStrategy             = "random",
-    IG.Local.Search                    = "best_insertion"
+    IG.Local.Search                    = "best_insertion",
+  ),
+  'ig', 'random', tibble(
+    IG.Init                            = "neh",
+    IG.Init.NEH.Ratio                  = "0",
+    IG.Init.NEH.Priority               = "sum_pij",
+    IG.Init.NEH.PriorityOrder          = "incr",
+    IG.Init.NEH.PriorityWeighted       = "no",
+    IG.Init.NEH.Insertion              = "first_best",
+    IG.Comp.Strat                      = "strict",
+    IG.Neighborhood.Size               = "1.0",
+    IG.Neighborhood.Strat              = "ordered",
+    IG.LS.Single.Step                  = "0",
+    IG.Accept                          = "temperature",
+    IG.Accept.Better.Comparison        = "strict",
+    IG.Accept.Temperature              = "0.25",
+    IG.Perturb.Insertion               = "random_best",
+    IG.DestructionStrategy             = "random",
+    IG.Perturb.DestructionSize         = "4",
+    IG.Local.Search                    = "best_insertion",
+    IG.Perturb.DestructionSizeStrategy = "fixed",
+    
+    IG.LSPS.Local.Search                = "best_insertion",
+    IG.LSPS.Single.Step                 = "0",
+    
+    IG.Perturb                             = "adaptive",
+    IG.AdaptivePerturb.AOS.WarmUp          = "0",
+    IG.AdaptivePerturb.AOS.WarmUp.Strategy = "random",
+    IG.AdaptivePerturb.AOS.RewardType      = "0",
+    IG.AdaptivePerturb.AOS.Strategy        = "random"
   )
 ) %>% 
   expand_grid(train_test_sets_df)

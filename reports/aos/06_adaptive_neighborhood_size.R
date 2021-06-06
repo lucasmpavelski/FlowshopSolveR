@@ -5,6 +5,8 @@ library(wrapr)
 library(irace)
 library(furrr)
 
+NCORES <- 8
+options(parallelly.debug = TRUE)
 plan(remote, workers = rep("linode2", 8), persistent = TRUE)
 # plan(sequential)
 
@@ -82,6 +84,10 @@ adapt_variants <- tribble(
   'linucb', '
   IG.AdaptiveNeighborhoodSize.AOS.Strategy              "" c (linucb)
   IG.AdaptiveNeighborhoodSize.AOS.LINUCB.Alpha          "" r (0.0, 1.5)
+  ',
+  'epsilon_greedy', '
+  IG.AdaptiveNeighborhoodSize.AOS.Strategy              "" c (epsilon_greedy)
+  IG.AdaptiveNeighborhoodSize.AOS.EpsilonGreedy.Epsilon "" r (0.0, 1.0)
   '
 )
 
@@ -134,6 +140,114 @@ ig_default_configs <- tribble(
     IG.Perturb.DestructionSize         = "4",
     IG.DestructionStrategy             = "random",
     IG.Local.Search                    = "best_insertion"
+  ),
+  'ig', 'random-2', tibble(
+    IG.Init                            = "neh",
+    IG.Init.NEH.Ratio                  = "0",
+    IG.Init.NEH.Priority               = "sum_pij",
+    IG.Init.NEH.PriorityOrder          = "incr",
+    IG.Init.NEH.PriorityWeighted       = "no",
+    IG.Init.NEH.Insertion              = "first_best",
+    IG.Comp.Strat                      = "strict",
+    IG.Neighborhood.Size               = "1.0",
+    IG.LS.Single.Step                  = "0",
+    IG.Accept                          = "temperature",
+    IG.Accept.Better.Comparison        = "strict",
+    IG.Accept.Temperature              = "0.25",
+    IG.Perturb.Insertion               = "random_best",
+    IG.Perturb                         = "rs",
+    IG.DestructionStrategy             = "random",
+    IG.Perturb.DestructionSize         = "4",
+    IG.Perturb.DestructionSizeStrategy = "fixed",
+    IG.Local.Search                    = "best_insertion",
+    
+    IG.Neighborhood.Strat                           = "adaptive",
+    IG.AdaptiveNeighborhoodSize.AOS.Strategy        = "random",
+    IG.AdaptiveNeighborhoodSize.AOS.NoArms          = "2",
+    IG.AdaptiveNeighborhoodSize.AOS.WarmUp          = "0",
+    IG.AdaptiveNeighborhoodSize.AOS.WarmUp.Strategy = "random",
+    IG.AdaptiveNeighborhoodSize.AOS.RewardType      = "0"
+  ),
+  'ig', 'random-3', tibble(
+    IG.Init                            = "neh",
+    IG.Init.NEH.Ratio                  = "0",
+    IG.Init.NEH.Priority               = "sum_pij",
+    IG.Init.NEH.PriorityOrder          = "incr",
+    IG.Init.NEH.PriorityWeighted       = "no",
+    IG.Init.NEH.Insertion              = "first_best",
+    IG.Comp.Strat                      = "strict",
+    IG.Neighborhood.Size               = "1.0",
+    IG.LS.Single.Step                  = "0",
+    IG.Accept                          = "temperature",
+    IG.Accept.Better.Comparison        = "strict",
+    IG.Accept.Temperature              = "0.25",
+    IG.Perturb.Insertion               = "random_best",
+    IG.Perturb                         = "rs",
+    IG.DestructionStrategy             = "random",
+    IG.Perturb.DestructionSize         = "4",
+    IG.Perturb.DestructionSizeStrategy = "fixed",
+    IG.Local.Search                    = "best_insertion",
+    
+    IG.Neighborhood.Strat                           = "adaptive",
+    IG.AdaptiveNeighborhoodSize.AOS.Strategy        = "random",
+    IG.AdaptiveNeighborhoodSize.AOS.NoArms          = "3",
+    IG.AdaptiveNeighborhoodSize.AOS.WarmUp          = "0",
+    IG.AdaptiveNeighborhoodSize.AOS.WarmUp.Strategy = "random",
+    IG.AdaptiveNeighborhoodSize.AOS.RewardType      = "0"
+  ),
+  'ig', 'random-5', tibble(
+    IG.Init                            = "neh",
+    IG.Init.NEH.Ratio                  = "0",
+    IG.Init.NEH.Priority               = "sum_pij",
+    IG.Init.NEH.PriorityOrder          = "incr",
+    IG.Init.NEH.PriorityWeighted       = "no",
+    IG.Init.NEH.Insertion              = "first_best",
+    IG.Comp.Strat                      = "strict",
+    IG.Neighborhood.Size               = "1.0",
+    IG.LS.Single.Step                  = "0",
+    IG.Accept                          = "temperature",
+    IG.Accept.Better.Comparison        = "strict",
+    IG.Accept.Temperature              = "0.25",
+    IG.Perturb.Insertion               = "random_best",
+    IG.Perturb                         = "rs",
+    IG.DestructionStrategy             = "random",
+    IG.Perturb.DestructionSize         = "4",
+    IG.Perturb.DestructionSizeStrategy = "fixed",
+    IG.Local.Search                    = "best_insertion",
+    
+    IG.Neighborhood.Strat                           = "adaptive",
+    IG.AdaptiveNeighborhoodSize.AOS.Strategy        = "random",
+    IG.AdaptiveNeighborhoodSize.AOS.NoArms          = "5",
+    IG.AdaptiveNeighborhoodSize.AOS.WarmUp          = "0",
+    IG.AdaptiveNeighborhoodSize.AOS.WarmUp.Strategy = "random",
+    IG.AdaptiveNeighborhoodSize.AOS.RewardType      = "0"
+  ),
+  'ig', 'random-10', tibble(
+    IG.Init                            = "neh",
+    IG.Init.NEH.Ratio                  = "0",
+    IG.Init.NEH.Priority               = "sum_pij",
+    IG.Init.NEH.PriorityOrder          = "incr",
+    IG.Init.NEH.PriorityWeighted       = "no",
+    IG.Init.NEH.Insertion              = "first_best",
+    IG.Comp.Strat                      = "strict",
+    IG.Neighborhood.Size               = "1.0",
+    IG.LS.Single.Step                  = "0",
+    IG.Accept                          = "temperature",
+    IG.Accept.Better.Comparison        = "strict",
+    IG.Accept.Temperature              = "0.25",
+    IG.Perturb.Insertion               = "random_best",
+    IG.Perturb                         = "rs",
+    IG.DestructionStrategy             = "random",
+    IG.Perturb.DestructionSize         = "4",
+    IG.Perturb.DestructionSizeStrategy = "fixed",
+    IG.Local.Search                    = "best_insertion",
+    
+    IG.Neighborhood.Strat                           = "adaptive",
+    IG.AdaptiveNeighborhoodSize.AOS.Strategy        = "random",
+    IG.AdaptiveNeighborhoodSize.AOS.NoArms          = "10",
+    IG.AdaptiveNeighborhoodSize.AOS.WarmUp          = "0",
+    IG.AdaptiveNeighborhoodSize.AOS.WarmUp.Strategy = "random",
+    IG.AdaptiveNeighborhoodSize.AOS.RewardType      = "0"
   )
 ) %>% 
   expand_grid(train_test_sets_df)
@@ -157,14 +271,18 @@ tuned_perf <- test_configs %>%
     sampled_performance = pmap(., function(name, problems, best_config, ...) {
       dir.create(dirname(name), recursive = T, showWarnings = F)
       set.seed(79879874)
+      print(name)
       sample_performance(
         algorithm = get_algorithm("IG"), 
         problemSpace = ProblemSpace(problems = problems$problem_space),
         config = best_config,
         solve_function = fsp_solver_performance,
         no_samples = 10,
-        cache = name
+        cache = name,
+        parallel = TRUE
       )
     }
     )
   )
+
+plan(sequential)

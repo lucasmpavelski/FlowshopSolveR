@@ -78,6 +78,10 @@ adapt_variants <- tribble(
   'linucb', '
   IG.AdaptiveLocalSearch.AOS.Strategy              "" c (linucb)
   IG.AdaptiveLocalSearch.AOS.LINUCB.Alpha          "" r (0.0, 1.5)
+  ',
+  'epsilon_greedy', '
+  IG.AdaptiveLocalSearch.AOS.Strategy              "" c (epsilon_greedy)
+  IG.AdaptiveLocalSearch.AOS.EpsilonGreedy.Epsilon "" r (0.0, 1.0)
   '
 )
 
@@ -131,6 +135,32 @@ ig_default_configs <- tribble(
     IG.Perturb.DestructionSize         = "4",
     IG.DestructionStrategy             = "random",
     IG.Local.Search                    = "best_insertion"
+  ),
+  'ig', 'random', tibble(
+    IG.Init                            = "neh",
+    IG.Init.NEH.Ratio                  = "0",
+    IG.Init.NEH.Priority               = "sum_pij",
+    IG.Init.NEH.PriorityOrder          = "incr",
+    IG.Init.NEH.PriorityWeighted       = "no",
+    IG.Init.NEH.Insertion              = "first_best",
+    IG.Comp.Strat                      = "strict",
+    IG.Neighborhood.Size               = "1.0",
+    IG.Neighborhood.Strat              = "ordered",
+    IG.LS.Single.Step                  = "0",
+    IG.Accept                          = "temperature",
+    IG.Accept.Better.Comparison        = "strict",
+    IG.Accept.Temperature              = "0.25",
+    IG.Perturb.Insertion               = "random_best",
+    IG.Perturb                         = "rs",
+    IG.DestructionStrategy             = "random",
+    IG.Perturb.DestructionSize         = "4",
+    IG.Perturb.DestructionSizeStrategy = "fixed",
+    
+    IG.Local.Search                            = "adaptive",
+    IG.AdaptiveLocalSearch.AOS.WarmUp          = "0",
+    IG.AdaptiveLocalSearch.AOS.WarmUp.Strategy = "random",
+    IG.AdaptiveLocalSearch.AOS.RewardType      = "0",
+    IG.AdaptiveLocalSearch.AOS.Strategy        = "random"
   )
 ) %>% 
   expand_grid(train_test_sets_df)

@@ -5,6 +5,11 @@ library(wrapr)
 library(irace)
 library(furrr)
 
+NCORES <- 8
+options(parallelly.debug = TRUE)
+plan(remote, workers = rep("linode2", 8), persistent = TRUE)
+# plan(sequential)
+
 run_irace <- function(name, params, problems, ...) {
   dir.create(dirname(name), recursive = T, showWarnings = F)
   set.seed(65487873)
@@ -50,8 +55,8 @@ ig_variants <-     tribble(
   IG.Perturb.DestructionSize         "" c (4)
   IG.Perturb.DestructionSizeStrategy "" c (adaptive)
   
-  IG.AOS.WarmUp                "" i (0,2000)
-  IG.AOS.WarmUp.Strategy       "" c (random, fixed)
+  IG.AOS.WarmUp                "" c (0, 1000, 2000)
+  IG.AOS.WarmUp.Strategy       "" c (random)
   IG.AOS.RewardType            "" c (0,1,2,3) 
   IG.AOS.Options               "" c (2_4, 4_6, 2_4_6, 4_8)
       '
@@ -113,12 +118,15 @@ adapt_variants <- tribble(
   'linucb', '
   IG.AOS.Strategy              "" c (linucb)
   IG.AOS.LINUCB.Alpha          "" r (0.0, 1.5) | IG.Perturb.DestructionSizeStrategy == "adaptive" & IG.AOS.Strategy == "linucb"
-  '
+  ',
+  'epsilon_greedy', '
+  IG.AOS.Strategy              "" c (epsilon_greedy)
+  IG.AOS.EpsilonGreedy.Epsilon "" r (0.0, 1.0)
+  ' #,
+  # 'random', '
+  # IG.AOS.Strategy              "" c (random)
+  # '
 )
-
-# plan(remote, workers = 8)
-# plan(remote, workers = rep("linode2", 8), persistent = TRUE)
-plan(sequential)
 
 exp_folder <- here("reports", "aos", "data", "01-adaptive_destruction_size")
 perf_folder <- file.path(exp_folder, "perf")
@@ -145,6 +153,32 @@ strategy_params <- train_test_sets_df %>%
   # mutate(best_config = pmap(., run_irace))
 
 
+ig_default_random <- tibble(
+  IG.Init                            = "neh",
+  IG.Init.NEH.Ratio                  = "0",
+  IG.Init.NEH.Priority               = "sum_pij",
+  IG.Init.NEH.PriorityOrder          = "incr",
+  IG.Init.NEH.PriorityWeighted       = "no",
+  IG.Init.NEH.Insertion              = "first_best",
+  IG.Comp.Strat                      = "strict",
+  IG.Neighborhood.Size               = "1.0",
+  IG.Neighborhood.Strat              = "ordered",
+  IG.LS.Single.Step                  = "0",
+  IG.Accept                          = "temperature",
+  IG.Accept.Better.Comparison        = "strict",
+  IG.Accept.Temperature              = "0.25",
+  IG.Perturb.Insertion               = "random_best",
+  IG.Perturb                         = "rs",
+  IG.DestructionStrategy             = "random",
+  IG.Perturb.DestructionSize         = "4",
+  IG.Local.Search                    = "best_insertion",
+  IG.Perturb.DestructionSizeStrategy = "adaptive",
+  IG.AOS.Strategy                    = "random",
+  IG.AOS.WarmUp                      = "0",
+  IG.AOS.WarmUp.Strategy             = "random",
+  IG.AOS.RewardType                  = "0"
+)
+
 ig_default_configs <- tribble(
   ~ig_variant, ~adapt_variant, ~best_config,
   'ig', 'default', tibble(
@@ -167,7 +201,11 @@ ig_default_configs <- tribble(
     IG.Perturb.DestructionSize         = "4",
     IG.DestructionStrategy             = "random",
     IG.Local.Search                    = "best_insertion"
-  )
+  ),
+  'ig', 'random-2_4', mutate(ig_default_random, IG.AOS.Options = "2_4"),
+  'ig', 'random-4_6', mutate(ig_default_random, IG.AOS.Options = "4_6"),
+  'ig', 'random-2_4_6', mutate(ig_default_random, IG.AOS.Options = "2_4_6"),
+  'ig', 'random-4_8', mutate(ig_default_random, IG.AOS.Options = "4_8")
 ) %>%
   expand_grid(train_test_sets_df)
 
@@ -190,97 +228,17 @@ tuned_perf <- test_configs %>%
     sampled_performance = pmap(., function(name, problems, best_config, ...) {
         dir.create(dirname(name), recursive = T, showWarnings = F)
         set.seed(79879874)
+        cat("Running ", name, "\n")
         sample_performance(
           algorithm = get_algorithm("IG"),
           problemSpace = ProblemSpace(problems = problems$problem_space),
           config = best_config,
           solve_function = fsp_solver_performance,
           no_samples = 10,
-          cache = name
+          cache = name,
+          parallel = NCORES
         )
       }
     )
   )
 
-
-tuned_perf_extra <- test_configs %>%
-  select(path, best_config, ig_variant, adapt_variant) %>%
-  mutate(
-    best_config = map(best_config, removeConfigurationsMetaData),
-    best_config = map(best_config, ~df_to_character(.x[1,])),
-    name = here(perf_folder, path, paste0(ig_variant, adapt_variant, "-extra.rds"))
-  ) %>%
-  inner_join(
-    train_test_sets_df %>%
-      filter(set_type == "extra"),
-    by = "path"
-  ) %>%
-  mutate(
-    sampled_performance = pmap(., function(name, problems, best_config, ...) {
-      dir.create(dirname(name), recursive = T, showWarnings = F)
-      set.seed(79879874)
-      sample_performance(
-        algorithm = get_algorithm("IG"),
-        problemSpace = ProblemSpace(problems = problems$problem_space),
-        config = best_config,
-        solve_function = fsp_solver_performance,
-        no_samples = 10,
-        cache = name
-      )
-    }
-    )
-  )
-  
-
-
-
-# tribble(
-#   ~name, ~config,
-#   'default-ig', c(
-#     IG.Init                            = "neh",
-#     IG.Init.NEH.Ratio                  = "0",
-#     IG.Init.NEH.Priority               = "sum_pij",
-#     IG.Init.NEH.PriorityOrder          = "incr",
-#     IG.Init.NEH.PriorityWeighted       = "no",
-#     IG.Init.NEH.Insertion              = "first_best",
-#     IG.Comp.Strat                      = "strict",
-#     IG.Neighborhood.Size               = "1.0",
-#     IG.Neighborhood.Strat              = "ordered",
-#     IG.LS.Single.Step                  = "0",
-#     IG.Accept                          = "temperature",
-#     IG.Accept.Better.Comparison        = "strict",
-#     IG.Accept.Temperature              = "0.25",
-#     IG.Perturb.Insertion               = "random_best",
-#     IG.Perturb                         = "rs",
-#     IG.Perturb.DestructionSizeStrategy = "fixed",
-#     IG.Perturb.DestructionSize         = "4",
-#     IG.DestructionStrategy             = "random",
-#     IG.Local.Search                    = "best_insertion"
-#   ),
-#   'static-ts', c(
-#     IG.Init                            = "neh",
-#     IG.Init.NEH.Ratio                  = "0",
-#     IG.Init.NEH.Priority               = "sum_pij",
-#     IG.Init.NEH.PriorityOrder          = "incr",
-#     IG.Init.NEH.PriorityWeighted       = "no",
-#     IG.Init.NEH.Insertion              = "first_best",
-#     IG.Comp.Strat                      = "strict",
-#     IG.Neighborhood.Size               = "1.0",
-#     IG.Neighborhood.Strat              = "ordered",
-#     IG.LS.Single.Step                  = "0",
-#     IG.Accept                          = "temperature",
-#     IG.Accept.Better.Comparison        = "strict",
-#     IG.Accept.Temperature              = "0.25",
-#     IG.Perturb.Insertion               = "random_best",
-#     IG.Perturb                         = "rs",
-#     IG.Perturb.DestructionSizeStrategy = "fixed",
-#     IG.Perturb.DestructionSize         = "4",
-#     IG.DestructionStrategy             = "random",
-#     IG.Local.Search                    = "adaptive_best_insertion"
-#   )
-# )
-
-# 
-# train_test_sets_df %>%
-#   filter(set_type == "test") %>%
-  

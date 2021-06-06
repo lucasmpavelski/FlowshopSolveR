@@ -5,6 +5,11 @@ library(wrapr)
 library(irace)
 library(furrr)
 
+NCORES <- 8
+options(parallelly.debug = TRUE)
+plan(remote, workers = rep("linode2", 8), persistent = TRUE)
+# plan(sequential)
+
 run_irace <- function(name, params, problems, ...) {
   dir.create(dirname(name), recursive = T, showWarnings = F)
   set.seed(65487873)
@@ -82,11 +87,13 @@ adapt_variants <- tribble(
   'linucb', '
   IG.AdaptivePosition.AOS.Strategy              "" c (linucb)
   IG.AdaptivePosition.AOS.LINUCB.Alpha          "" r (0.0, 1.5)
+  ',
+  'epsilon_greedy', '
+  IG.AdaptivePosition.AOS.Strategy              "" c (epsilon_greedy)
+  IG.AdaptivePosition.AOS.EpsilonGreedy.Epsilon "" r (0.0, 1.0)
   '
 )
 
-plan(remote, workers = rep("linode2", 8), persistent = TRUE)
-# plan(sequential)
 
 exp_folder <- here("reports", "aos", "data", "03-adaptive_destruction_position")
 perf_folder <- file.path(exp_folder, "perf")

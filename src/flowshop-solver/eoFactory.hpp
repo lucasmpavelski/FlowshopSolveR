@@ -1,8 +1,8 @@
 #pragma once
 
+#include <exception>
 #include <stdexcept>
 #include <type_traits>
-#include <exception>
 
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
@@ -16,8 +16,8 @@
 #include "flowshop-solver/heuristics/falseContinuator.hpp"
 #include "flowshop-solver/problems/Problem.hpp"
 
-
 // AOS
+#include "flowshop-solver/aos/EpsilonGreedy.hpp"
 #include "flowshop-solver/aos/frrmab.hpp"
 #include "flowshop-solver/aos/lin_ucb.hpp"
 #include "flowshop-solver/aos/probability_matching.hpp"
@@ -31,12 +31,11 @@
 #include "flowshop-solver/fla/FitnessHistory.hpp"
 #include "flowshop-solver/fla/NeutralityFLA.hpp"
 
-#include "flowshop-solver/neighborhood-size/NeighborhoodSize.hpp"
-#include "flowshop-solver/neighborhood-size/FixedNeighborhoodSize.hpp"
 #include "flowshop-solver/neighborhood-size/AdaptiveNeighborhoodSize.hpp"
+#include "flowshop-solver/neighborhood-size/FixedNeighborhoodSize.hpp"
+#include "flowshop-solver/neighborhood-size/NeighborhoodSize.hpp"
 
 #include "aos/thompson_sampling.hpp"
-
 
 #include "flowshop-solver/heuristics/AdaptiveLocalSearch.hpp"
 
@@ -148,11 +147,12 @@ class eoFactory : public eoFunctorStore {
   }
 
   auto buildNeighborhood() -> moIndexNeighborhood<Ngh>* {
-    return buildNeighborhood(_problem.maxNeighborhoodSize() * real(".Neighborhood.Size"));
+    return buildNeighborhood(_problem.maxNeighborhoodSize() *
+                             real(".Neighborhood.Size"));
   }
 
   auto buildNeighborhood(const int max_size) -> moIndexNeighborhood<Ngh>* {
-    const int size = max_size;
+    const int size = std::max(1, max_size);
     const std::string name = categoricalName(".Neighborhood.Strat");
     if (name == "ordered") {
       return &pack<myOrderNeighborhood<Ngh>>(size);
@@ -227,15 +227,15 @@ class eoFactory : public eoFunctorStore {
       const int size = _problem.size(0) * real(".Neighborhood.Size");
       return &pack<FixedNeighborhoodSize>(size);
     } else if (name == "adaptive") {
-        int noPartitions = integer(".AdaptiveNeighborhoodSize.AOS.NoArms");
-        std::vector<int> options(noPartitions);
-        std::iota(options.begin(), options.end(), 1);
-        int rewardType = categorical(".AdaptiveNeighborhoodSize.AOS.RewardType");
-        auto operatorSelection =
-            buildOperatorSelection(".AdaptiveNeighborhoodSize", options);
-        return &pack<AdaptiveNeighborhoodSize<EOT>>(
-            _problem.size(0), *operatorSelection, *getRewards(), rewardType);
-      }
+      int noPartitions = integer(".AdaptiveNeighborhoodSize.AOS.NoArms");
+      std::vector<int> options(noPartitions);
+      std::iota(options.begin(), options.end(), 1);
+      int rewardType = categorical(".AdaptiveNeighborhoodSize.AOS.RewardType");
+      auto operatorSelection =
+          buildOperatorSelection(".AdaptiveNeighborhoodSize", options);
+      return &pack<AdaptiveNeighborhoodSize<EOT>>(
+          _problem.size(0), *operatorSelection, *getRewards(), rewardType);
+    }
     return nullptr;
   }
 
@@ -293,7 +293,7 @@ class eoFactory : public eoFunctorStore {
           buildLocalSearchByName("best_improvement", false),
           buildLocalSearchByName("random_best_improvement", false),
           buildLocalSearchByName("best_insertion", false),
-          buildLocalSearchByName("adaptive_best_insertion" , false)};
+          buildLocalSearchByName("adaptive_best_insertion", false)};
       std::vector<int> options = {0, 1, 2, 3, 4};
       auto operatorSelection =
           buildOperatorSelection(".AdaptiveLocalSearch", options);
@@ -361,6 +361,9 @@ class eoFactory : public eoFunctorStore {
       }
     } else if (name == "random") {
       strategy = &pack<Random<int>>(options);
+    } else if (name == "epsilon_greedy") {
+      strategy = &pack<EpsilonGreedy<int>>(
+          options, real(prefix + ".AOS.EpsilonGreedy.Epsilon"));
     }
 
     auto warmUpProportion = integer(prefix + ".AOS.WarmUp");
