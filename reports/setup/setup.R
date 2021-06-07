@@ -7,12 +7,12 @@ library(furrr)
 
 NCORES <- 16
 options(parallelly.debug = TRUE)
-plan(remote, workers = rep("linode2", NCORES), persistent = TRUE)
+# plan(remote, workers = rep("linode2", NCORES), persistent = TRUE)
 
 all_problems <- all_problems_df() %>%
   filter(
-    no_jobs %in% c(10, 30, 50),
-    no_machines %in% c(5, 10),
+    no_jobs %in% c(20),
+    no_machines %in% c(10),
     dist %in% c('uniform', 'exponential'),
     stopping_criterion == 'TIME',
     budget == 'high'
@@ -38,3 +38,36 @@ pwalk(all_problems, function(meta_opt_problem, id, ...) {
 })
 
 plan(sequential)
+
+
+lower_bound_cache <- map(dir(LOWER_BOUNDS_FOLDER, full.names = T), read_rds) %>%
+  bind_rows() %>%
+  mutate(
+    problem_data = map(problem, ~.x@data),
+    dist = map_chr(problem_data, 'dist'),
+    corr = map_chr(problem_data, 'corr'),
+    no_jobs = as.integer(map_chr(problem_data, 'no_jobs')),
+    no_machines = as.integer(map_chr(problem_data, 'no_machines')),
+    problem_ = map_chr(problem_data, 'problem'),
+    type = map_chr(problem_data, 'type'),
+    objective = map_chr(problem_data, 'objective'),
+    cost = as.integer(map_dbl(result, 'cost')),
+    time = as.integer(map_dbl(result, 'time')),
+    no_evals = as.integer(map_dbl(result, 'no_evals'))
+  ) %>%
+  select(-problem, 
+         -problem_data,
+         problem = problem_,
+         -result)
+
+
+lower_bounds <- lower_bound_cache %>%
+  group_by(dist, corr, no_jobs, no_machines, problem, type, objective) %>%
+  summarise(
+    cost = min(cost),
+    time = sum(time),
+    no_evals = sum(no_evals)
+  )
+  
+write_csv(lower_bounds, here("data", "lower_bounds.csv"))
+  
