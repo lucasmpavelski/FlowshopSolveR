@@ -56,6 +56,10 @@ test_problems <- problems %>%
 
 
 load_perfs <- function(perf_folder, path = "all") {
+  lower_bounds <- read_csv(here("data", "lower_bounds.csv")) %>% 
+    rename(best_cost = cost)
+  
+  
   tibble(
     path = path,
     full_path = file.path(perf_folder, path)
@@ -71,9 +75,10 @@ load_perfs <- function(perf_folder, path = "all") {
     ) %>%
     unnest(perfs) %>%
     unnest(perf) %>%
+    left_join(lower_bounds, by = c("problem", "dist", "corr", "no_jobs", "no_machines", "type", "objective", "instance")) %>%
     mutate(algo = str_replace_all(algo, "^ig|\\.rds$", "")) %>%
     group_by(path, id) %>%
-    mutate(arfp = 100 * (fitness - min(fitness)) / min(fitness))
+    mutate(arfp = 100 * (fitness - best_cost) / best_cost)
 }
 
 ```
@@ -94,6 +99,21 @@ perfs <- map(perf_experiments, ~{
 })
 
 names(perfs) <- perf_experiments
+
+extra_perfs <- c("01-adaptive_destruction_size", 
+"02-adaptive_best_insertion", "03-adaptive_destruction_position", 
+"04-adaptive_local_search", "05-adaptive_perturb", "06-adaptive_neighborhood_size", "09-final_comparison")
+
+extras <- map(extra_perfs, ~{
+  exp_folder <- here("reports", "aos", "data", .x)
+  perf_folder <- file.path(exp_folder, "extra")
+  dt <- load_perfs(perf_folder) %>%
+    mutate(experiment = .x)
+  perfs[[.x]] <<- bind_rows(perfs[[.x]], dt)
+  dt
+})
+
+names(extras) <- extra_perfs 
 ```
 
 
@@ -102,7 +122,6 @@ perfs[["01-adaptive_destruction_size"]] %>%
   ggplot(aes(x = algo, fill = algo, y = arfp)) +
   geom_violin() + 
   labs(x = NULL) +
-  scale_y_continuous(trans = "pseudo_log") +
   ggtitle("Adaptive destruction size") + 
   theme_minimal()
 ```
@@ -121,6 +140,20 @@ perfs[["01-adaptive_destruction_size"]] %>%
 ```
 
 
+
+```{r}
+perfs[["01-adaptive_destruction_size"]] %>%
+  group_by(algo) %>%
+  summarize(
+    q00 = quantile(arfp, 0.0),
+    q25 = quantile(arfp, 0.25),
+    q50 = quantile(arfp, 0.5),
+    mean = mean(arfp),
+    q75 = quantile(arfp, 0.75),
+    q100 = quantile(arfp, 1.00)
+  ) %>% knitr::kable(booktabs = TRUE)
+```
+
 ```{r}
 perfs[["01-adaptive_destruction_size"]] %>%
   group_by(algo) %>%
@@ -136,7 +169,8 @@ perfs[["01-adaptive_destruction_size"]] %>%
 
 
 ```{r}
-algo_perfs <- perfs[["01-adaptive_destruction_size"]]
+algo_perfs <- perfs[["01-adaptive_destruction_size"]] %>%
+  filter(!(algo %in% c('random-2_4','random-2_4_6','random-4_6')))
 frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed))
 ```
 
@@ -171,23 +205,16 @@ frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-
 
 
 ```{r adaptive_destruction_position-plt}
-exp_folder <- here("reports", "aos", "data", "03-adaptive_destruction_position")
-perf_folder <- file.path(exp_folder, "perf")
-irace_folder <- file.path(exp_folder, "irace")
-
-algo_perfs <- load_perfs(perf_folder)
-
-algo_perfs %>%
+perfs[["03-adaptive_destruction_position"]] %>%
   ggplot(aes(x = algo, fill = algo, y = arfp)) +
   geom_violin() + 
   labs(x = NULL) +
-  scale_y_continuous(trans = "pseudo_log") +
   ggtitle("Adaptive destruction position") + 
   theme_minimal()
 ```
 
 ```{r}
-algo_perfs %>%
+perfs[["03-adaptive_destruction_position"]] %>%
   group_by(algo) %>%
   summarize(
     q00 = quantile(arfp, 0.0),
@@ -200,28 +227,22 @@ algo_perfs %>%
 ```
 
 ```{r}
+algo_perfs <- perfs[["03-adaptive_destruction_position"]]
 frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed))
 ```
 
 
 ```{r adaptive_local_search-plt}
-exp_folder <- here("reports", "aos", "data", "04-adaptive_local_search")
-perf_folder <- file.path(exp_folder, "perf")
-irace_folder <- file.path(exp_folder, "irace")
-
-algo_perfs <- load_perfs(perf_folder)
-
-algo_perfs %>%
+perfs[["04-adaptive_local_search"]] %>%
   ggplot(aes(x = algo, fill = algo, y = arfp)) +
   geom_violin() + 
   labs(x = NULL) +
-  scale_y_continuous(trans = "pseudo_log") +
   ggtitle("Adaptive local search") + 
   theme_minimal()
 ```
 
 ```{r}
-algo_perfs %>%
+perfs[["04-adaptive_local_search"]] %>%
   group_by(algo) %>%
   summarize(
     q00 = quantile(arfp, 0.0),
@@ -234,17 +255,12 @@ algo_perfs %>%
 ```
 
 ```{r}
+algo_perfs <- perfs[["04-adaptive_local_search"]] 
 frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed))
 ```
 
 ```{r adaptive_perturb-plt}
-exp_folder <- here("reports", "aos", "data", "05-adaptive_perturb")
-perf_folder <- file.path(exp_folder, "perf")
-irace_folder <- file.path(exp_folder, "irace")
-
-algo_perfs <- load_perfs(perf_folder)
-
-algo_perfs %>%
+perfs[["05-adaptive_perturb"]] %>%
   ggplot(aes(x = algo, fill = algo, y = arfp)) +
   geom_violin() + 
   labs(x = NULL) +
@@ -254,7 +270,7 @@ algo_perfs %>%
 ```
 
 ```{r}
-algo_perfs %>%
+perfs[["05-adaptive_perturb"]] %>%
   group_by(algo) %>%
   summarize(
     q00 = quantile(arfp, 0.0),
@@ -267,24 +283,22 @@ algo_perfs %>%
 ```
 
 ```{r}
+algo_perfs <- perfs[["05-adaptive_perturb"]]
 frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed))
 ```
 
 
 ```{r adaptive_neighborhood_size-plt}
-algo_perfs <- perfs[["06-adaptive_neighborhood_size"]]
-
-algo_perfs %>%
+perfs[["06-adaptive_neighborhood_size"]] %>%
   ggplot(aes(x = algo, fill = algo, y = arfp)) +
   geom_violin() + 
   labs(x = NULL) +
-  scale_y_continuous(trans = "pseudo_log") +
   ggtitle("Adaptive neighborhood size") + 
   theme_minimal()
 ```
 
 ```{r}
-algo_perfs %>%
+perfs[["06-adaptive_neighborhood_size"]] %>%
   group_by(algo) %>%
   summarize(
     q00 = quantile(arfp, 0.0),
@@ -297,6 +311,8 @@ algo_perfs %>%
 ```
 
 ```{r}
+algo_perfs <- perfs[["06-adaptive_neighborhood_size"]] %>%
+  filter(!(algo %in% c('random-3', 'random-5', 'random-10')))
 frdAllPairsNemenyiTest(algo_perfs$arfp, algo_perfs$algo, paste(algo_perfs$id, "-", algo_perfs$seed))
 ```
 
@@ -307,7 +323,7 @@ perfs %>%
   bind_rows() %>%
   group_by(experiment, algo) %>%
   summarise(
-    arfp = sprintf("%.3f (%.3f)", mean(arfp), sd(arfp))
+    arfp = sprintf("%.3f %.2f", mean(arfp), sd(arfp))
   ) %>%
   pivot_wider(names_from = "algo", values_from = "arfp") %>%
   knitr::kable(booktabs = TRUE)
@@ -378,13 +394,13 @@ configs_tidy <- map_dfr(experiments, ~{
 
 
 ```{r}
-# configs_tidy %>%
-#   filter((param %in% c("RewardType"))) %>% 
-#   filter(!(param %in% c("WarmUp.Strategy"))) %>%  # pivot_wider(names_from = "param", values_from = "value") %>%
-#   arrange(exp, algo, param) %>%
-#   mmtable(value) +
-#   header_top(algo) +
-#   header_left(exp)
+configs_tidy %>%
+  filter((param %in% c("RewardType"))) %>%
+  filter(!(param %in% c("WarmUp.Strategy"))) %>%  # pivot_wider(names_from = "param", values_from = "value") %>% 
+  arrange(exp, algo, param) %>%
+  mmtable(value) +
+  header_top(algo) +
+  header_left(exp)
 ```
 
 
@@ -421,6 +437,27 @@ configs_tidy %>%
 ```
 
 
+```{r}
+extras[[1]] %>%
+  ggplot(aes(x = algo, fill = algo, y = arfp)) +
+  geom_violin() + 
+  labs(x = NULL) +
+  scale_y_continuous(trans = "pseudo_log") +
+  ggtitle("Adaptive perturb-ds") + 
+  theme_minimal()
+```
+
+```{r}
+extras[[1]] %>%
+  bind_rows() %>%
+  group_by(experiment, algo) %>%
+  summarise(
+    arfp = sprintf("%.3f (%.3f)", mean(arfp), sd(arfp))
+  ) %>%
+  pivot_wider(names_from = "algo", values_from = "arfp") %>%
+  knitr::kable(booktabs = TRUE)
+```
+
 
 ```{r final_comparison-plt}
 algo_perfs <- perfs[["09-final_comparison"]]
@@ -445,15 +482,15 @@ perfs[["09-final_comparison"]] %>%
   bind_rows() %>%
   group_by(experiment, algo) %>%
   summarise(
-    arfp = sprintf("%.3f (%.3f)", mean(arfp), sd(arfp))
+    arfp = sprintf("%.3f (%.2f)", mean(arfp), sd(arfp))
   ) %>%
   pivot_wider(names_from = "algo", values_from = "arfp") %>%
-  knitr::kable("latex", booktabs = TRUE)
+  knitr::kable(booktabs = TRUE)
 ```
 
 
 ```{r}
-frdAllPairsNemenyiTest(perfs[["09-final_comparison"]]$arfp, perfs[["09-final_comparison"]]$algo, paste(perfs[["09-final_comparison"]]$id, "-", algo_perfs$seed))
+frdAllPairsNemenyiTest(perfs[["09-final_comparison"]]$arfp, perfs[["09-final_comparison"]]$algo, paste(perfs[["09-final_comparison"]]$id, "-", perfs[["09-final_comparison"]]$seed))
 ```
 
 
@@ -464,7 +501,7 @@ perfs[["09-final_comparison"]] %>%
   bind_rows() %>%
   group_by(experiment, algo, objective) %>%
   summarise(
-    arfp = sprintf("%.3f (%.3f)", mean(arfp), sd(arfp))
+    arfp = sprintf("%.3f (%.2f)", mean(arfp), sd(arfp))
   ) %>%
   pivot_wider(names_from = "algo", values_from = "arfp") %>%
   knitr::kable(booktabs = TRUE)
@@ -487,10 +524,10 @@ perfs[["09-final_comparison"]] %>%
   bind_rows() %>%
   group_by(experiment, algo, type) %>%
   summarise(
-    arfp = sprintf("%.3f (%.3f)", mean(arfp), sd(arfp))
+    arfp = sprintf("%.3f (%.2f)", mean(arfp), sd(arfp))
   ) %>%
   pivot_wider(names_from = "algo", values_from = "arfp") %>%
-  knitr::kable("latex", booktabs = TRUE)
+  knitr::kable(booktabs = TRUE)
 ```
 
 ```{r}
@@ -505,10 +542,10 @@ perfs[["09-final_comparison"]] %>%
   bind_rows() %>%
   group_by(experiment, algo, dist, corr) %>%
   summarise(
-    arfp = sprintf("%.3f (%.3f)", mean(arfp), sd(arfp))
+    arfp = sprintf("%.3f (%.2f)", mean(arfp), sd(arfp))
   ) %>%
   pivot_wider(names_from = "algo", values_from = "arfp") %>%
-  knitr::kable("latex", booktabs = TRUE)
+  knitr::kable(booktabs = TRUE)
 ```
 
 ```{r}
@@ -520,15 +557,14 @@ test_by_group(perfs[["09-final_comparison"]] %>% mutate(dist_corr = paste(dist, 
 ```{r}
 perfs[["09-final_comparison"]] %>%
   bind_rows() %>%
-  group_by(experiment, algo, no_jobs) %>%
+  group_by(experiment, algo, no_jobs<=50) %>%
   summarise(
-    arfp = sprintf("%.3f (%.3f)", mean(arfp), sd(arfp))
+    arfp = sprintf("%.3f (%.2f)", mean(arfp), sd(arfp))
   ) %>%
-  pivot_wider(names_from = "algo", values_from = "arfp")
-# %>%
-  # knitr::kable("latex", booktabs = TRUE)
+  pivot_wider(names_from = "algo", values_from = "arfp") %>%
+knitr::kable(booktabs = TRUE)
 ```
 
 ```{r}
-test_by_group(perfs[["09-final_comparison"]], 'no_jobs')
+test_by_group(perfs[["09-final_comparison"]] %>% mutate(no_jobs = no_jobs <= 50), 'no_jobs')
 ```

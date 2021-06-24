@@ -4,18 +4,18 @@ library(here)
 library(tidyverse)
 library(furrr)
 
-EXP_NAME <- "type"
+EXP_NAME <- "objective-larger-hp"
 
-plan(sequential)
-# plan(multisession)
-# plan(remote,
-#      workers = rep("linode2", 8),
-#      persistent = TRUE)
-
-
-
-set.seed(54654654)
-
+# plan(sequential)
+plan(multisession, workers = 8)
+# # plan(remote,
+# #      workers = rep("linode2", 8),
+# #      persistent = TRUE)
+# 
+# 
+# 
+# set.seed(54654654)
+# 
 parameter_space <- readParameters(
   text = '
 IG.Init                            "" c (neh)
@@ -42,43 +42,35 @@ IG.Perturb.DestructionSize         "" i (2,8)
 '
 )
 
-solve_function <- fsp_solver_performance
-# solve_function <- function(...) {
-#   print("before")
-#   res <- fsp_solver_performance_print(...)
-#   print("after")
-#   flush.console()
-#   res
-# }
-
-
+ 
 all_problems <- all_problems_df() %>%
   filter(
-    no_jobs %in% c(10, 30, 50),
-    no_machines %in% c(5, 10),
-    dist %in% c('uniform', 'exponential'),
+    no_jobs %in% c(100, 200),
+    no_machines %in% c(20),
+    dist %in% c('uniform'),
+    corr %in% c('random'),
     stopping_criterion == 'TIME',
     budget == 'low'
   ) %>%
-  mutate(stopping_criterion = "EVALS") %>%
+  mutate(stopping_criterion = "FIXEDTIME") %>%
   unnest(instances) %>%
-  filter(inst_n <= 5) %>%
+  filter(inst_n <= 6) %>%
   mutate(id = id * 100 + inst_n) %>%
   nest(instances = c(inst_n, instance))
 
-objective_axis <- unique(all_problems$type)
+objective_axis <- unique(all_problems$objective)
 all_problems <- all_problems %>%
   rowwise() %>%
-  mutate(meta_objective = which(type == objective_axis)) %>%
+  mutate(meta_objective = which(objective == objective_axis)) %>%
   ungroup() %>%
   mutate(problem_space = pmap(., as_metaopt_problem))
 
 train_test_problems <- all_problems %>%
   group_split(sample.int(nrow(all_problems)) < 0.2 * nrow(all_problems))
 train_problems <-
-  all_problems %>% filter(map_lgl(instances, ~ .x$inst_n > 1)) # train_test_problems[[1]]
+  all_problems %>% filter(map_lgl(instances, ~ .x$inst_n < 6)) # train_test_problems[[1]]
 test_problems <-
-  all_problems %>% filter(map_lgl(instances, ~ .x$inst_n == 1)) # train_test_problems[[2]]
+  all_problems %>% filter(map_lgl(instances, ~ .x$inst_n == 6)) # train_test_problems[[2]]
 
 
 
@@ -99,28 +91,40 @@ arpf_by_objective <- function(perfs) {
       cost = as.integer(map_dbl(result, 'cost')),
       meta_objective = as.integer(map_dbl(problem_data, 'meta_objective'))
     )
-  
-  lower_bounds <- read_csv(here("data", "lower_bounds.csv")) %>% 
+
+  lower_bounds <- read_csv(here("data", "lower_bounds.csv")) %>%
     rename(best_cost = cost)
-  
-  sampled_data %>%
-    left_join(lower_bounds, by = c("problem", "dist", "corr", "no_jobs", "no_machines", "type", "objective")) %>%
+
+  res <- sampled_data %>%
+    left_join(lower_bounds, by = c("problem", "dist", "corr", "no_jobs", "no_machines", "type", "objective", "instance")) %>%
     mutate(arpf = 100 * (cost - best_cost) / best_cost) %>%
     group_by(conf_id, meta_objective) %>%
     summarize(performance = mean(arpf)) %>%
     ungroup()
+
+  res
 }
 
 
+solve_function <- fsp_solver_performance
+# solve_function <- function(...) {
+#   print("before")
+#   res <- fsp_solver_performance_print(...)
+#   print("after")
+#   flush.console()
+#   res
+# }
+
+algorithm <- Algorithm(name = "IG", parameters = parameter_space)
 
 test_problems_eval <- make_performance_sample_evaluation(
-  algorithm = Algorithm(name = "IG", parameters = parameter_space),
+  algorithm = algorithm,
   problem_space = ProblemSpace(problems = test_problems$problem_space),
   solve_function = solve_function,
   no_samples = 1,
   parallel = FALSE,
   aggregate_performances = arpf_by_objective,
-  cache_folder = here("data", "problem_partition", "objective")
+  cache_folder = here("data", "problem_partition", EXP_NAME)
 )
 
 moead_problem <- list(
@@ -131,7 +135,7 @@ moead_problem <- list(
 )
 
 variation_irace <- make_irace_variation(
-  algorithm = Algorithm(name = "IG", parameters = parameter_space),
+  algorithm = algorithm,
   problem_space = ProblemSpace(problems = train_problems$problem_space),
   solve_function = solve_function,
   irace_scenario = defaultScenario(
@@ -141,20 +145,20 @@ variation_irace <- make_irace_variation(
     )
   ),
   no_samples = 10,
-  cache_folder = here("data", "problem_partition", "objective")
+  cache_folder = here("data", "problem_partition", EXP_NAME)
 )
 
 results <- moead(
   problem  = moead_problem,
   preset   = preset_moead("original"),
   variation = list(list(name  = "irace")),
-  decomp = list(name = "SLD", H = 3),
+  decomp = list(name = "SLD", H = 7),
   showpars = list(show.iters = "numbers", showevery = 1),
   neighbors = list(name       = "lambda",
-                   T          = 4,
+                   T          = 2,
                    delta.p    = 1),
   stopcrit = list(list(name  = "maxiter",
-                       maxiter  = 50)),
+                       maxiter  = 40)),
   seed     = 42
 )
 
@@ -163,3 +167,37 @@ plan(sequential)
 
 saveRDS(results, file = sprintf("results_%s.rds", EXP_NAME))
 
+results <- readRDS(sprintf("results_%s.rds", EXP_NAME))
+
+plt <- ggplot(as_tibble(results$Y)) +
+  geom_point(aes(x = f1, y = f2)) +
+  xlab("FLOWTIME") +
+  ylab("MAKESPAN")
+
+ggsave(plt, filename = sprintf("%s_final.png", EXP_NAME), width = 9, height = 6)
+
+plt <- tibble(
+  generation = 1:40
+) %>%
+  mutate(fn = here(paste0("data/problem_partition/", EXP_NAME, "/variation_input_objs_", generation, ".csv"))) %>%
+  mutate(res = map(fn, read_csv)) %>%
+  unnest(res) %>%
+  select(FLOWTIME = V1, MAKESPAN = V2, generation) %>%
+  ggplot() +
+  geom_point(aes(x = FLOWTIME, y = MAKESPAN, color = generation))
+
+
+ggsave(plt, filename = sprintf("%s_evolution1.png", EXP_NAME), width = 9, height = 6)
+
+plt <- tibble(
+  generation = 20:40
+) %>%
+  mutate(fn = here(paste0("data/problem_partition/", EXP_NAME, "/variation_input_objs_", generation, ".csv"))) %>%
+  mutate(res = map(fn, read_csv)) %>%
+  unnest(res) %>%
+  select(FLOWTIME = V1, MAKESPAN = V2, generation) %>%
+  ggplot() +
+  geom_point(aes(x = FLOWTIME, y = MAKESPAN, color = generation))
+
+
+ggsave(plt, filename = sprintf("%s_evolution2.png", EXP_NAME), width = 9, height = 6)

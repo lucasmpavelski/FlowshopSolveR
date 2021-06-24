@@ -5,7 +5,10 @@ library(wrapr)
 library(irace)
 library(purrr)
 
-plan(remote, workers = rep("linode2", 2), persistent = TRUE)
+NCORES <- 32
+options(parallelly.debug = TRUE)
+# plan(sequential)
+plan(remote, workers = rep("linode2", NCORES), persistent = TRUE)
 
 experiments <- c(
   "01-adaptive_destruction_size",
@@ -42,27 +45,31 @@ configs_tidy <- map_dfr(experiments, ~ {
 })
 
 adaptive_perturb_config <- configs_tidy %>%
-  filter(exp == "05-adaptive_perturb", algo == "igfrrmab.rds") %>%
+  filter(exp == "05-adaptive_perturb", algo == "igts.rds") %>%
   pull(config) %>%
   unlist()
 merged_config <- adaptive_perturb_config
 
-adaptive_ds_config <- configs_tidy %>%
-  filter(exp == "01-adaptive_destruction_size", algo == "igts.rds") %>%
-  pull(config) %>%
-  unlist()
+# adaptive_ds_config <- configs_tidy %>%
+#   filter(exp == "01-adaptive_destruction_size", algo == "iglinucb.rds") %>%
+#   pull(config) %>%
+#   unlist()
+
+adaptive_ds_config <- c(
+  IG.AOS.Strategy                    = "random",
+  IG.AOS.WarmUp                      = "0",
+  IG.AOS.WarmUp.Strategy             = "random",
+  IG.AOS.RewardType                  = "0",
+  IG.AOS.RewardType                  = "0",
+  IG.AOS.Options = "4_8"
+)
 
 merged_config[names(adaptive_ds_config)] <- adaptive_ds_config
 
 adapt_perturb_ds <- merged_config
 adapt_perturb_ds['IG.Perturb.DestructionSizeStrategy'] <- 'adaptive'
-
-# Local search         & 0.302 (0.691) & 0.282 (0.575) & 0.304 (0.615) & 0.268 (0.596) & \textbf{0.245 (0.507)}\\ % ts
-# Perturbation         & \textit{0.201 (0.457)} & \textit{\textbf{0.177 (0.423)}} & \textit{0.201 (0.434)} & \textit{0.191 (0.407)} & 0.271 (0.528)\\ % mab
-# Destruction size     & \textit{0.210 (0.408)} & \textit{0.202 (0.492)} & \textit{0.196 (0.407)} & \textit{\textbf{0.186 (0.430)}} & 0.249 (0.487)\\ % ts
-# Neighborhood Size    & 0.267 (0.538) & 0.247 (0.505) & 0.248 (0.510) & 0.262 (0.524) & \textbf{0.228 (0.476)}\\ % mab
-# Destruction position & 0.251 (0.486) & 0.246 (0.498) & 0.371 (0.537) & 0.238 (0.448) & \textbf{0.228 (0.464)}\\ % ts
-# Local search focus   & 0.248 (0.470) & 0.242 (0.472) & 0.245 (0.476) & 0.244 (0.470) & \textbf{0.232 (0.485)}\\ % mab
+adapt_perturb_ds['IG.Perturb.DestructionSizeStrategy.AOS.Strategy'] <- 'random'
+adapt_perturb_ds['IG.Perturb.DestructionSizeStrategy.AOS.Options'] <- '4_8'
 
 adaptive_ls_config <- configs_tidy %>%
   filter(exp == "04-adaptive_local_search", algo == "igts.rds") %>%
@@ -75,6 +82,8 @@ adaptive_ns_config <- configs_tidy %>%
   filter(exp == "06-adaptive_neighborhood_size", algo == "igfrrmab.rds") %>%
   pull(config) %>%
   unlist()
+adapt_perturb_ds['IG.AdaptiveNeighborhoodSize.AOS.Strategy'] <- 'random'
+adapt_perturb_ds['IG.AdaptiveNeighborhoodSize.AOS.NoArms'] <- '2'
 
 merged_config[names(adaptive_ns_config)] <- adaptive_ns_config
 
@@ -86,7 +95,7 @@ adaptive_dp_config <- configs_tidy %>%
 merged_config[names(adaptive_dp_config)] <- adaptive_dp_config
 
 adaptive_bi_config <- configs_tidy %>%
-  filter(exp == "02-adaptive_best_insertion", algo == "igfrrmab.rds") %>%
+  filter(exp == "02-adaptive_best_insertion", algo == "igepsilon_greedy.rds") %>%
   pull(config) %>%
   unlist()
 
@@ -98,19 +107,28 @@ merged_config['IG.Perturb'] <- 'adaptive'
 merged_config['IG.DestructionStrategy'] <- 'adaptive_position'
 merged_config['IG.Neighborhood.Strat'] <- 'adaptive'
 merged_config['IG.Local.Search'] <- 'adaptive_with_adaptive_best_insertion'
+
+merged_config['IG.Init.NEH.PriorityOrder'] <- 'decr'
+merged_config['IG.Accept.Temperature'] <- '0.5'
+
 adapt_all <- merged_config
+
+adapt_no_ls <- merged_config
+adapt_no_ls['IG.Local.Search'] <- 'best_insertion'
+
 
 train_test_sets_df <- read_rds(here("reports", "aos", "data", "train_test_sets_df.rds"))
 
 test_configs <- tribble(
   ~ig_variant, ~adapt_variant, ~best_config,
-  'ig', 'adapt-perturb-ds', as_tibble_row(adapt_perturb_ds),
-  'ig', 'adapt-all', as_tibble_row(adapt_all),
+  'ig', 'adapt-no-local-search-final', as_tibble_row(adapt_no_ls),
+  'ig', 'adapt-all-arpd-final', as_tibble_row(adapt_all),
   'ig', 'default', tibble(
     IG.Init                            = "neh",
     IG.Init.NEH.Ratio                  = "0",
     IG.Init.NEH.Priority               = "sum_pij",
     IG.Init.NEH.PriorityOrder          = "incr",
+    # IG.Init.NEH.PriorityOrder          = "decr",
     IG.Init.NEH.PriorityWeighted       = "no",
     IG.Init.NEH.Insertion              = "first_best",
     IG.Comp.Strat                      = "strict",
@@ -120,6 +138,7 @@ test_configs <- tribble(
     IG.Accept                          = "temperature",
     IG.Accept.Better.Comparison        = "strict",
     IG.Accept.Temperature              = "0.25",
+    # IG.Accept.Temperature              = "0.5",
     IG.Perturb.Insertion               = "random_best",
     IG.Perturb                         = "rs",
     IG.Perturb.DestructionSizeStrategy = "fixed",
@@ -128,7 +147,8 @@ test_configs <- tribble(
     IG.Local.Search                    = "best_insertion"
   )
 ) %>% 
-  expand_grid(train_test_sets_df)
+  expand_grid(train_test_sets_df %>%
+                filter(set_type == "test"))
 
 exp_folder <- here("reports", "aos", "data", "09-final_comparison")
 perf_folder <- file.path(exp_folder, "perf")
@@ -159,7 +179,46 @@ tuned_perf <- test_configs %>%
         config = best_config,
         solve_function = fsp_solver_performance,
         no_samples = 10,
-        cache = name
+        cache = name,
+        parallel = TRUE
+      )
+    }
+    )
+  )
+
+test_configs <- test_configs %>%
+  select(ig_variant, adapt_variant, best_config) %>%
+  mutate(path = "all") %>%
+  mutate(
+    best_config = map(best_config, removeConfigurationsMetaData),
+    best_config = map(best_config, ~df_to_character(.x[1,])),
+    name = here(exp_folder, "extra", path, paste0(ig_variant, adapt_variant, ".rds"))
+  ) %>%
+  mutate(best_config = map(best_config, ~{
+    .x['IG.Init.NEH.PriorityOrder'] <- 'decr'
+    .x['IG.Accept.Temperature'] <- '0.5'
+    .x
+  }))
+
+tuned_perf <- test_configs %>%
+  inner_join(
+    train_test_sets_df %>%
+      filter(set_type == "extra"),
+    by = "path"
+  ) %>%
+  mutate(
+    sampled_performance = pmap(., function(name, problems, best_config, ...) {
+      dir.create(dirname(name), recursive = T, showWarnings = F)
+      set.seed(79879874)
+      cat("Running ", name, "\n")
+      sample_performance(
+        algorithm = get_algorithm("IG"),
+        problemSpace = ProblemSpace(problems = problems$problem_space),
+        config = best_config,
+        solve_function = fsp_solver_performance,
+        no_samples = 10,
+        cache = name,
+        parallel = TRUE
       )
     }
     )

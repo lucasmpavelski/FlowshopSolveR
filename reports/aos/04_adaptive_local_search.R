@@ -5,6 +5,11 @@ library(wrapr)
 library(irace)
 library(furrr)
 
+NCORES <- 32
+options(parallelly.debug = TRUE)
+plan(remote, workers = rep("linode2", NCORES), persistent = TRUE)
+# plan(sequential)
+
 run_irace <- function(name, params, problems, ...) {
   dir.create(dirname(name), recursive = T, showWarnings = F)
   set.seed(65487873)
@@ -85,7 +90,6 @@ adapt_variants <- tribble(
   '
 )
 
-plan(remote, workers = rep("linode2", 8), persistent = TRUE)
 
 exp_folder <- here("reports", "aos", "data", "04-adaptive_local_search")
 perf_folder <- file.path(exp_folder, "perf")
@@ -196,34 +200,44 @@ tuned_perf <- test_configs %>%
     )
   )
 
-plan(sequential)
 
-# print("Computing extras")
-# 
-# tuned_perf_extra <- test_configs %>%
-#   select(path, best_config, ig_variant, adapt_variant) %>%
-#   mutate(
-#     best_config = map(best_config, removeConfigurationsMetaData),
-#     best_config = map(best_config, ~df_to_character(.x[1,])),
-#     name = here(extra_folder, path, paste0(ig_variant, adapt_variant, ".rds"))
-#   ) %>%
-#   inner_join(
-#     train_test_sets_df %>%
-#       filter(set_type == "extra"),
-#     by = "path"
-#   ) %>%
-#   mutate(
-#     sampled_performance = pmap(., function(name, problems, best_config, ...) {
-#       dir.create(dirname(name), recursive = T, showWarnings = F)
-#       set.seed(79879874)
-#       sample_performance(
-#         algorithm = get_algorithm("IG"),
-#         problemSpace = ProblemSpace(problems = problems$problem_space),
-#         config = best_config,
-#         solve_function = fsp_solver_performance,
-#         no_samples = 10,
-#         cache = name
-#       )
-#     }
-#     )
-#   )
+
+
+test_configs <- strategy_params %>%
+  bind_rows(ig_default_configs) %>%
+  select(ig_variant, adapt_variant, best_config) %>%
+  mutate(path = "all") %>%
+  mutate(
+    best_config = map(best_config, removeConfigurationsMetaData),
+    best_config = map(best_config, ~df_to_character(.x[1,])),
+    name = here(exp_folder, "extra", path, paste0(ig_variant, adapt_variant, ".rds"))
+  ) %>%
+  mutate(best_config = map(best_config, ~{
+    .x['IG.Init.NEH.PriorityOrder'] <- 'decr'
+    .x['IG.Accept.Temperature'] <- '0.5'
+    .x
+  }))
+
+tuned_perf <- test_configs %>%
+  inner_join(
+    train_test_sets_df %>%
+      filter(set_type == "extra"),
+    by = "path"
+  ) %>%
+  mutate(
+    sampled_performance = pmap(., function(name, problems, best_config, ...) {
+      dir.create(dirname(name), recursive = T, showWarnings = F)
+      set.seed(79879874)
+      cat("Running ", name, "\n")
+      sample_performance(
+        algorithm = get_algorithm("IG"),
+        problemSpace = ProblemSpace(problems = problems$problem_space),
+        config = best_config,
+        solve_function = fsp_solver_performance,
+        no_samples = 10,
+        cache = name,
+        parallel = NCORES
+      )
+    }
+    )
+  )

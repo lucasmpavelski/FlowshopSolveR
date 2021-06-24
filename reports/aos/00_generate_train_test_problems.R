@@ -22,7 +22,7 @@ extra_problems <- all_problems_df() %>%
     budget == "high",
     dist %in% c("exponential", "uniform"),
     # corr == "random",
-    no_jobs %in% c(100),
+    no_jobs %in% c(100,200),
     no_machines %in% c(20)
   ) %>%
   mutate(

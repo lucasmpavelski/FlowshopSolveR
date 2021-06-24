@@ -5,20 +5,22 @@ library(wrapr)
 library(irace)
 library(furrr)
 
-NCORES <- 16
+NCORES <- 32
 options(parallelly.debug = TRUE)
-# plan(remote, workers = rep("linode2", NCORES), persistent = TRUE)
+plan(remote, workers = rep("linode2", NCORES), persistent = TRUE)
 
 all_problems <- all_problems_df() %>%
   filter(
-    no_jobs %in% c(20),
-    no_machines %in% c(10),
+    no_jobs %in% c(100, 200),
+    no_machines %in% c(20),
     dist %in% c('uniform', 'exponential'),
     stopping_criterion == 'TIME',
     budget == 'high'
   ) %>%
   mutate(stopping_criterion = "FIXEDTIME") %>%
+  mutate(instances = map(instances, ~filter(.x, inst_n %in% c(6)))) %>%
   mutate(meta_opt_problem = pmap(., as_metaopt_problem))
+
 
 LOWER_BOUNDS_FOLDER <- here("data", "lower_bounds")
 dir.create(LOWER_BOUNDS_FOLDER, FALSE, TRUE)
@@ -32,7 +34,7 @@ pwalk(all_problems, function(meta_opt_problem, id, ...) {
     problemSpace = ProblemSpace(problems = list(meta_opt_problem)),
     solve_function = fsp_solver_performance,
     no_samples = 30,
-    cache = file.path(LOWER_BOUNDS_FOLDER, paste0(id, ".rds")),
+    cache = file.path(LOWER_BOUNDS_FOLDER, paste0(id, '-', paste0(meta_opt_problem@instances, collapse = '-'), ".rds")),
     parallel = TRUE
   )
 })
@@ -62,7 +64,7 @@ lower_bound_cache <- map(dir(LOWER_BOUNDS_FOLDER, full.names = T), read_rds) %>%
 
 
 lower_bounds <- lower_bound_cache %>%
-  group_by(dist, corr, no_jobs, no_machines, problem, type, objective) %>%
+  group_by(dist, corr, no_jobs, no_machines, problem, type, objective, instance) %>%
   summarise(
     cost = min(cost),
     time = sum(time),
