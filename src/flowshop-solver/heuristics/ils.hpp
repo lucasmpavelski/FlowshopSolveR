@@ -7,7 +7,6 @@
 
 #include "flowshop-solver/heuristics/IGexplorer.hpp"
 #include "flowshop-solver/MHParamsValues.hpp"
-#include "flowshop-solver/heuristics/NEHInit.hpp"
 #include "flowshop-solver/heuristics/acceptCritTemperature.hpp"
 #include "flowshop-solver/heuristics/falseContinuator.hpp"
 #include "flowshop-solver/heuristics.hpp"
@@ -59,30 +58,7 @@ auto solveWithILS(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   }
 
   // initialization
-  eoInitPermutation<EOT> init0(N);
-  NEHInit<EOT> init1(fullEval, N, *compSS);
-  int cycle = 3;
-  NEHInitRandom<EOT> init2(fullEval, N, cycle, *compSS);
-  // FastNEH fastNeh(prob.getData());
-  // FastNEHRandom init2(prob.getData());
   eoInit<EOT>* init = nullptr;
-
-  switch (params.categorical("ILS.Init.Strat")) {
-    case 0:
-      init = &init0;
-      break;
-    case 1:
-      init = &init1;
-      break;
-    case 2:
-      init = &init2;
-      break;
-    default:
-      throw std::runtime_error(
-          "Unknonwn ILS.Init.Strat value " +
-          std::to_string(params.categorical("ILS.Init.Strat")));
-      break;
-  }
 
   // neighborhood size
   const int min_nh_size = (N >= 20) ? 11 : 2;
@@ -174,20 +150,7 @@ auto solveWithILS(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   ****/
 
   eoInit<EOT>* perturbRestartInit = nullptr;
-  switch (params.categorical("ILS.Perturb.Restart.Init")) {
-    case 0:
-      perturbRestartInit = &init0;
-      break;
-    case 1:
-      perturbRestartInit = &init1;
-      break;
-    case 2:
-      perturbRestartInit = &init2;
-      break;
-    default:
-      assert(false);
-      break;
-  }
+  // switch (params.categorical("ILS.Perturb.Restart.Init")) {
 
   moRestartPerturb<Ngh> perturb0(
       *perturbRestartInit, fullEval,
@@ -204,9 +167,9 @@ auto solveWithILS(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   moMonOpPerturb<Ngh> perturb1(kickPerturb, fullEval);
 
   // init -> monOp in order to use it in nilsPerturb framework
-  eoInitAdaptor<EOT> initPerturb0(init0);  // init perturb random
-  eoInitAdaptor<EOT> initPerturb1(init1);  // init perturb NEH
-  eoInitAdaptor<EOT> initPerturb2(init2);  // init perturb NEHrnd
+  eoInitAdaptor<EOT> initPerturb0(*init);  // init perturb random
+  eoInitAdaptor<EOT> initPerturb1(*init);  // init perturb NEH
+  eoInitAdaptor<EOT> initPerturb2(*init);  // init perturb NEHrnd
   OpPerturbDestConst<EOT> NILSOpPerturb(
       fullEval, params.integer("ILS.Perturb.NILS.Destruction.Size"));
   // eoSwapMutation<EOT> NILSkickPerturb(

@@ -129,6 +129,17 @@ TEST(SolveFullAdapt, IG) {
   params["IG.AdaptiveBestInsertion.AOS.FRRMAB.WindowSize"] = "271";
   params["IG.AdaptiveBestInsertion.AOS.FRRMAB.Scale"] = "9.611";
   params["IG.AdaptiveBestInsertion.AOS.FRRMAB.Decay"] = "0.8757";
+
+  params["IG.Perturb.NumberOfSwapsStrategy"] = "adaptive";
+  params["IG.AdaptiveNumberOfSwaps.AOS.WarmUp"] = "100000";
+  params["IG.AdaptiveNumberOfSwaps.AOS.WarmUp.Strategy"] = "random";
+  params["IG.AdaptiveNumberOfSwaps.AOS.RewardType"] = "2";
+  params["IG.AdaptiveNumberOfSwaps.AOS.Options"] = "2_4";
+  params["IG.AdaptiveNumberOfSwaps.AOS.Strategy"] = "frrmab";
+  params["IG.AdaptiveNumberOfSwaps.AOS.FRRMAB.WindowSize"] = "271";
+  params["IG.AdaptiveNumberOfSwaps.AOS.FRRMAB.Scale"] = "9.611";
+  params["IG.AdaptiveNumberOfSwaps.AOS.FRRMAB.Decay"] = "0.8757";
+ 
   ;
   prob["dist"] = "exponential";
   prob["corr"] = "random";

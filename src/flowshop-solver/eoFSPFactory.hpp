@@ -1,15 +1,11 @@
 #pragma once
 
 #include <exception>
+#include <stdexcept>
 
-
-#include <algo/moLocalSearch.h>
-#include <continuator/moCombinedContinuator.h>
-#include <paradiseo/mo/algo/moLocalSearch.h>
-#include <paradiseo/mo/perturb/moPerturbation.h>
+#include <paradiseo/mo/continuator/moCombinedContinuator.h>
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
-#include <stdexcept>
 
 #include "flowshop-solver/MHParamsValues.hpp"
 #include "flowshop-solver/eoFactory.hpp"
@@ -199,7 +195,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
       return &pack<FixedNumberOfSwaps>(fixedDs);
     } else if (name == "adaptive") {
       auto operator_selection = buildOperatorSelection(".AdaptiveNumberOfSwaps");
-      int rewardType = categorical(".AdaptiveNumberOfSwaps.RewardType");
+      int rewardType = categorical(".AdaptiveNumberOfSwaps.AOS.RewardType");
       return &pack<AdaptiveNumberOfSwaps<EOT>>(*operator_selection,
                                                  *getRewards(), rewardType);
     }
@@ -247,7 +243,7 @@ class eoFSPFactory : public eoFactory<FSPProblem::Ngh> {
       return &pack<IGLocalSearchPartialSolution<Ngh>>(
           *insertion, *destructionStrategy, *lspsLocalSearch);
     } else if (name == "swap") {
-      auto noSwaps = &pack<FixedNumberOfSwaps>(2);
+      auto noSwaps = buildNumberOfSwaps();
       auto kickPerturb = &pack<ilsKickOp<EOT>>(*noSwaps);
       return &pack<moMonOpPerturb<Ngh>>(*kickPerturb, eval);
     } else if (name == "adaptive") {

@@ -6,8 +6,9 @@
 #include <unordered_map>
 #include <vector>
 
+template <class EOT>
 struct VectorHasher {
-    auto operator()(const std::vector<int> &V) const -> int {
+    auto operator()(const EOT &V) const -> int {
         int hash = V.size();
         for(auto &i : V) {
             hash ^= i + 0x9e3779b9 + (hash << 6) + (hash >> 2);
@@ -32,7 +33,7 @@ struct LocalOptimaNetwork {
   };
 
   std::vector<EOT> nodes;
-  std::unordered_map<std::vector<int>, int, VectorHasher> indexMap;
+  std::unordered_map<EOT, int, VectorHasher<EOT>> indexMap;
   std::vector<std::vector<lo_sample>> samples;
   std::vector<std::vector<edge>> edges;
 

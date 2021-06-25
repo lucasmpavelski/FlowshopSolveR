@@ -224,7 +224,7 @@ struct RNG {
     ~Guard() noexcept {
       try {
         restoreRNGState();
-      } catch (std::exception e) {
+      } catch (std::exception& e) {
         std::cerr << e.what();
         std::exit(1);
       }

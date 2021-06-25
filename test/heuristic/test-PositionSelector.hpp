@@ -8,7 +8,7 @@
 TEST(PositionSelector, AdaptivePostitionSelector) {
     RNG::seed(65787);
     Random<int> selector({1, 2, 3});
-    AdaptivePositionSelector aps(selector);
+    AdaptivePositionSelector<std::vector<int>> aps(selector);
     std::vector<int> counts(301, 0);
     std::vector<int> vec(301, 0);
     aps.init(vec);
@@ -26,7 +26,7 @@ TEST(PositionSelector, AdaptivePostitionSelector) {
 TEST(PositionSelector, AdaptivePostitionSelectorWithRandom) {
     RNG::seed(65787);
     Random<int> selector({0, 1, 2, 3});
-    AdaptivePositionSelector aps(selector);
+    AdaptivePositionSelector<std::vector<int>> aps(selector);
     std::vector<int> counts(301, 0);
     std::vector<int> vec(301, 0);
     aps.init(vec);
@@ -46,7 +46,7 @@ TEST(PositionSelector, AdaptivePostitionSelectorMaxOptionsWithRandom) {
     std::vector<int> options(301);
     std::iota(options.begin(), options.end(), 0);
     Random<int> selector(options);
-    AdaptivePositionSelector aps(selector);
+    AdaptivePositionSelector<std::vector<int>> aps(selector);
     std::vector<int> counts(300, 0);
     std::vector<int> vec(300);
     std::iota(vec.begin(), vec.end(), 0);
@@ -67,7 +67,7 @@ TEST(PositionSelector, AdaptivePostitionSelectorMaxOptionsWithoutRandom) {
     std::vector<int> options(300);
     std::iota(options.begin(), options.end(), 1);
     Random<int> selector(options);
-    AdaptivePositionSelector aps(selector);
+    AdaptivePositionSelector<std::vector<int>> aps(selector);
     std::vector<int> counts(300, 0);
     std::vector<int> vec(300);
     std::iota(vec.begin(), vec.end(), 0);
@@ -89,7 +89,7 @@ TEST(PositionSelector, AdaptivePostitionSelectorOnlyRandomArm) {
     std::vector<int> options(1);
     options[0] = 0;
     Random<int> selector(options);
-    AdaptivePositionSelector aps(selector);
+    AdaptivePositionSelector<std::vector<int>> aps(selector);
     std::vector<int> counts(300, 0);
     std::vector<int> vec(300);
     std::iota(vec.begin(), vec.end(), 0);
@@ -109,7 +109,7 @@ TEST(PositionSelector, AdaptivePostitionSelectorOnlyRandomArm) {
 
 TEST(PositionSelector, AdaptivePostitionSelectorNoRepeat) {
     Random<int> selector({1, 2, 3});
-    AdaptiveNoReplacementPositionSelector aps(selector);
+    AdaptiveNoReplacementPositionSelector<std::vector<int>> aps(selector);
     std::vector<int> counts(300, 0);
     std::vector<int> vec(300);
     std::iota(vec.begin(), vec.end(), 400);

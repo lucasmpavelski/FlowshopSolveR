@@ -5,7 +5,8 @@
 #include "flowshop-solver/aos/adaptive_operator_selection.hpp"
 #include "flowshop-solver/position-selector/PositionSelector.hpp"
 
-class AdaptivePositionSelector : public PositionSelector {
+template <class VecT>
+class AdaptivePositionSelector : public PositionSelector<VecT> {
   OperatorSelection<int>& operatorSelection;
   bool includeRandom = false;
 
@@ -16,7 +17,7 @@ class AdaptivePositionSelector : public PositionSelector {
     includeRandom = std::find(opRef.begin(), opRef.end(), 0) != opRef.end();
   }
 
-  auto select(const std::vector<int>& vec) -> int override {
+  auto select(const VecT& vec) -> int override {
     const int n = vec.size();
     const int k = operatorSelection.noOperators() - includeRandom;
     const int selected = operatorSelection.selectOperator();

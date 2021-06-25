@@ -18,7 +18,7 @@ class PermFSPCompiler {
   PermFSPCompiler(const FSPData& fspData)
       : fspData{fspData}, part_ct(fspData.noJobs() * fspData.noMachines()), cache(fspData.noJobs(), -1), noJobs(fspData.noJobs()) {}
 
-  void compile(const std::vector<int>& _fsp, std::vector<int>& Ct) {
+  void compile(const FSP& _fsp, std::vector<int>& Ct) {
     const int _N = _fsp.size();
     const int N = fspData.noJobs();
     const int M = fspData.noMachines();

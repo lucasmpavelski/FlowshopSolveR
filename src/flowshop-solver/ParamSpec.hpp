@@ -63,7 +63,7 @@ class ParamSpec {
       if (s == "NA")
         return std::numeric_limits<float>::quiet_NaN();
       return std::stof(s.c_str());
-    } catch (std::invalid_argument e) {
+    } catch (std::invalid_argument& e) {
       std::cerr << "Value " << s
                 << " cannot be converted to values for paramater " << name;
       throw std::move(e);

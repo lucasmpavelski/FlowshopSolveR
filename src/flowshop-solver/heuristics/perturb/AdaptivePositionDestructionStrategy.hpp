@@ -13,7 +13,7 @@ template <class EOT>
 class AdaptivePositionDestructionStrategy : public DestructionStrategy<EOT> {
   DestructionSize& destructionSize;
   FitnessRewards<EOT>& rewards;
-  PositionSelector& positionSelector;
+  PositionSelector<EOT>& positionSelector;
   int rewardType;
   bool printRewards;
   bool printChoices;
@@ -62,7 +62,7 @@ class AdaptivePositionDestructionStrategy : public DestructionStrategy<EOT> {
   
  public:
   AdaptivePositionDestructionStrategy(DestructionSize& destructionSize,
-                                      PositionSelector& positionSelector,
+                                      PositionSelector<EOT>& positionSelector,
                                       FitnessRewards<EOT>& rewards,
                                       int rewardType,
                                       bool printRewards = false,

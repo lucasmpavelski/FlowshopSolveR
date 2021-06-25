@@ -23,7 +23,7 @@ class NoWaitCompletionTimeCompiler {
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
         if (i != j) {
-          int max = 0, idx = 0;
+          int max = 0;
           for (int r = 1; r <= M; r++) {
             int s = 0;
             for (int h = 1; h < r; h++) {
@@ -37,7 +37,6 @@ class NoWaitCompletionTimeCompiler {
             }
             if (s > max) {
               max = s;
-              idx = r;
             }
           }
           _delayMatrix[i * N + j] = p[0 * N + i] + max;
@@ -53,7 +52,7 @@ class NoWaitCompletionTimeCompiler {
   NoWaitCompletionTimeCompiler(const FSPData& fspData)
       : fspData{fspData}, delayMatrix{computeDelayMatrix()} {}
 
-  void compile(const std::vector<int>& _fsp, std::vector<int>& Ct) {
+  void compile(const FSP& _fsp, std::vector<int>& Ct) {
     const int N = fspData.noJobs();
     const int _N = _fsp.size();
 

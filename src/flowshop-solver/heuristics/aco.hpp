@@ -7,7 +7,6 @@
 #include <unordered_map>
 
 #include "flowshop-solver/MHParamsValues.hpp"
-#include "flowshop-solver/heuristics/NEHInit.hpp"
 #include "flowshop-solver/heuristics/IGexplorer.hpp"
 #include "flowshop-solver/heuristics/falseContinuator.hpp"
 #include "flowshop-solver/heuristics.hpp"
@@ -177,28 +176,7 @@ auto solveWithACO(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
   }
 
   // initialization
-  eoInitPermutation<EOT> init0(N);
-  NEHInit<EOT> init1(fullEval, N, *compSS);
-  int cycle = 3;
-  NEHInitRandom<EOT> init2(fullEval, N, cycle, *compSS);
   eoInit<EOT>* init = nullptr;
-
-  switch (params.categorical("ACO.Init.Strat")) {
-    case 0:
-      init = &init0;
-      break;
-    case 1:
-      init = &init1;
-      break;
-    case 2:
-      init = &init2;
-      break;
-    default:
-      throw std::runtime_error(
-          "Unknonwn ACO.Init.Strat value " +
-          std::to_string(params.categorical("ACO.Init.Strat")));
-      break;
-  }
 
   // neighborhood size
   const int min_nh_size = (N >= 20) ? 11 : 2;

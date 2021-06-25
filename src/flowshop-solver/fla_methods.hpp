@@ -13,7 +13,6 @@
 #include "flowshop-solver/heuristics/FSPOrderHeuristics.hpp"
 #include "flowshop-solver/heuristics/IGexplorer.hpp"
 #include "flowshop-solver/heuristics/InsertionStrategy.hpp"
-#include "flowshop-solver/heuristics/NEHInit.hpp"
 #include "flowshop-solver/heuristics/perturb/perturb.hpp"
 #include "flowshop-solver/FSPProblemFactory.hpp"
 #include "flowshop-solver/MHParamsSpecsFactory.hpp"
@@ -42,18 +41,12 @@ std::vector<FSPProblem::EOT> adaptiveWalk(
   auto& eval = problem.eval();
   auto& neighborEval = problem.neighborEval();
 
-  eoInitPermutation<EOT> init0(problem.size());
-  NEHInitOrdered<EOT> init1(eval, order);
-  NEHInitRandom<EOT> init2(eval, problem.size());
-  eoInit<EOT>* init = nullptr;
-  if (init_strat == "RANDOM")
-    init = &init0;
-  else if (init_strat == "NEH")
-    init = &init1;
-  else if (init_strat == "RANDOM_NEH")
-    init = &init2;
-  else
-    assert(false);
+  MHParamsSpecs specs = MHParamsSpecsFactory::get("AdaptiveWalk");
+  MHParamsValues params(&specs);
+  params.readValues(sampling_params);
+
+  eoFSPFactory factory(params, problem);
+  eoInit<EOT>* init = factory.buildInit();
 
   const int nh_size = std::pow(problem.size() - 1, 2);
   moRndWithoutReplNeighborhood<Ngh> neighborhood(nh_size);
@@ -115,18 +108,13 @@ double adaptiveWalkLength(
   auto& eval = problem.eval();
   auto& neighborEval = problem.neighborEval();
 
-  eoInitPermutation<EOT> init0(problem.size());
-  NEHInitOrdered<EOT> init1(eval, order);
-  NEHInitRandom<EOT> init2(eval, problem.size());
-  eoInit<EOT>* init = nullptr;
-  if (init_strat == "RANDOM")
-    init = &init0;
-  else if (init_strat == "NEH")
-    init = &init1;
-  else if (init_strat == "RANDOM_NEH")
-    init = &init2;
-  else
-    assert(false);
+
+  MHParamsSpecs specs = MHParamsSpecsFactory::get("AdaptiveWalk");
+  MHParamsValues params(&specs);
+  params.readValues(sampling_params);
+
+  eoFSPFactory factory(params, problem);
+  eoInit<EOT>* init = factory.buildInit();
 
   const int nh_size = std::pow(problem.size() - 1, 2);
   moRndWithoutReplNeighborhood<Ngh> neighborhood(nh_size);

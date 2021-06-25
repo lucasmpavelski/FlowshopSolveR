@@ -8,7 +8,7 @@ TEST(FSPNeighbor, Moves) {
   auto testMove = [](std::initializer_list<int> init, int from, int to,
                      std::initializer_list<int> result) {
     FSP sol;
-    sol.assign(init);
+    sol.assign(init.begin(), init.end());
     FSPNeighbor ng(from, to, sol.size());
     ng.move(sol);
     return std::equal(sol.begin(), sol.end(), result.begin());

@@ -14,7 +14,7 @@ TEST(NEH, KK2Example) {
   };
   FSPData dt{pts, 6, true};
 
-  std::vector<int> ref(dt.noJobs());
+  FSP ref(dt.noJobs());
   std::iota(begin(ref), end(ref), 0);
 
   FSP sol = ref;
@@ -41,7 +41,7 @@ TEST(Heuristic, NEHKK2l) {
   };
   FSPData dt{pts, 6, true};
 
-  std::vector<int> ref(dt.noJobs());
+  FSP ref(dt.noJobs());
   std::iota(begin(ref), end(ref), 0);
 
   FSP sol = ref;

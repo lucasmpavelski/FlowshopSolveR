@@ -30,11 +30,11 @@ class PermFSPNeighborMakespanEval : public moEval<FSPNeighbor> {
       return m * (no_jobs + 1) + j;
     }
 
-    void compile(const ivec& seq) {
+    void compile(const FSP& seq) {
       compile(seq, 0);
     }
 
-    void compile(const ivec& seq, int from) {
+    void compile(const FSP& seq, int from) {
       const auto no_jobs = fspData.noJobs();
       const auto no_machines = fspData.noMachines();
       const auto seq_size = static_cast<int>(seq.size());

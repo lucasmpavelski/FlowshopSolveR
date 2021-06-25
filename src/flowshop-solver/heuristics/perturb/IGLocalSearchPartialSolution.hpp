@@ -47,7 +47,7 @@ class IGLocalSearchPartialSolution : public DestructionConstruction<Ngh> {
 
   auto operator()(EOT& sol) -> bool override {
     EOT before = sol;
-    std::vector<int> removedJobs = destruction(sol);
+    EOT removedJobs = destruction(sol);
     if (sol.size() > 0)
       localSearch(sol);
     construction(sol, removedJobs);

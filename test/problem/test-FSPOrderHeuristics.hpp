@@ -16,7 +16,7 @@ TEST(Heuristic, FSPOrderHeuristics) {
                                      "hill",    "hi_hilo", "hi_lohi",
                                      "lo_hilo", "lo_lohi"};
   FSPData dt(20, 5);
-  std::vector<int> ref(20);
+  FSP ref(20);
   std::iota(begin(ref), end(ref), 0);
   for (const auto& name : names) {
     for (const auto& order : orders) {
@@ -39,7 +39,7 @@ TEST(Heuristic, LROrderExample) {
   };
   FSPData dt{pts, 4, true};
 
-  std::vector<int> ref(dt.noJobs());
+  FSP ref(dt.noJobs());
   std::iota(begin(ref), end(ref), 0);
 
   FSP sol = ref;
@@ -59,7 +59,7 @@ TEST(Heuristic, KK1Example) {
   };
   FSPData dt{pts, 6, true};
 
-  std::vector<int> ref(dt.noJobs());
+  FSP ref(dt.noJobs());
   std::iota(begin(ref), end(ref), 0);
 
   FSP sol = ref;
@@ -79,7 +79,7 @@ TEST(Heuristic, NMExample) {
   };
   FSPData dt{pts, 6, true};
 
-  std::vector<int> ref(dt.noJobs());
+  FSP ref(dt.noJobs());
   std::iota(begin(ref), end(ref), 0);
 
   FSP sol = ref;

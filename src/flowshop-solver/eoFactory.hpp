@@ -192,7 +192,7 @@ class eoFactory : public eoFunctorStore {
       return domainNeighborComparator();
   }
 
-  auto buildPositionSelector(const std::string& prefix) -> PositionSelector* {
+  auto buildPositionSelector(const std::string& prefix) -> PositionSelector<EOT>* {
     std::vector<int> options;
     const std::string noArms = categoricalName(prefix + ".NoArms");
     if (noArms == "no_jobs") {
@@ -208,9 +208,9 @@ class eoFactory : public eoFunctorStore {
     auto operatorSelection = buildOperatorSelection(prefix, options);
     auto replace = categoricalName(prefix + ".Replace");
     if (replace == "yes") {
-      return &pack<AdaptivePositionSelector>(*operatorSelection);
+      return &pack<AdaptivePositionSelector<EOT>>(*operatorSelection);
     } else if (replace == "no") {
-      return &pack<AdaptiveNoReplacementPositionSelector>(*operatorSelection);
+      return &pack<AdaptiveNoReplacementPositionSelector<EOT>>(*operatorSelection);
     }
     assert(false);
     return nullptr;

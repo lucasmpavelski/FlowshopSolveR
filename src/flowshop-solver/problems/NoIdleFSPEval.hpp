@@ -24,7 +24,7 @@ class NoIdleCompletionTimesCompiler {
   NoIdleCompletionTimesCompiler(const FSPData& fspData)
       : fspData(fspData), _F(fspData.noJobs() * (fspData.noMachines() - 1)) {}
 
-  void compile(const std::vector<int>& perm,
+  void compile(const FSP& perm,
                std::vector<int>& completionTimes) {
     const int noJobs = perm.size();
     const int noMachines = fspData.noMachines();

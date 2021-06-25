@@ -35,7 +35,7 @@ class BestInsertionExplorer
 
   bool improve;
   bool LO;
-  std::vector<int> RandJOB;
+  EOT RandJOB;
   unsigned k;
   NeighborhoodSize& neighborhoodSize;
   const NeighborhoodType neighborhoodType;
@@ -97,7 +97,6 @@ class BestInsertionExplorer
 
     // Ngh neighbor, bestNeighbor;
     // bestNeighbor.fitness(std::numeric_limits<double>::max());
-    int bestPosition = -1;
     neighborhoodCheckpoint.initNeighborhood(_solution);
     for (int position = 0; position < n; position++) {
       if (insertPosition == position)
@@ -107,7 +106,6 @@ class BestInsertionExplorer
       neighborEval(tmp, neighbor);
       if (bestNeighbor.invalid() ||
           neighborComparator(bestNeighbor, neighbor)) {
-        bestPosition = position;
         bestNeighbor = neighbor;
       }
       neighborhoodCheckpoint.neighborCall(neighbor);

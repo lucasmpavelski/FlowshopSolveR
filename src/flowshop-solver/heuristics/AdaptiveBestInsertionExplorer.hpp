@@ -26,11 +26,11 @@ class AdaptiveBestInsertionExplorer
   bool LO;
   int k;
   
-  PositionSelector& positionSelector;
+  PositionSelector<EOT>& positionSelector;
 
  public:
   AdaptiveBestInsertionExplorer(
-      PositionSelector& positionSelector,
+      PositionSelector<EOT>& positionSelector,
       moEval<Ngh>& neighborEval,
       NeigborhoodCheckpoint<Ngh>& neighborhoodCheckpoint,
       moNeighborComparator<Ngh>& neighborComparator,
@@ -69,7 +69,6 @@ class AdaptiveBestInsertionExplorer
     Ngh neighbor, bestNeighbor;
 
     bestNeighbor.fitness(std::numeric_limits<double>::max());
-    int bestPosition = -1;
     neighborhoodCheckpoint.initNeighborhood(sol);
     for (int position = 0; position < n; position++) {
       if (insertPosition == position)
@@ -79,7 +78,6 @@ class AdaptiveBestInsertionExplorer
       neighborEval(sol, neighbor);
       if (bestNeighbor.invalid() ||
           neighborComparator(bestNeighbor, neighbor)) {
-        bestPosition = position;
         bestNeighbor = neighbor;
       }
       neighborhoodCheckpoint.neighborCall(neighbor);

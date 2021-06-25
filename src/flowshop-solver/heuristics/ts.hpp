@@ -10,7 +10,6 @@
 #include "flowshop-solver/heuristics.hpp"
 #include "flowshop-solver/FSPProblemFactory.hpp"
 
-#include "flowshop-solver/heuristics/NEHInit.hpp"
 #include "flowshop-solver/heuristics/dummyAspiration.hpp"
 #include "flowshop-solver/heuristics/moFirstBestTS.hpp"
 #include "flowshop-solver/heuristics/moFirstTS.hpp"
@@ -53,32 +52,9 @@ auto solveWithTS(Problem<Ngh>& prob, const MHParamsValues& params) -> Result {
       break;
   }
 
-  // initialization
-  eoInitPermutation<EOT> init0(N);
-  NEHInit<EOT> init1(fullEval, N, *compSS);
-  int cycle = 3;
-  NEHInitRandom<EOT> init2(fullEval, N, cycle, *compSS);
-  // FastNEH fastNeh(prob.getData());
-  // FastNEHRandom init2(prob.getData());
+  // initialization 
   eoInit<EOT>* init = nullptr;
-
-  switch (params.categorical("TS.Init.Strat")) {
-    case 0:
-      init = &init0;
-      break;
-    case 1:
-      init = &init1;
-      break;
-    case 2:
-      init = &init2;
-      break;
-    default:
-      throw std::runtime_error(
-          "Unknonwn TS.Init.Strat value " +
-          std::to_string(params.categorical("TS.Init.Strat")));
-      break;
-  }
-
+  
   // neighborhood size
   const int min_nh_size = (N >= 20) ? 11 : 2;
   const int nh_interval = (N >= 20) ? 10 : 1;

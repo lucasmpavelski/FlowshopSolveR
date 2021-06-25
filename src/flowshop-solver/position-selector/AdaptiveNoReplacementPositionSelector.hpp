@@ -5,23 +5,23 @@
 #include "flowshop-solver/aos/adaptive_operator_selection.hpp"
 #include "flowshop-solver/position-selector/AdaptivePositionSelector.hpp"
 
-
-class AdaptiveNoReplacementPositionSelector : public AdaptivePositionSelector {
-   std::vector<int> unselectedPositions;
+template <class EOT>
+class AdaptiveNoReplacementPositionSelector : public AdaptivePositionSelector<EOT> {
+   EOT unselectedPositions;
  
  public:
   AdaptiveNoReplacementPositionSelector(OperatorSelection<int>& operatorSelection)
-      : AdaptivePositionSelector(operatorSelection) {}
+      : AdaptivePositionSelector<EOT>(operatorSelection) {}
 
-  void init(const std::vector<int>& sol) override {
+  void init(const EOT& sol) override {
     unselectedPositions = sol;
   }
 
-  auto select(const std::vector<int>& sol) -> int override {
+  auto select(const EOT& sol) -> int override {
     if (unselectedPositions.empty()) {
       init(sol);
     }
-    int pos = AdaptivePositionSelector::select(unselectedPositions);
+    int pos = AdaptivePositionSelector<EOT>::select(unselectedPositions);
     int solPos = std::distance(sol.begin(), std::find(sol.begin(), sol.end(), unselectedPositions[pos]));
     unselectedPositions.erase(unselectedPositions.begin() + pos);
     return solPos;
