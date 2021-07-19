@@ -32,7 +32,7 @@ make_irace_variation <- function(algorithm,
     problems_per_obj <- as.integer(objective_weights * no_samples)
     sampled_problems <- NULL
     all_problems <- problem_space@problems
-    objectives <- map_int(all_problems, ~ .x@data$meta_objective)
+    objectives <- unique(map_int(all_problems, ~ .x@data$meta_objective))
     for (obj in objectives) {
       obj_problems <- keep(all_problems, ~ .x@data$meta_objective == obj)
       sampled_problems <- c(sampled_problems,
@@ -72,7 +72,8 @@ make_irace_variation <- function(algorithm,
         solve_function = solve_function,
         irace_scenario = var_irace_scenario,
         cache = NA,
-        quiet = F
+        quiet = F,
+        parallel = 1
       )
       result[1,]
     }, .options = furrr_options(seed = TRUE)) %>%

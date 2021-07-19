@@ -21,6 +21,8 @@
 
 #include "flowshop-solver/heuristics/ig.hpp"
 
+#include "flowshop-solver/eoFSPFactory.hpp"
+
 
 std::vector<FSPProblem::EOT> adaptiveWalk(
     std::unordered_map<std::string, std::string> prob_params,
