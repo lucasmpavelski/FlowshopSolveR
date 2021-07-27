@@ -192,9 +192,10 @@ perfs %>%
   scale_x_log10() +
   scale_y_log10() +
   theme_bw() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  scale_colour_viridis_d()
 
-ggsave("test-problems.png", width=7, height = 4)
+ggsave("objectives-test-problems.png", width=7, height = 4)
 
 
 irace_final_pop_perf <- irace_best %>%
@@ -219,20 +220,34 @@ irace_final_pop_perf <- irace_best %>%
   pivot_wider(names_from = meta_objective, values_from = performance)
 
 final_pop_perfs <- irace_final_pop_perf %>%
+  mutate(conf_id = row_number()) %>%
   mutate(strategy = "irace") %>%
-  bind_rows(read_moead_final_pop_perf("objective-medium-hp") %>% mutate(strategy = "MOEA/D with irace variation")) %>%
-  bind_rows(read_moead_final_pop_perf("objective-medium-ga-hp") %>% mutate(strategy = "MOEA/D"))
+  bind_rows(read_moead_final_pop_perf("objective-medium-hp") %>% 
+                mutate(strategy = "MOEA/D with irace variation") %>%
+                mutate(conf_id = row_number()) %>%
+                filter(conf_id <= 4)
+          ) %>%
+  bind_rows(
+    read_moead_final_pop_perf("objective-medium-ga-hp") %>% 
+      mutate(strategy = "MOEA/D") %>%
+      mutate(conf_id = row_number()) %>%
+      filter(conf_id %in% c(1,3,4)) %>%
+      mutate(conf_id = case_when(conf_id == 1 ~ 1, T ~ conf_id - 1))
+  )
 
 final_pop_perfs %>%
   rename(flowtime = `f1`, makespan = `f2`) %>%
   ggplot() +
   geom_point(aes(x = `flowtime`, y = `makespan`, color = strategy)) +
+  geom_label(aes(x = `flowtime`, y = `makespan`, color = strategy, label = conf_id),
+            nudge_x = .003, nudge_y = .001, hjust = 0) +
   theme_bw() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  scale_colour_viridis_d()
 
-ggsave("final-pop.png", width=7, height = 4)
+ggsave("objectives-final-pop.png", width=7, height = 4)
 
 # results <- readRDS(sprintf("results_%s.rds", "objective-medium-ga-hp"))
 
 
-read_moead_final_pop("objective-medium-hp") %>% View()
+read_moead_final_pop("objective-medium-ga-hp") %>% write_csv("pop.csv")

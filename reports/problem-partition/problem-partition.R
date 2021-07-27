@@ -186,7 +186,7 @@ experiments <- list(
 )
 
 opt <- parse_args(OptionParser(option_list=list(
-  make_option(c("-e", "--experiment"), default="type-medium-lin")
+  make_option(c("-e", "--experiment"), default="type-medium-lin-ga")
 )))
 
 EXP_NAME <- opt$experiment

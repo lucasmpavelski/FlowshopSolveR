@@ -33,22 +33,27 @@ IG.Perturb.NumberOfSwaps           "" i (2,8) | IG.Perturb == "swap" && IG.Pertu
 '
 )
 
+
 all_problems <- all_problems_df() %>%
   filter(
     problem == "flowshop",
     no_jobs %in% c(100),
     no_machines %in% c(20),
-    type %in% c('PERM'),
+    type %in% c('PERM', 'NOWAIT', 'NOIDLE'),
+    objective %in% c('MAKESPAN'),
     dist %in% c('exponential', 'uniform'),
-    # corr %in% c('random'),
     stopping_criterion == 'TIME',
     budget == 'low'
   ) %>%
-  # mutate(stopping_criterion = "EVALS") %>%
   mutate(stopping_criterion = "FIXEDTIME") %>%
   unnest(instances) %>%
+  filter(inst_n <= 6) %>%
   mutate(id = id * 100 + inst_n) %>%
-  nest(instances = c(inst_n, instance))
+  nest(instances = c(inst_n, instance)) %>%
+  rowwise() %>%
+  mutate(meta_objective = which(type == c('PERM', 'NOWAIT', 'NOIDLE'))) %>%
+  ungroup() %>%
+  mutate(problem_space = pmap(., as_metaopt_problem))
 
 objective_axis <- unique(all_problems$objective)
 all_problems <- all_problems %>%
@@ -76,14 +81,14 @@ test_problems <-
   }))
 
 
-validation_problems <- all_problems %>%
-  filter(map_lgl(instances, ~ .x$inst_n > 6)) %>%
-  unnest(instances) %>%
-  inner_join(lower_bounds, by = c("problem", "dist", "corr", "no_jobs", "no_machines", "type", "objective", "instance")) %>%
-  mutate(problem_space = map2(problem_space, best_cost, ~{
-    .x@data['best_cost'] <- .y
-    .x
-  }))
+# validation_problems <- all_problems %>%
+#   filter(map_lgl(instances, ~ .x$inst_n > 6)) %>%
+#   unnest(instances) %>%
+#   inner_join(lower_bounds, by = c("problem", "dist", "corr", "no_jobs", "no_machines", "type", "objective", "instance")) %>%
+#   mutate(problem_space = map2(problem_space, best_cost, ~{
+#     .x@data['best_cost'] <- .y
+#     .x
+  # }))
 
 
 arpf_by_objective <- function(perfs) {
@@ -146,8 +151,11 @@ read_moead_final_pop <- function(exp_name) {
 }
 
 read_moead_final_pop_perf <- function(exp_name) {
-  readRDS(sprintf("results_%s.rds", exp_name))$Y  %>%
-    as_tibble()
+  perf <- readRDS(sprintf("results_%s.rds", exp_name))$Y
+  perf %>%
+    as_tibble() %>%
+    mutate(conf_id = row_number()) %>%
+    mutate(nd = find_nondominated_points(perf))
 }
 
 read_moead_perfs <- function(exp_name) {
@@ -157,8 +165,11 @@ read_moead_perfs <- function(exp_name) {
     mutate(strategy = exp_name)
 }
 
-irace_best <- readRDS(here("data", "problem_partition", "medium-irace.rds"))
+irace_best <- readRDS(here("data", "problem_partition", "type-medium-100jobs-20machines-irace"))
+plan(multisession)
+
 irace_perf <- irace_best %>%
+  filter(row_number() == 1) %>%
   removeConfigurationsMetaData() %>%
   as_tibble() %>%
   mutate(perf = pmap(., function(...) {
@@ -168,7 +179,7 @@ irace_perf <- irace_best %>%
       solve_function = solve_function,
       problemSpace = ProblemSpace(problems = test_problems$problem_space),
       no_samples = 10,
-      cache = here("data", "problem_partition", "medium-irace-perf"),
+      cache = here("data", "problem_partition", "type-medium-100jobs-20machines-irace-perf"),
       parallel = TRUE,
       config = df_to_character(list(...))
     )
@@ -178,23 +189,26 @@ irace_perf <- irace_best %>%
   mutate(strategy = "irace")
 
 
-moead_irace <- read_moead_perfs("objective-medium-hp") %>% mutate(strategy = "MOEA/D with irace variation")
-moead_ga <- read_moead_perfs("objective-medium-ga-hp") %>% mutate(strategy = "MOEA/D")
+moead_irace <- read_moead_perfs("type-medium-lin") %>% mutate(strategy = "MOEA/D with irace variation")
+moead_ga <- read_moead_perfs("type-medium-lin-ga") %>% mutate(strategy = "MOEA/D")
 
 
 perfs <- bind_rows(moead_irace, moead_ga, irace_perf)
 
 perfs %>%
   pivot_wider(names_from = meta_objective, values_from = performance) %>%
-  rename(flowtime = `1`, makespan = `2`) %>%
+  rename(PERM = `1`, NOWAIT = `2`, NOIDLE = `3`)  %>%
+  pivot_longer(c('PERM', 'NOWAIT', 'NOIDLE')) %>%
   ggplot() +
-  geom_point(aes(x = `flowtime`, y = `makespan`, color = strategy)) +
-  scale_x_log10() +
-  scale_y_log10() +
+  geom_path(aes(x = `name`, y = `value`, color = strategy, group = factor(strategy))) +
   theme_bw() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  ylab("ARPD") +
+  xlab(NULL) +
+  scale_y_log10() +
+  scale_colour_viridis_d()
 
-ggsave("test-problems.png", width=7, height = 4)
+ggsave("types-test-problems.png", width=7, height = 4)
 
 
 irace_final_pop_perf <- irace_best %>%
@@ -207,32 +221,49 @@ irace_final_pop_perf <- irace_best %>%
       solve_function = solve_function,
       problemSpace = ProblemSpace(problems = test_problems$problem_space),
       no_samples = 1,
-      cache = here("data", "problem_partition", "medium-irace-perf-final"),
+      cache = here("data", "problem_partition", "type-medium-100jobs-20machines-irace-perf-final"),
       parallel = TRUE,
       config = df_to_character(list(...))
     )
   })) %>%
   mutate(conf_id = 1) %>%
-  arpf_by_objective() %>% 
+  arpf_by_objective() %>%
   mutate(meta_objective = sprintf("f%d", meta_objective)) %>%
   select(-conf_id) %>%
   pivot_wider(names_from = meta_objective, values_from = performance)
 
 final_pop_perfs <- irace_final_pop_perf %>%
-  mutate(strategy = "irace") %>%
-  bind_rows(read_moead_final_pop_perf("objective-medium-hp") %>% mutate(strategy = "MOEA/D with irace variation")) %>%
-  bind_rows(read_moead_final_pop_perf("objective-medium-ga-hp") %>% mutate(strategy = "MOEA/D"))
+  mutate(
+    strategy = "irace",
+    conf_id = 1,
+    nd = TRUE
+  ) %>%
+  bind_rows(read_moead_final_pop_perf("type-medium-lin") %>%
+              mutate(strategy = "MOEA/D with irace variation") %>%
+              mutate(conf_id = row_number())
+  ) %>%
+  bind_rows(
+    read_moead_final_pop_perf("type-medium-lin-ga") %>%
+      mutate(strategy = "MOEA/D") %>%
+      mutate(conf_id = row_number())
+  ) %>%
+  filter(nd)
 
 final_pop_perfs %>%
-  rename(flowtime = `f1`, makespan = `f2`) %>%
+  rename(PERM = `f1`, NOWAIT = `f2`, NOIDLE = `f3`)  %>%
+  pivot_longer(c('PERM', 'NOWAIT', 'NOIDLE')) %>%
   ggplot() +
-  geom_point(aes(x = `flowtime`, y = `makespan`, color = strategy)) +
+  geom_path(aes(x = `name`, y = `value`, color = strategy, group = factor(strategy))) +
   theme_bw() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  ylab("ARPD") +
+  xlab(NULL) +
+  scale_y_log10() +
+  scale_colour_viridis_d()
 
-ggsave("final-pop.png", width=7, height = 4)
+ggsave("types-final-pop.png", width=7, height = 4)
 
 # results <- readRDS(sprintf("results_%s.rds", "objective-medium-ga-hp"))
 
 
-read_moead_final_pop("objective-medium-hp") %>% View()
+# read_moead_final_pop("objective-medium-ga-hp") %>% write_csv("pop.csv")

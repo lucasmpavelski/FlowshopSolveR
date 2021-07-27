@@ -4,10 +4,10 @@ library(here)
 library(tidyverse)
 library(furrr)
 
-EXP_NAME <- "objective-medium-hp"
+EXP_NAME <- "type-medium-100jobs-20machines-irace"
 
 # plan(sequential)
-plan(multisession, workers = 32)
+plan(multisession)
 # # plan(remote,
 # #      workers = rep("linode2", 8),
 # #      persistent = TRUE)
@@ -44,7 +44,6 @@ IG.Perturb.NumberOfSwaps           "" i (2,8) | IG.Perturb == "swap" && IG.Pertu
 '
 )
 
-
 all_problems <- all_problems_df() %>%
   filter(
     problem == "flowshop",
@@ -66,13 +65,6 @@ all_problems <- all_problems_df() %>%
   ungroup() %>%
   mutate(problem_space = pmap(., as_metaopt_problem))
 
-objective_axis <- unique(all_problems$objective)
-all_problems <- all_problems %>%
-  rowwise() %>%
-  mutate(meta_objective = which(objective == objective_axis)) %>%
-  ungroup() %>%
-  mutate(problem_space = pmap(., as_metaopt_problem))
-
 solve_function <- fsp_solver_performance
 
 algorithm <- Algorithm(name = "IG", parameters = parameter_space)
@@ -90,4 +82,62 @@ best_solvers <- train_best_solver(
   quiet = F,
   cache = here("data", "problem_partition", "type-medium-100jobs-20machines-irace"),
   recover = TRUE
+)
+
+type_problems <- all_problems_df() %>%
+  filter(
+    problem == "flowshop",
+    no_jobs %in% c(100),
+    no_machines %in% c(20),
+    type %in% c('PERM', 'NOWAIT', 'NOIDLE'),
+    objective %in% c('MAKESPAN'),
+    dist %in% c('exponential', 'uniform'),
+    stopping_criterion == 'TIME',
+    budget == 'low'
+  ) %>%
+  mutate(stopping_criterion = "FIXEDTIME") %>%
+  unnest(instances) %>%
+  filter(inst_n <= 6) %>%
+  mutate(id = id * 100 + inst_n) %>%
+  nest(instances = c(inst_n, instance)) %>%
+  rowwise() %>%
+  mutate(meta_objective = which(type == c('PERM', 'NOWAIT', 'NOIDLE'))) %>%
+  ungroup() %>%
+  mutate(problem_space = pmap(., as_metaopt_problem))
+
+lower_bounds <- read_csv(here("data", "lower_bounds.csv")) %>%
+  rename(best_cost = cost)
+lb_features <- c("problem", "dist", "corr", "no_jobs",
+                 "no_machines", "type", "objective", "instance")
+
+test_problems <- type_problems %>% 
+  filter(map_lgl(instances, ~ .x$inst_n == 6)) %>%
+  unnest(instances) %>%
+  inner_join(lower_bounds, by = lb_features) %>%
+  mutate(problem_space = map2(problem_space, best_cost, ~{
+    .x@data['best_cost'] <- .y
+    .x
+  }))
+
+set.seed(42)
+
+sample_performance(
+  algorithm = algorithm,
+  solve_function = solve_function,
+  problemSpace = ProblemSpace(problems = test_problems$problem_space),
+  no_samples = 10,
+  cache = here("data", "problem_partition", "type-medium-100jobs-20machines-irace-perf"),
+  parallel = TRUE,
+  config = df_to_character(best_solvers[1,])
+)
+
+set.seed(42)
+sample_performance(
+  algorithm = algorithm,
+  solve_function = solve_function,
+  problemSpace = ProblemSpace(problems = test_problems$problem_space),
+  no_samples = 1,
+  cache = here("data", "problem_partition", "type-medium-100jobs-20machines-irace-perf-final"),
+  parallel = TRUE,
+  config = df_to_character(best_solvers[1,])
 )
