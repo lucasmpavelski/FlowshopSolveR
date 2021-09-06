@@ -5,6 +5,9 @@ library(tidyverse)
 library(furrr)
 library("ggplot2")
 
+plan(sequential)
+# plan(multisession, workers = 7)
+
 parameter_space <- readParameters(
   text = '
 IG.Init                            "" c (neh)
@@ -131,9 +134,9 @@ eval_config <- function(conf_id, exp_name, ...) {
   sample_performance(
     algorithm = algorithm,
     solve_function = solve_function,
-    problemSpace = ProblemSpace(problems = test_problems$problem_space),
+    problemSpace = ProblemSpace(problems = validation_problems$problem_space),
     no_samples = 10,
-    cache = here("data", "problem_partition", exp_name, sprintf("perf_%d", conf_id)),
+    cache = here("data", "problem_partition", exp_name, sprintf("validation_%d", conf_id)),
     parallel = TRUE,
     config = config
   )
@@ -163,15 +166,16 @@ irace_perf <- irace_best %>%
   as_tibble() %>%
   mutate(perf = pmap(., function(...) {
     set.seed(42)
-    sample_performance(
+    perfs <- sample_performance(
       algorithm = algorithm,
       solve_function = solve_function,
-      problemSpace = ProblemSpace(problems = test_problems$problem_space),
+      problemSpace = ProblemSpace(problems = validation_problems$problem_space),
       no_samples = 10,
-      cache = here("data", "problem_partition", "medium-irace-perf"),
+      cache = here("data", "problem_partition", "objective-irace-validation"),
       parallel = TRUE,
       config = df_to_character(list(...))
     )
+    perfs
   })) %>%
   mutate(conf_id = 1) %>%
   arpf_by_objective() %>%

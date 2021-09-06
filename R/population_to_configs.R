@@ -36,8 +36,13 @@ population_to_configs <- function(X, parameter_space) {
   discrete_params <- get_discrete_not_fixed(parameter_space)
   categorical_params <- get_categorical_not_fixed(parameter_space)
   fixed_params <- get_fixed(parameter_space)
+  no_dummy <- ncol(X) - length(tunnable_params)
   
-  colnames(X) <- tunnable_params
+  if (no_dummy > 0) {
+    colnames(X) <- c(tunnable_params, paste0('dummy_', 1:no_dummy))
+  } else {
+    colnames(X) <- c(tunnable_params)
+  }
   
   result <-  as_tibble(X) %>%
     mutate_at(discrete_params, as.integer)

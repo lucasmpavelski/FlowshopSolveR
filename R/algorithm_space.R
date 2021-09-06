@@ -41,7 +41,8 @@ default_configs <- function(name) {
       IG.Perturb.DestructionSizeStrategy = "fixed",
       IG.Perturb.DestructionSize         = "4",
       IG.DestructionStrategy             = "random",
-      IG.Local.Search                    = "best_insertion"
+      IG.Local.Search                    = "best_insertion",
+      IG.NumberOfSwapsStrategy           = "default"
     )
   } else {
     tibble()

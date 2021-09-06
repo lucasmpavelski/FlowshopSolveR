@@ -54,7 +54,7 @@ make_performance_sample_evaluation <- function(algorithm,
       mutate(meta_objective = map(performance, seq_along)) %>%
       unnest(cols = c(performance, meta_objective))
     
-    no_objs <- n_distinct(computed_from_arquive$meta_objective)
+    no_objs <- n_distinct(map_int(problem_space@problems, ~as.integer(.x@data$meta_objective)))
     no_solutions_to_eval <- nrow(configs) - nrow(computed_from_arquive) / no_objs
     cat('\n', no_solutions_to_eval, 'to be computed\n')
     
@@ -130,6 +130,8 @@ make_performance_sample_evaluation <- function(algorithm,
     sampled_perfs <- sampled_perfs %>%
       select(-conf_id) %>%
       as.matrix()
+    
+    set.seed(eval_count * 17)
     
     colnames(sampled_perfs) <- NULL
     sampled_perfs

@@ -10,6 +10,20 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// cppEAJumpCost
+float cppEAJumpCost(int size, int k, double mu, long seed);
+RcppExport SEXP _FlowshopSolveR_cppEAJumpCost(SEXP sizeSEXP, SEXP kSEXP, SEXP muSEXP, SEXP seedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< long >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(cppEAJumpCost(size, k, mu, seed));
+    return rcpp_result_gen;
+END_RCPP
+}
 // initFactories
 void initFactories(std::string data_folder);
 RcppExport SEXP _FlowshopSolveR_initFactories(SEXP data_folderSEXP) {
@@ -129,6 +143,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_FlowshopSolveR_cppEAJumpCost", (DL_FUNC) &_FlowshopSolveR_cppEAJumpCost, 4},
     {"_FlowshopSolveR_initFactories", (DL_FUNC) &_FlowshopSolveR_initFactories, 1},
     {"_FlowshopSolveR_solveFSP", (DL_FUNC) &_FlowshopSolveR_solveFSP, 5},
     {"_FlowshopSolveR_sampleSolutionStatisticsFLA", (DL_FUNC) &_FlowshopSolveR_sampleSolutionStatisticsFLA, 4},

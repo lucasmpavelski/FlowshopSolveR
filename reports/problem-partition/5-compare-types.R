@@ -47,13 +47,11 @@ all_problems <- all_problems_df() %>%
   ) %>%
   mutate(stopping_criterion = "FIXEDTIME") %>%
   unnest(instances) %>%
-  filter(inst_n <= 6) %>%
   mutate(id = id * 100 + inst_n) %>%
   nest(instances = c(inst_n, instance)) %>%
   rowwise() %>%
   mutate(meta_objective = which(type == c('PERM', 'NOWAIT', 'NOIDLE'))) %>%
-  ungroup() %>%
-  mutate(problem_space = pmap(., as_metaopt_problem))
+  ungroup()
 
 objective_axis <- unique(all_problems$objective)
 all_problems <- all_problems %>%
@@ -81,14 +79,14 @@ test_problems <-
   }))
 
 
-# validation_problems <- all_problems %>%
-#   filter(map_lgl(instances, ~ .x$inst_n > 6)) %>%
-#   unnest(instances) %>%
-#   inner_join(lower_bounds, by = c("problem", "dist", "corr", "no_jobs", "no_machines", "type", "objective", "instance")) %>%
-#   mutate(problem_space = map2(problem_space, best_cost, ~{
-#     .x@data['best_cost'] <- .y
-#     .x
-  # }))
+validation_problems <- all_problems %>%
+  filter(map_lgl(instances, ~ .x$inst_n > 6)) %>%
+  unnest(instances) %>%
+  inner_join(lower_bounds, by = c("problem", "dist", "corr", "no_jobs", "no_machines", "type", "objective", "instance")) %>%
+  mutate(problem_space = map2(problem_space, best_cost, ~{
+    .x@data['best_cost'] <- .y
+    .x
+}))
 
 
 arpf_by_objective <- function(perfs) {
@@ -132,13 +130,14 @@ algorithm <- Algorithm(name = "IG", parameters = parameter_space)
 
 eval_config <- function(conf_id, exp_name, ...) {
   config <- df_to_character(list(...))
+  cat("evaluating ", conf_id, exp_name, "...\n")
   set.seed(42)
   sample_performance(
     algorithm = algorithm,
     solve_function = solve_function,
-    problemSpace = ProblemSpace(problems = test_problems$problem_space),
+    problemSpace = ProblemSpace(problems = validation_problems$problem_space),
     no_samples = 10,
-    cache = here("data", "problem_partition", exp_name, sprintf("perf_%d", conf_id)),
+    cache = here("data", "problem_partition", exp_name, sprintf("validation_%d", conf_id)),
     parallel = TRUE,
     config = config
   )
@@ -173,15 +172,20 @@ irace_perf <- irace_best %>%
   removeConfigurationsMetaData() %>%
   as_tibble() %>%
   mutate(perf = pmap(., function(...) {
+    cat("evaluating irace_best...\n")
+    # cat(paste(df_to_character(list(...)), collapse = " "))
+    config <- df_to_character(list(...))
+    config[is.na(config)] <- "1"
+    config[config == "NA"] <- "1"
     set.seed(42)
     sample_performance(
       algorithm = algorithm,
       solve_function = solve_function,
-      problemSpace = ProblemSpace(problems = test_problems$problem_space),
+      problemSpace = ProblemSpace(problems = validation_problems$problem_space),
       no_samples = 10,
-      cache = here("data", "problem_partition", "type-medium-100jobs-20machines-irace-perf"),
-      parallel = TRUE,
-      config = df_to_character(list(...))
+      cache = here("data", "problem_partition", "type-irace-validation"),
+      parallel = T,
+      config = config
     )
   })) %>%
   mutate(conf_id = 1) %>%

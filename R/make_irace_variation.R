@@ -32,11 +32,11 @@ make_irace_variation <- function(algorithm,
     problems_per_obj <- as.integer(objective_weights * no_samples)
     sampled_problems <- NULL
     all_problems <- problem_space@problems
-    objectives <- unique(map_int(all_problems, ~ .x@data$meta_objective))
+    objectives <- unique(map_int(all_problems, ~ as.integer(.x@data$meta_objective)))
     for (obj in objectives) {
       obj_problems <- keep(all_problems, ~ .x@data$meta_objective == obj)
       sampled_problems <- c(sampled_problems,
-                            sample(obj_problems, problems_per_obj[obj]))
+                            sample(obj_problems, problems_per_obj[obj], replace = T))
     }
     sampled_problems
   }
@@ -59,7 +59,10 @@ make_irace_variation <- function(algorithm,
       set.seed(iter * i * 31)
       instances <- sample_instances_by_objectives(W[i, ])
       init_configs <-
-        configs %>% filter(conf_id %in% B[i, ]) %>% select(-conf_id) %>% distinct()
+        configs %>% 
+          filter(conf_id %in% B[i, ]) %>% 
+          select(all_of(algorithm@parameters$names)) %>% 
+          distinct()
       if (nrow(init_configs) == 3) {
         init_configs <- init_configs[1:2, ]
       }
@@ -76,7 +79,8 @@ make_irace_variation <- function(algorithm,
         parallel = 1
       )
       result[1,]
-    }, .options = furrr_options(seed = TRUE)) %>%
+    }, .options = furrr_options(seed = TRUE)
+    ) %>%
       bind_rows()
   }
   
@@ -90,8 +94,20 @@ make_irace_variation <- function(algorithm,
       results <- irace_variation(configs, iter, ...)
       write_output_cache(results, iter)
     }
-    results %>%
-      configs_to_population(algorithm@parameters) %>%
+    configs <- results %>%
+      configs_to_population(algorithm@parameters)
+    tunnable_params <- get_not_fixed(algorithm@parameters)
+    no_dummy <- ncol(X) - length(tunnable_params)
+    if (no_dummy > 0) {
+      dummy_cols <- X[,-no_dummy]
+      configs <- configs %>% bind_cols(dummy_cols)
+    }
+    
+    set.seed(iter * 31)
+    
+    configs <- configs %>% as.matrix()
+    colnames(configs) <- NULL
+    configs %>%
       normalize_population(problem)
   }
   

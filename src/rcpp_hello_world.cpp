@@ -1,24 +1,24 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-#include "flowshop-solver/MHParamsSpecsFactory.hpp"
-#include "flowshop-solver/FSPProblemFactory.hpp"
-#include "flowshop-solver/fla_methods.hpp"
-#include "flowshop-solver/heuristics/all.hpp"
-#include "flowshop-solver/heuristics.hpp"
+#include "MHParamsSpecsFactory.hpp"
+#include "FSPProblemFactory.hpp"
+#include "fla_methods.hpp"
+#include "heuristics/all.hpp"
+#include "heuristics.hpp"
+#include "fla/LocalOptimaNetwork.hpp"
+#include "fla/LONSampling.hpp"
+#include "fla/SnowballLONSampling.hpp"
+#include "fla/MarkovChainLONSampling.hpp"
+#include "bin/EAJump.hpp"
 
-// This is a simple function using Rcpp that creates an R list
-// containing a character vector and a numeric vector.
-//
-// Learn more about how to use Rcpp at:
-//
-//   http://www.rcpp.org/
-//   http://adv-r.had.co.nz/Rcpp.html
-//
-// and browse examples of code using Rcpp at:
-//
-//   http://gallery.rcpp.org/
-//
+
+// [[Rcpp::export]]
+float cppEAJumpCost(int size, int k, double mu, long seed) {
+  RNG::seed(seed);
+  return eaJumpCost(size, k, mu);
+}
+
 
 // [[Rcpp::export]]
 void initFactories(std::string data_folder)
@@ -198,11 +198,6 @@ List enumerateSolutions(Rcpp::List fspInstance, Rcpp::CharacterVector fspProblem
     Named("fitness") = sample_fitness
   );
 }
-
-#include "flowshop-solver/fla/LocalOptimaNetwork.hpp"
-#include "flowshop-solver/fla/LONSampling.hpp"
-#include "flowshop-solver/fla/SnowballLONSampling.hpp"
-#include "flowshop-solver/fla/MarkovChainLONSampling.hpp"
 
 inline auto buildLONSampling(const std::string& name) -> std::unique_ptr<LONSampling> {
   if (name == "snowball")

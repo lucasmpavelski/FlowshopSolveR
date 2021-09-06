@@ -8,6 +8,7 @@ PKG_LIBS=-L${FSP_LIB_FOLDER} -lflowshop_solver_lib \
 PKG_CPPFLAGS = -I$(PARADISEO_INC_FOLDER)/eo \
                -I$(PARADISEO_INC_FOLDER)/mo \
                -I$(PARADISEO_INC_FOLDER)/moeo \
+               -I/usr/local/include \
                -I/usr/include/eigen3 \
                -I${FSP_INC_FOLDER} \
                -I${FSP_INC_FOLDER}/flowshop-solver

@@ -27,6 +27,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 add_definitions(-DDATA_FOLDER="${CMAKE_SOURCE_DIR}/data")
 add_definitions(-DDEPRECATED_MESSAGES="")
+add_definitions(-DWITH_EIGEN=1)
 
 #set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -lpthread -g -fPIC -v -Wall -Wextra -Wno-sign-compare -Wno-logical-op-parentheses -Wno-deprecated-register -Wno-pragma-once-outside-header")
@@ -114,8 +115,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 #endforeach()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/module")
-find_package(Paradiseo COMPONENTS moeo eoutils eo)
+find_package(Paradiseo COMPONENTS moeo eoutils eo es cma)
 include_directories(SYSTEM ${PARADISEO_INCLUDE_DIR})
+
+message(STATUS "${PARADISEO_INCLUDE_DIR}")
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 

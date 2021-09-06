@@ -5,6 +5,8 @@ library(tidyverse)
 library(furrr)
 library(optparse)
 
+plan(sequential)
+plan(multisession, workers = 16)
 
 parameter_space <- readParameters(
   text = '
