@@ -11,7 +11,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // cppEAJumpCost
-float cppEAJumpCost(int size, int k, double mu, long seed);
+List cppEAJumpCost(int size, int k, double mu, long seed);
 RcppExport SEXP _FlowshopSolveR_cppEAJumpCost(SEXP sizeSEXP, SEXP kSEXP, SEXP muSEXP, SEXP seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

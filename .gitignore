@@ -21,6 +21,7 @@ R/RFlowshopSolvers/src/rcpp_hello_world.o
 R/RFlowshopSolvers.Rcheck/*
 R/RFlowshopSolvers_*.tar.gz
 *_cache/
+.cache/
 *_files/
 *_html/
 *rpubs/
@@ -40,7 +41,7 @@ aclib2/fsp/scenarios/*
 data/instances/*/*
 data/features/*.rds
 data/performances/*/*
-data/problem_partition/*/*
+data/problem_partition
 runs/*
 reports/lons_study/models/*
 tmp/*

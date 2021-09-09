@@ -14,9 +14,13 @@ using namespace Rcpp;
 
 
 // [[Rcpp::export]]
-float cppEAJumpCost(int size, int k, double mu, long seed) {
+List cppEAJumpCost(int size, int k, double mu, long seed) {
   RNG::seed(seed);
-  return eaJumpCost(size, k, mu);
+  auto res = eaJumpCost(size, k, mu);
+  return List::create(
+    Named("cost") = res.first,
+    Named("time") = res.second,
+    Named("no_evals") = res.second);
 }
 
 

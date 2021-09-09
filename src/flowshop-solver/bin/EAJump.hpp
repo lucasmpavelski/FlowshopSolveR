@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <utility>
 
 #include <paradiseo/eo/eo>
 #include <paradiseo/mo/mo>
@@ -20,7 +21,7 @@ inline int jump(const eoBit<int>& sol, const int k) {
   }
 }
 
-inline float eaJumpCost(int size, int k, double mu) {
+inline std::pair<int, int> eaJumpCost(int size, int k, double mu) {
   eoBitMutation<eoBit<int>> mutation(mu);
   int max_budget = exp(1) * pow(size, k);
   eoBit<int> sol(size);
@@ -43,5 +44,5 @@ inline float eaJumpCost(int size, int k, double mu) {
     curr_fitness = std::max(curr_fitness, fitness_m);
     steps++;
   }
-  return 1.0 * steps / max_budget;
+  return {curr_fitness, steps};
 }

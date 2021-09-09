@@ -19,6 +19,7 @@ Depends:
     here,
     readr,
     schedulingInstancesGeneratoR,
-    furrr
+    furrr,
+    MOEADr
 Imports: Rcpp (>= 1.0.4)
 LinkingTo: Rcpp

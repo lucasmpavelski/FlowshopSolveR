@@ -23,6 +23,7 @@ configs_to_population <- function(configs, parameter_space) {
   configs <- configs[, get_not_fixed(parameter_space)]
   for (param in get_categorical_not_fixed(parameter_space)) {
     domain <- parameter_space$domain[[param]]
+    configs[is.na(configs[param]), param] <- domain[1]
     configs <- configs %>%
       rowwise() %>%
       mutate_at(param, ~ which(coalesce(as.character(.x), domain[1]) == domain)) %>%

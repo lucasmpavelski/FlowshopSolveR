@@ -38,7 +38,7 @@ make_performance_sample_evaluation <- function(algorithm,
     if (is.na(cache_folder) ||
         !file.exists(output_cache_fn()))
       return(NA)
-    dt <- read_csv(output_cache_fn())
+    dt <- read_csv(output_cache_fn(), col_types = cols())
     dt %>%
       mutate_all(as.double)
   }
@@ -120,7 +120,7 @@ make_performance_sample_evaluation <- function(algorithm,
     configs <- population_to_configs(x, algorithm@parameters)
     write_cache_input(configs)
     sampled_perfs <- read_cache()
-    if (is.na(sampled_perfs)) {
+    if (is.null(nrow(sampled_perfs))) {
       sampled_perfs <- compute_sample_performance(configs)
       write_cache_output(sampled_perfs)
     }

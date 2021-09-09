@@ -1,62 +1,10 @@
-library(bit)
-library(MOEADr)
 library(FlowshopSolveR)
-library(here)
 library(tidyverse)
-library(furrr)
-library(optparse)
-library(Rcpp)
-
-oneMax <- function(x) {
-  sum(x)
-}
-
-jump <- function(x, k) {
-  om <- oneMax(x)
-  n <- length(x)
-  if (om <= n - k || om == n) {
-    om
-  } else {
-    n - om
-  }
-}
-
-make_jump <- function(l) {
-  function(x) jump(x, l)
-}
-
-mutate_rls <- function(x, k) {
-  invert <- sample(length(x), k)
-  xor(x, bitwhich(length(x), invert))
-}
-
-mutate_ea <- function(x, mu) {
-  invert <- runif(length(x)) < mu
-  xor(x, as.bit(invert))
-}
-
-ea_jump_cost <- function(size, m, mu, seed) {
-  # sol <- as.bit(sample(2, size, replace=TRUE) == 1)
-  # curr_fitness <- eval_func(sol)
-  # mutate <- mutate_ea
-  # steps <- 0
-  # max_budget <- exp(1) * size ^ m
-  # while (curr_fitness != size && steps <= max_budget) {
-  #   sol_m <- mutate_ea(sol, mu)
-  #   fitness_m <- eval_func(sol_m)
-  #   if (curr_fitness < fitness_m)
-  #     sol <- sol_m
-  #   curr_fitness <- max(curr_fitness, fitness_m)
-  #   steps <- steps + 1
-  #   # cat(size, mu, curr_fitness, steps, '\n')
-  # }
-  # steps / max_budget
-  cppEAJumpCost(size, m, mu, seed)
-}
+library(here)
 
 
-# plan(sequential)
-plan(multisession, workers = 7)
+plan(sequential)
+# plan(multisession, workers = 7)
 # plan(remote,
 #      workers = rep("linode2", 32),
 #      persistent = TRUE)
@@ -76,9 +24,46 @@ arpf_by_objective <- function(perfs) {
     summarise(performance = mean(result))
 }
 
+
+mean_if_present <- function(x) {
+  ifelse(length(x) > 0, mean(x), 0)
+}
+
+ert <- function(data) {
+  success_rate <- ((data[[1]] %>% pull(success) %>% sum()) / nrow(data[[1]])) + 1e-6
+  success_evals <- data[[1]] %>% filter(success) %>% pull(no_evals) %>% mean_if_present()
+  fail_evals <- data[[1]] %>% filter(!success) %>% pull(no_evals) %>% mean_if_present()
+  success_evals + ((1 - success_rate) / success_rate) * fail_evals
+}
+
+aggregate_by_ert <- function(sample) {
+  sample %>%
+    sample %>% select(conf_id, perf) %>%
+    unnest(perf) %>%
+    select(-seed, -instance) %>%
+    mutate(tolerance = 1e-8) %>%
+    unnest(tolerance) %>%
+    mutate(
+      meta_objective = map_int(problem, ~as.integer(.x@data$meta_objective)),
+      no_evals = map_int(result, ~as.integer(.x$no_evals)),
+      fitness = map_dbl(result, ~.x$cost),
+      optimal = map_dbl(problem, ~cecGlobalOptimum(.x@data$function_number)),
+      fitness_delta = fitness - optimal,
+      success = fitness_delta <= tolerance
+    ) %>%
+    select(meta_objective, conf_id, no_evals, success) %>%
+    group_by(meta_objective, conf_id) %>%
+    nest() %>%
+    mutate(performance = ert(data)) %>%
+    select(-data) %>%
+    ungroup()
+}
+
+
 parameter_space <- readParameters(
   text = '
 mu "" r (0.01, 0.4)
+dummy "" c (0,1)
   '
 )
 
@@ -107,93 +92,76 @@ jump_problems <- tribble(
   mutate(problem_space = pmap(., as_metaopt_problem))
 
 solve_function <- function(problem, config, seed, ...) {
-  size <- problem@data$size
-  l <- problem@data$l
-  cost <- ea_jump_cost(
-    size = size,
-    m = l,
+  res <- cppEAJumpCost(
+    size = problem@data$size,
+    k = problem@data$l,
     mu = as.double(config['mu']),
     seed = seed
   )
-  list(
-    cost = cost,
-    time = cost,
-    no_evals = cost
-  )
+  res$cost <- problem@data$size - res$cost
+  res
 }
 
 algorithm <- Algorithm(name = "EA (1+1)", parameters = parameter_space)
 
-EXP_NAME <- "jump-ea-mutations-test-pbi"
-EXP = list(
-  # parameters
-  parameter_space = parameter_space,
-  algorithm = algorithm,
-  # problems
-  problems = jump_problems,
-  objective_feature = "l",
-  objectives = c("2", "3"),
-  eval_problems = jump_problems,
-  eval_no_samples = 30,
-  # moead parameters
-  moead_variation = "irace",
-  moead_decomp = list(name = "SLD", H = 7),
-  moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
-  moead_max_iter = 50,
-  # irace variation
-  irace_variation_problems = jump_problems,
-  irace_variation_no_evaluations = 100,
-  irace_variation_no_samples = 30
-)
-
-test_problems_eval <- make_performance_sample_evaluation(
-  algorithm = algorithm,
-  problem_space = ProblemSpace(problems = EXP$eval_problems$problem_space),
-  solve_function = solve_function,
-  no_samples = EXP$eval_no_samples,
-  parallel = T,
-  aggregate_performances = arpf_by_objective,
-  cache_folder = here("data", "problem_partition", EXP_NAME)
-)
-
-moead_problem <- list(
-  name   = "test_problems_eval",
-  xmin   = c(real_lower_bounds(parameter_space, fixed = FALSE), 0),
-  xmax   = c(real_upper_bounds(parameter_space, fixed = FALSE), 1),
-  m      = length(EXP$objectives)
-)
-
-variation <- NULL
-
-variation_irace <- NULL
-if (EXP$moead_variation == "irace") {
-  variation_irace <<- make_irace_variation(
-    algorithm = algorithm,
-    problem_space = ProblemSpace(problems = EXP$irace_variation_problems$problem_space),
-    solve_function = solve_function,
-    irace_scenario = defaultScenario(
-      list(
-        maxExperiments = EXP$irace_variation_no_evaluations,
-        minNbSurvival = 1
-      )
+experiments <- tribble(
+    ~name, ~experiment_data,
+    "jump-ea-mutations-ert", list(
+      strategy = "moead",
+      # parameters
+      algorithm = algorithm,
+      eval_problems = jump_problems,
+      solve_function = solve_function,
+      # moead parameters
+      aggregation_function = aggregate_by_ert,
+      eval_no_samples = 30,
+      moead_variation = "irace",
+      moead_decomp = list(name = "SLD", H = 7),
+      moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
+      moead_max_iter = 50,
+      # irace variation
+      irace_variation_problems = jump_problems,
+      irace_variation_no_evaluations = 100,
+      irace_variation_no_samples = 30
     ),
-    no_samples = EXP$irace_variation_no_samples,
-    cache_folder = here("data", "problem_partition", EXP_NAME)
-  )
-  variation <<- list(list(name = "irace"))
-} else if (EXP$moead_variation == "ga") {
-  variation <<- preset_moead("original")$variation
-}
+    "jump-ea-mutations-ga-ert", list(
+      strategy = "moead",
+      # parameters
+      algorithm = algorithm,
+      eval_problems = jump_problems,
+      solve_function = solve_function,
+      # moead parameters
+      aggregation_function = aggregate_by_ert,
+      eval_no_samples = 30,
+      moead_variation = "ga",
+      moead_decomp = list(name = "SLD", H = 7),
+      moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
+      moead_max_iter = 67
+    ),
+    "jump-ea-mutations-irace-ert", list(
+      strategy = "irace",
+      # parameters
+      algorithm = algorithm,
+      eval_problems = jump_problems,
+      solve_function = solve_function,
+      # irace parameters
+      irace_max_evals = 160000
+    )
+  ) %>%
+    mutate(
+      configs = pmap(., run_experiment, 
+                     folder = here("data", "problem_partition"))
+    ) %>%
+    mutate(
+      validation = pmap(., run_validation, 
+                        folder = here("data", "problem_partition"),
+                        aggregation_function = aggregate_by_ert)
+    )
 
-results <- moead(
-  preset   = preset_moead("original"),
-  problem  = moead_problem,
-  variation = variation,
-  decomp = EXP$moead_decomp,
-  showpars = list(show.iters = "numbers", showevery = 1),
-  neighbors = EXP$moead_neighbors,
-  stopcrit = list(list(name  = "maxiter",
-                       maxiter  = EXP$moead_max_iter)),
-  seed     = 42
-)
-
+experiments %>%
+  mutate(perfs = map(validation, 'perf')) %>% 
+  select(name, perfs) %>% 
+  unnest(perfs) %>%
+  pivot_wider(names_from = meta_objective, values_from = performance) %>%
+  ggplot() +
+  geom_point(aes(x = `1`, y = `2`, color = name))

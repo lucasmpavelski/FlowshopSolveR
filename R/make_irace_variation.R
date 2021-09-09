@@ -45,7 +45,7 @@ make_irace_variation <- function(algorithm,
     if (is.na(cache_folder) ||
         !file.exists(output_cache_fn(iter)))
       return(NA)
-    read_csv(output_cache_fn(iter))
+    read_csv(output_cache_fn(iter), col_types = cols())
   }
   
   write_output_cache <- function(results, iter) {
@@ -90,7 +90,7 @@ make_irace_variation <- function(algorithm,
       population_to_configs(algorithm@parameters)
     write_input_cache(configs, iter)
     results <- read_output_cache(iter)
-    if (is.na(results[1])) {
+    if (nrow(results) != nrow(configs)) {
       results <- irace_variation(configs, iter, ...)
       write_output_cache(results, iter)
     }
