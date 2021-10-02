@@ -3,8 +3,8 @@ library(tidyverse)
 library(here)
 
 
-plan(sequential)
-# plan(multisession, workers = 7)
+# plan(sequential)
+plan(multisession, workers = 6)
 # plan(remote,
 #      workers = rep("linode2", 32),
 #      persistent = TRUE)
@@ -47,7 +47,7 @@ aggregate_by_ert <- function(sample) {
       meta_objective = map_int(problem, ~as.integer(.x@data$meta_objective)),
       no_evals = map_int(result, ~as.integer(.x$no_evals)),
       fitness = map_dbl(result, ~.x$cost),
-      optimal = map_dbl(problem, ~cecGlobalOptimum(.x@data$function_number)),
+      optimal = map_dbl(problem, ~.x@data$size + .x@data$l),
       fitness_delta = fitness - optimal,
       success = fitness_delta <= tolerance
     ) %>%
@@ -105,8 +105,8 @@ solve_function <- function(problem, config, seed, ...) {
 algorithm <- Algorithm(name = "EA (1+1)", parameters = parameter_space)
 
 experiments <- tribble(
-    ~name, ~experiment_data,
-    "jump-ea-mutations-ert", list(
+    ~name, ~name_print, ~experiment_data,
+    "jump-ea-mutations-ert-budget", "MOEA/D+irace", list(
       strategy = "moead",
       # parameters
       algorithm = algorithm,
@@ -124,7 +124,7 @@ experiments <- tribble(
       irace_variation_no_evaluations = 100,
       irace_variation_no_samples = 30
     ),
-    "jump-ea-mutations-ga-ert", list(
+    "jump-ea-mutations-ga-ert-budget", "MOEA/D", list(
       strategy = "moead",
       # parameters
       algorithm = algorithm,
@@ -138,7 +138,7 @@ experiments <- tribble(
       moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
       moead_max_iter = 67
     ),
-    "jump-ea-mutations-irace-ert", list(
+    "jump-ea-mutations-irace-ert-budget", "irace", list(
       strategy = "irace",
       # parameters
       algorithm = algorithm,
@@ -158,10 +158,24 @@ experiments <- tribble(
                         aggregation_function = aggregate_by_ert)
     )
 
-experiments %>%
+plt_dt <- experiments %>%
   mutate(perfs = map(validation, 'perf')) %>% 
-  select(name, perfs) %>% 
+  select(name, name_print, perfs) %>%
   unnest(perfs) %>%
   pivot_wider(names_from = meta_objective, values_from = performance) %>%
+  left_join(
+    experiments %>%
+      mutate(pop = map(validation, 1)) %>% 
+      select(name, pop) %>% unnest(pop),
+    by = c('name', 'conf_id')
+  ) %>%
+  select(name, name_print, low = `1`, high = `2`, mu, conf_id)
+
+plt_dt %>%
   ggplot() +
-  geom_point(aes(x = `1`, y = `2`, color = name))
+  geom_point(aes(x = low, y = high, color = name_print, size = mu), alpha = .85) +
+  theme_minimal() +
+  labs(color = "strategy", size = expression(mu))
+
+ggsave("binary-problems-front.pdf", width = 9, height = 5, device=cairo_pdf)
+

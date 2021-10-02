@@ -3,6 +3,7 @@ library(smoof)
 library(cec2013)
 library(checkmate)
 library(FlowshopSolveR)
+library(tidyverse)
 
 # plan(sequential)
 plan(multisession, workers = 7)
@@ -173,8 +174,8 @@ aggregate_by_ert <- function(sample) {
 }
 
 experiments <- tribble(
-  ~name, ~experiment_data,
-  "cmaes-cec2013", list(
+  ~name, ~name_print, ~experiment_data,
+  "cmaes-cec2013", "MOEA/D+irace", list(
     strategy = "moead",
     algorithm = Algorithm(name = "cmaes", parameters = cmaes_params),
     eval_problems = cec_problems,
@@ -191,7 +192,7 @@ experiments <- tribble(
     irace_variation_no_evaluations = 100,
     irace_variation_no_samples = 4
   ),
-  "cmaes-cec2013-ga", list(
+  "cmaes-cec2013-ga", "MOEA/D", list(
     strategy = "moead",
     algorithm = Algorithm(name = "cmaes", parameters = cmaes_params),
     eval_problems = cec_problems,
@@ -204,7 +205,7 @@ experiments <- tribble(
     moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
     moead_max_iter = 134
   ),
-  "cmaes-cec2013-irace", list(
+  "cmaes-cec2013-irace", "irace", list(
     strategy = "irace",
     algorithm = Algorithm(name = "cmaes", parameters = cmaes_params),
     eval_problems = cec_problems,
@@ -224,15 +225,29 @@ experiments <- tribble(
                       aggregation_function = aggregate_by_ert)
   )
 
-# experiments %>%
-#   mutate(perfs = map(validation, 'perf')) %>% 
-#   select(name, perfs) %>% 
-#   unnest(perfs) %>%
-#   pivot_wider(names_from = meta_objective, values_from = performance) %>%
-#   ggplot() +
-#   geom_point(aes(x = `1`, y = `2`, color = name))
+plt_dt <- experiments %>%
+  mutate(perfs = map(validation, 'perf')) %>% 
+  select(name, name_print, perfs) %>%
+  unnest(perfs) %>%
+  pivot_wider(names_from = meta_objective, values_from = performance) %>%
+  left_join(
+    experiments %>%
+      mutate(pop = map(validation, 1)) %>% 
+      select(name, pop) %>% unnest(pop),
+    by = c('name', 'conf_id')
+  ) %>%
+  select(name, name_print, low = `1`, high = `2`, conf_id, sigma, mu_factor)
+
+plt_dt %>%
+  ggplot() +
+  geom_point(aes(x = low, y = high, color = name_print), alpha = .85) +
+  geom_contour()
+  theme_minimal() +
+  labs(color = "strategy", size = expression(sigma))
 
 # results <- run_experiment()
+  
+  ggsave("binary-problems-front.pdf", width = 9, height = 5, device=cairo_pdf)
   
   
 

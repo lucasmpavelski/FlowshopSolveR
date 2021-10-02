@@ -23,7 +23,7 @@ inline int jump(const eoBit<int>& sol, const int k) {
 
 inline std::pair<int, int> eaJumpCost(int size, int k, double mu) {
   eoBitMutation<eoBit<int>> mutation(mu);
-  int max_budget = exp(1) * pow(size, k);
+  int max_budget = pow(size, k);
   eoBit<int> sol(size);
   eoBit<int> sol_m(size);
   

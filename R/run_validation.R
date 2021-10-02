@@ -1,6 +1,6 @@
 
 
-run_validation <- function(experiment_data, name, configs, folder, aggregation_function, no_samples = 100) {
+run_validation <- function(experiment_data, name, configs, folder, aggregation_function, no_samples = 100, ...) {
   validation_dir <- file.path(folder, name, "validation")
   dir.create(validation_dir, showWarnings = F, recursive = T)
   results <- configs

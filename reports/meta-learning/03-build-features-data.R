@@ -91,7 +91,6 @@ instanceFeaturesFLA <- function(metaopt_problem, instance, ...) {
 }
 
 computeSolutionStatisticsFLA <- function(metaopt_problem, instance, ...) {
-  browser()
   prob_dt <- metaopt_problem@data
   prob_dt$instance <- instance
   stats <- sampleSolutionStatisticsFLA(
@@ -202,39 +201,140 @@ densityBasinInformation <- function(s) {
   -res
 }
 
+computeAdaptiveWalks <- function(metaopt_problem, instance, ...) {
+  aw_fla <- crossing(
+      sample = 1:30,
+      Init.Strat = "RANDOM",
+      Sampling.Strat = "IG"
+    ) %>%
+    mutate(
+      adaptive_walk = pmap(., function(...) {
+        cfs <- list(...)
+        seed <- floor(runif(1, 1, 2147483647))
+        problem_params <- df_to_character(metaopt_problem@data)
+        problem_params['instance'] <- instance
+        sampling_params <- c(
+          AdaptiveWalk.Init = "NEH",
+          Sampling.Strat = "IG"
+        )
+        adaptiveWalk(problem_params, sampling_params, seed)
+      })
+    )
+  aw_fla
+}
+
+calculateDistances <- function(aw) {
+  n <- length(aw$fitness)
+  local_optima <- unlist(aw$solutions[n])
+  dt <- as_tibble(aw)[1,] %>%
+    mutate(
+      adj = map_dbl(solutions, adjacencyDistance, b = local_optima),
+      prec = map_dbl(solutions, precedenceDistance, b = local_optima),
+      abs_pos = map_dbl(solutions, absolutePositionDistance, b = local_optima),
+      dev = map_dbl(solutions, deviationDistance, b = local_optima),
+      shift = map_dbl(solutions, shiftDistance, b = local_optima),
+      swap = map_dbl(solutions, aproximatedSwapDistance, b = local_optima),
+      aw_length = map_int(solutions, ~ length(.x))
+    )
+  dt$aw_length <- length(aw$fitness)
+  dt$local_optima <- list(local_optima)
+  dt[1,]
+}
+
+computeAllDistances <- function(metaopt_problem, instance, ...) {
+  aw_fla <- computeAdaptiveWalks(metaopt_problem, instance, ...) %>%
+    mutate(
+      adaptive_walk = map(adaptive_walk, calculateDistances)
+    )
+  aw_fla
+}
+
+meanWalkLength <- function(walk_data) {
+  # walk_data <- walk_data %>% 
+  #   group_by(sample) %>%
+  #   summarise(wl = n() - 1)
+  mean(walk_data$aw_length)
+}
+
+cor0 <- function(a, b) {
+  c <- cor(a, b)
+  if (is.na(c)) 0 else c
+}
+
+computeFDCs <- function(metaopt_problem, instance, ...) {
+  aw_fla <- computeAllDistances(metaopt_problem, instance, ...) %>%
+    select(-stopping_criterium, -mh) %>%
+    spread(Sampling.Strat, adaptive_walk) %>%
+    group_by(problem, budget, dist, corr, type, objective, no_jobs, no_machines, inst_n, instance) %>%
+    nest() %>%
+    ungroup() %>%
+    mutate(
+      adaptive_walks = map(data, unnest),
+      fdc_adj = map_dbl(adaptive_walks, ~ cor0(.x$fitness, .x$adj)),
+      fdc_prec = map_dbl(adaptive_walks, ~ cor0(.x$fitness, .x$prec)),
+      fdc_abs_pos = map_dbl(adaptive_walks, ~ cor0(.x$fitness, .x$abs_pos)),
+      fdc_dev = map_dbl(adaptive_walks, ~ cor0(.x$fitness, .x$dev)),
+      fdc_shift = map_dbl(adaptive_walks, ~ cor0(.x$fitness, .x$shift)),
+      fdc_swap = map_dbl(adaptive_walks, ~ cor0(.x$fitness, .x$swap)),
+      mean_walk_length = map_dbl(adaptive_walks, meanWalkLength)
+    )
+  aw_fla
+}
+
 problem_space <- all_problems_df() %>%
-  filter(budget == 'low', no_jobs <= 500)
+  filter(budget == 'low', no_jobs == 30)
 
-plan(multisession)
+# plan(multisession)
 
-computeFLA(
-  problem_space,
-  instanceFeaturesFLA,
-  c("no_jobs", "no_machines", "ratio", "pt_sd", "mean_sd_per_machine",
-    "mean_sd_per_job", "mean_skew_per_machine", "mean_skew_per_job",
-    "mean_kurt_per_machine", "mean_kurt_per_job"),
-  parallel = F,
-  use_cache = T
-)
-
-set.seed(345346454)
 # computeFLA(
 #   problem_space,
-#   computeSolutionStatisticsFLA, 
-#   c("up", "down", "side", "slmin", "lmin", "iplat", "ledge", "slope", 
+#   computeFDCs,
+#   c("fdc_adj"),
+#   parallel = F,
+#   use_cache = T
+# )
+
+# 
+# computeFLA(
+#   problem_space,
+#   instanceFeaturesFLA,
+#   c("no_jobs", "no_machines", "ratio", "pt_sd", "mean_sd_per_machine",
+#     "mean_sd_per_job", "mean_skew_per_machine", "mean_skew_per_job",
+#     "mean_kurt_per_machine", "mean_kurt_per_job"),
+#   parallel = F,
+#   use_cache = T
+# )
+# 
+# set.seed(345346454)
+# computeFLA(
+#   problem_space,
+#   computeSolutionStatisticsFLA,
+#   c("up", "down", "side", "slmin", "lmin", "iplat", "ledge", "slope",
 #                                   "lmax", "slmax"),
-#   parallel = F, 
+#   parallel = F,
 #   use_cache = T
 # )
-
-# set.seed(87987987)
+# 
+# # set.seed(87987987)
 # computeFLA(
 #   problem_space,
-#   computeRandomWalkFLA, 
+#   computeRandomWalkFLA,
 #   c("rw_autocorr_1", "entropy", "partial_inf", "inf_stability", "density_basin"),
-#   parallel = F, 
+#   parallel = F,
 #   use_cache = T
 # )
 
 
+# initFactories("data")
+# 
+# pp <- c(dist = "erlang", corr = "random", no_jobs = "30", no_machines = "5",
+#   problem = "flowshop", corv = "0", objective = "FLOWTIME", type = "NOIDLE",
+#   stopping_criterion = "TIME", budget = "low", id = "98", instance = "erlang_random_30_5_01.txt"
+# )
+# sp <- c(
+#   AdaptiveWalk.Init = "neh", 
+#   AdaptiveWalk.Init.NEH.Ratio = "1",
+#   Sampling.Strat = "IG"
+# )
+# adaptiveWalk(pp, sp, 987)
 

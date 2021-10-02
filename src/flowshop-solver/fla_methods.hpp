@@ -50,9 +50,6 @@ std::vector<FSPProblem::EOT> adaptiveWalk(
   eoFSPFactory factory(params, problem);
   eoInit<EOT>* init = factory.buildInit();
 
-  const int nh_size = std::pow(problem.size() - 1, 2);
-  moRndWithoutReplNeighborhood<Ngh> neighborhood(nh_size);
-
   moTrueContinuator<Ngh> tc;
   moCheckpoint<Ngh> checkpoint(tc);
 
@@ -61,22 +58,8 @@ std::vector<FSPProblem::EOT> adaptiveWalk(
   checkpoint.add(solutionStat);
   checkpoint.add(solutionMonitor);
 
-  moFirstImprHC<Ngh> fi(neighborhood, eval, neighborEval, checkpoint);
-  moSimpleHC<Ngh> hc(neighborhood, eval, neighborEval, checkpoint);
-
-  moSolComparator<EOT> comparator;
-  IGexplorer<Ngh> igExplorer(eval, problem.size(0), comparator);
-  moLocalSearch<Ngh> ig(igExplorer, checkpoint, eval);
-
-  moLocalSearch<Ngh>* localSearch = nullptr;
-  if (sampling_strat == "FI")
-    localSearch = &fi;
-  else if (sampling_strat == "HC")
-    localSearch = &hc;
-  else if (sampling_strat == "IG")
-    localSearch = &ig;
-  else
-    throw std::runtime_error("Unknown sampling strat: " + sampling_strat);
+  moLocalSearch<Ngh>* localSearch = factory.buildLocalSearch();
+  localSearch->setContinuator(checkpoint);
 
   EOT sol;
   (*init)(sol);

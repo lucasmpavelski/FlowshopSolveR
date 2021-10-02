@@ -21,9 +21,12 @@ denormalize_population <- function(X, problem) {
 
 configs_to_population <- function(configs, parameter_space) {
   configs <- configs[, get_not_fixed(parameter_space)]
+  configs <- configs %>% mutate_at(all_of(get_categorical_not_fixed(parameter_space)), as.character)
   for (param in get_categorical_not_fixed(parameter_space)) {
     domain <- parameter_space$domain[[param]]
-    configs[is.na(configs[param]), param] <- domain[1]
+    if (any(is.na(configs[param]))) {
+      configs[is.na(configs[param]), param] <- domain[1]
+    }
     configs <- configs %>%
       rowwise() %>%
       mutate_at(param, ~ which(coalesce(as.character(.x), domain[1]) == domain)) %>%

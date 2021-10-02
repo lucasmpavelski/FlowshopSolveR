@@ -1,4 +1,4 @@
-run_experiment <- function(experiment_data, name, folder) {
+run_experiment <- function(experiment_data, name, folder, ...) {
   dir.create(folder, showWarnings = F, recursive = T)
   if (experiment_data$strategy == "irace") {
     irace_experiment(experiment_data, name, folder)

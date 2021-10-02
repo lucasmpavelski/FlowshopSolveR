@@ -13,7 +13,7 @@ plan(sequential)
 
 all_problems <- all_problems_df() %>%
   filter(
-    no_jobs %in% c(100),
+    no_jobs %in% c(50),
     no_machines %in% c(20),
     dist %in% c('uniform', 'exponential'),
     stopping_criterion == 'TIME',

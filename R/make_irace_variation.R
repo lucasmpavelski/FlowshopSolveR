@@ -79,8 +79,7 @@ make_irace_variation <- function(algorithm,
         parallel = 1
       )
       result[1,]
-    }, .options = furrr_options(seed = TRUE)
-    ) %>%
+    }) %>%
       bind_rows()
   }
   
@@ -90,7 +89,7 @@ make_irace_variation <- function(algorithm,
       population_to_configs(algorithm@parameters)
     write_input_cache(configs, iter)
     results <- read_output_cache(iter)
-    if (nrow(results) != nrow(configs)) {
+    if (is.null(nrow(results))) {
       results <- irace_variation(configs, iter, ...)
       write_output_cache(results, iter)
     }
