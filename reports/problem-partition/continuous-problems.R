@@ -4,6 +4,7 @@ library(cec2013)
 library(checkmate)
 library(FlowshopSolveR)
 library(tidyverse)
+library(patchwork)
 
 # plan(sequential)
 plan(multisession, workers = 7)
@@ -236,18 +237,40 @@ plt_dt <- experiments %>%
       select(name, pop) %>% unnest(pop),
     by = c('name', 'conf_id')
   ) %>%
-  select(name, name_print, low = `1`, high = `2`, conf_id, sigma, mu_factor)
+  select(name, name_print, unimodal = `1`, multimodal = `2`, conf_id, 
+         sigma, lambda, mu_factor)
 
-plt_dt %>%
+p_sigma <- plt_dt %>%
   ggplot() +
-  geom_point(aes(x = low, y = high, color = name_print), alpha = .85) +
-  geom_contour()
+  geom_point(aes(x = unimodal, y = multimodal, color = name_print, size=sigma), alpha = .85) +
   theme_minimal() +
-  labs(color = "strategy", size = expression(sigma))
+  labs(color = NULL, size = expression(sigma)) #+
+  # theme(legend.position = "bottom", axis.title.x = element_blank()) +
+  # ggtitle(expression(sigma))
 
+p_lambda <- plt_dt %>%
+  ggplot() +
+  geom_point(aes(x = unimodal, y = multimodal, color = name_print, size=lambda), alpha = .85) +
+  theme_minimal() +
+  labs(color = NULL, size = expression(lambda)) #+
+  # theme(legend.position = "bottom", axis.title.y = element_blank()) +
+  # ggtitle(expression(lambda))
+
+p_my <- plt_dt %>%
+  ggplot() +
+  geom_point(aes(x = unimodal, y = multimodal, color = name_print, size=mu_factor), alpha = .85) +
+  theme_minimal() +
+  labs(color = NULL, size = expression(mu)) +
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_blank()) +
+  ggtitle(expression(mu))
+
+p_sigma + p_lambda + p_my +
+  plot_layout(guides = 'collect') &
+  theme(legend.position='bottom')
 # results <- run_experiment()
   
-  ggsave("binary-problems-front.pdf", width = 9, height = 5, device=cairo_pdf)
+p_lambda
+ggsave("continuos-problems-front.pdf", width = 9, height = 5, device=cairo_pdf)
   
   
 

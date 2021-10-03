@@ -129,54 +129,54 @@ arpf_by_objective <- function(perfs) {
 
 
 experiments <- tribble(
-  ~name, ~experiment_data,
-  # "flowshop-objective-50j10m", list(
-  #   strategy = "moead",
-  #   # parameters
-  #   algorithm = algorithm,
-  #   # problems
-  #   eval_problems = obj_problems,
-  #   solve_function = fsp_solver_performance,
-  #   aggregation_function = arpf_by_objective,
-  #   eval_no_samples = 4,
-  #   # moead parameters
-  #   moead_variation = "irace",
-  #   moead_decomp = list(name = "SLD", H = 7),
-  #   moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
-  #   moead_max_iter = 50,
-  #   # irace variation
-  #   irace_variation_problems = obj_problems,
-  #   irace_variation_no_evaluations = 300,
-  #   irace_variation_no_samples = 4
-  # ),
-  # "flowshop-objective-50j10m-ga", list(
-  #   strategy = "moead",
-  #   # parameters
-  #   algorithm = algorithm,
-  #   # problems
-  #   eval_problems = obj_problems,
-  #   solve_function = fsp_solver_performance,
-  #   aggregation_function = arpf_by_objective,
-  #   eval_no_samples = 4,
-  #   # moead parameters
-  #   moead_variation = "ga",
-  #   moead_decomp = list(name = "SLD", H = 7),
-  #   moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
-  #   moead_max_iter = 519
-  # ) #,
-  # "flowshop-objective-50j10m-irace", list(
-  #   strategy = "irace",
-  #   # parameters
-  #   algorithm = algorithm,
-  #   # problems
-  #   eval_problems = obj_problems,
-  #   solve_function = fsp_solver_performance,
-  #   aggregation_function = arpf_by_objective,
-  #   eval_no_samples = 4,
-  #   # irace parameters
-  #   irace_max_evals = 132864
-  # ),
-  "flowshop-type-50j10m", list(
+  ~name, ~name_print, ~experiment_data,
+  "flowshop-objective-50j10m", "MOEA/D+irace", list(
+    strategy = "moead",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = obj_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    eval_no_samples = 4,
+    # moead parameters
+    moead_variation = "irace",
+    moead_decomp = list(name = "SLD", H = 7),
+    moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
+    moead_max_iter = 50,
+    # irace variation
+    irace_variation_problems = obj_problems,
+    irace_variation_no_evaluations = 300,
+    irace_variation_no_samples = 4
+  ),
+  "flowshop-objective-50j10m-ga", "MOEA/D", list(
+    strategy = "moead",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = obj_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    eval_no_samples = 4,
+    # moead parameters
+    moead_variation = "ga",
+    moead_decomp = list(name = "SLD", H = 7),
+    moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
+    moead_max_iter = 519
+  ),
+  "flowshop-objective-50j10m-irace", "irace", list(
+    strategy = "irace",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = obj_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    eval_no_samples = 4,
+    # irace parameters
+    irace_max_evals = 132864
+  ),
+  "flowshop-type-50j10m", "MOEA/D+irace", list(
     strategy = "moead",
     # parameters
     algorithm = algorithm,
@@ -195,7 +195,7 @@ experiments <- tribble(
     irace_variation_no_evaluations = 300,
     irace_variation_no_samples = 4
   ),
-  "flowshop-type-50j10m-ga", list(
+  "flowshop-type-50j10m-ga", "MOEA/D", list(
     strategy = "moead",
     # parameters
     algorithm = algorithm,
@@ -210,7 +210,7 @@ experiments <- tribble(
     moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
     moead_max_iter = 1300
   ),
-  "flowshop-type-50j10m-irace", list(
+  "flowshop-type-50j10m-irace", "irace", list(
     strategy = "irace",
     # parameters
     algorithm = algorithm,
@@ -284,3 +284,78 @@ experiments <- tribble(
   )
 
 
+
+plt_dt <- experiments %>%
+  filter(startsWith(name, "flowshop-objective")) %>%
+  mutate(perfs = map(validation, 'perf')) %>% 
+  select(name, name_print, perfs) %>%
+  unnest(perfs) %>%
+  pivot_wider(names_from = meta_objective, values_from = performance) %>%
+  left_join(
+    experiments %>%
+      mutate(pop = map(validation, 1)) %>% 
+      select(name, pop) %>% unnest(pop),
+    by = c('name', 'conf_id')
+  ) %>%
+  select(name, name_print, flowtime = `1`, makespan = `2`, conf_id,
+         IG.Perturb.DestructionSize)
+
+plt_dt %>%
+  ggplot() +
+  geom_point(aes(x = flowtime, y = makespan, color = name_print,
+                 size = IG.Perturb.DestructionSize), alpha = .85) +
+  theme_minimal() +
+  scale_x_log10() +
+  scale_y_log10() +
+  labs(color = NULL, size = "d")
+
+ggsave("flowshop-objective-front.pdf", width = 9, height = 5, device=cairo_pdf)
+
+
+plt_dt <- experiments %>%
+  filter(startsWith(name, "flowshop-type")) %>%
+  mutate(perfs = map(validation, 'perf')) %>% 
+  select(name, name_print, perfs) %>%
+  unnest(perfs) %>%
+  mutate(
+    meta_objective = case_when(
+      meta_objective == 1 ~ "permutation",
+      meta_objective == 2 ~ "no-wait",
+      meta_objective == 3 ~ "no-idle"
+    )
+  ) %>%
+  left_join(
+    experiments %>%
+      mutate(pop = map(validation, 1)) %>% 
+      select(name, pop) %>% unnest(pop),
+    by = c('name', 'conf_id')
+  ) %>%
+  select(name, name_print, meta_objective, performance, conf_id)
+
+nd_points <- plt_dt %>% 
+  select(name_print, conf_id, meta_objective, performance) %>% 
+  pivot_wider(names_from = meta_objective, values_from = performance) %>%
+  mutate(rn = paste(name_print, conf_id, sep = ";")) %>%
+  column_to_rownames("rn") %>%
+  select(-name_print, -conf_id) %>%
+  mutate(non_dominated = MOEADr::find_nondominated_points(.)) %>%
+  rownames_to_column("name_print_conf_id") %>%
+  separate(name_print_conf_id, c("name_print", "conf_id"), sep = ";") %>%
+  mutate(conf_id = as.integer(conf_id))
+
+plt_dt %>%
+  left_join(nd_points, by = c("name_print", "conf_id")) %>%
+  ggplot() +
+  geom_line(aes(
+    x = meta_objective, 
+    y = performance, 
+    linetype = non_dominated,
+    color = name_print,
+    group = paste(name_print, conf_id)),
+    alpha = .85
+  ) +
+  scale_y_log10() +
+  theme_minimal() +
+  labs(color = NULL, linetype = "non-dominated")
+
+ggsave("flowshop-type-front.pdf", width = 9, height = 5, device=cairo_pdf)
