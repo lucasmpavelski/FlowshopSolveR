@@ -1,0 +1,7 @@
+AdaptiveWalk.Init            "" c (random,neh)
+AdaptiveWalk.Init.NEH.Ratio  "" o (1)
+AdaptiveWalk.Comp.Strat      "" c (strict)
+AdaptiveWalk.Neighborhood.Size  "" r (0.0,1.0)
+AdaptiveWalk.Neighborhood.Strat "" c (random)
+AdaptiveWalk.Local.Search       "" c (none,first_improvement,best_improvement,random_best_improvement,best_insertion,adaptive_best_insertion,adaptive,adaptive_with_adaptive_best_insertion)
+AdaptiveWalk.LS.Single.Step     "" c (0, 1)

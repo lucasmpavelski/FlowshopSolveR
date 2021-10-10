@@ -69,6 +69,7 @@ make_irace_variation <- function(algorithm,
       var_irace_scenario <- irace_scenario
       var_irace_scenario$initConfigurations <- init_configs
       var_irace_scenario$seed <- iter * i * 91
+      var_irace_scenario$minNbSurvival <- 1
       result <- train_best_solver(
         problem_space = ProblemSpace(problems = instances),
         algorithm = algorithm,
