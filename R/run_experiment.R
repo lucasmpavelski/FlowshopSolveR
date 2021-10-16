@@ -2,10 +2,14 @@ run_experiment <- function(experiment_data, name, folder, ...) {
   dir.create(folder, showWarnings = F, recursive = T)
   if (experiment_data$strategy == "irace") {
     irace_experiment(experiment_data, name, folder)
+  } else if (experiment_data$strategy == "irace-extremes") {
+    irace_extremes_experiment(experiment_data, name, folder)
   } else if (experiment_data$strategy == "moead") {
     moead_experiment(experiment_data, name, folder)
   }
 }
+
+
 
 irace_experiment <- function(experiment_data, name, folder) {
   experiment_dir <- file.path(folder, name)
@@ -23,6 +27,31 @@ irace_experiment <- function(experiment_data, name, folder) {
     recover = TRUE
   ) |>
     removeConfigurationsMetaData()
+}
+
+irace_extremes_experiment <- function(experiment_data, name, folder) {
+  experiment_dir <- file.path(folder, name)
+  dir.create(experiment_dir, showWarnings = F, recursive = T)
+  objectives <- unlist(unique(map(experiment_data$eval_problems$problem_space, ~.x@data$meta_objective)))
+  max_evals <- as.integer(experiment_data$irace_max_evals / length(objectives))
+  map(objectives, function(an_objective) {
+    problems <- keep(experiment_data$eval_problems$problem_space,
+                     ~.x@data$meta_objective == an_objective)
+    train_best_solver(
+      problem_space = ProblemSpace(problems = problems),
+      algorithm = experiment_data$algorithm,
+      solve_function = experiment_data$solve_function,
+      irace_scenario = defaultScenario(
+        list(maxExperiments = max_evals)
+      ),
+      parallel = 8,
+      quiet = F,
+      cache = file.path(experiment_dir, paste0("result_", an_objective, ".rds")),
+      recover = TRUE
+    ) |>
+      removeConfigurationsMetaData()
+  }) %>%
+    bind_rows()
 }
 
 make_variation <- function(experiment_data, name, folder) {
