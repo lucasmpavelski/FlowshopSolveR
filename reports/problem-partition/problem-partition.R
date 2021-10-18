@@ -5,7 +5,7 @@ library(furrr)
 library(plot3D)
 
 # plan(sequential)
-plan(multisession, workers = 8)
+plan(multisession, workers = 16)
 
 parameter_space <- readParameters(
   text = '
@@ -156,25 +156,25 @@ arpf_by_objective <- function(perfs) {
 
 experiments <- tribble(
   ~name, ~name_print, ~experiment_data,
-  # "flowshop-corr-50j10m", "MOEA/D+irace", list(
-  #   strategy = "moead",
-  #   # parameters
-  #   algorithm = algorithm,
-  #   # problems
-  #   eval_problems = corr_problems,
-  #   solve_function = fsp_solver_performance,
-  #   aggregation_function = arpf_by_objective,
-  #   eval_no_samples = 4,
-  #   # moead parameters
-  #   moead_variation = "irace",
-  #   moead_decomp = list(name = "SLD", H = 7),
-  #   moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
-  #   moead_max_iter = 50,
-  #   # irace variation
-  #   irace_variation_problems = corr_problems,
-  #   irace_variation_no_evaluations = 100,
-  #   irace_variation_no_samples = 4
-  # ),
+  "flowshop-corr-50j10m", "MOEA/D+irace", list(
+    strategy = "moead",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = corr_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    eval_no_samples = 4,
+    # moead parameters
+    moead_variation = "irace",
+    moead_decomp = list(name = "SLD", H = 7),
+    moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
+    moead_max_iter = 50,
+    # irace variation
+    irace_variation_problems = corr_problems,
+    irace_variation_no_evaluations = 100,
+    irace_variation_no_samples = 4
+  ),
   "flowshop-corr-50j10m-ga", "MOEA/D", list(
     strategy = "moead",
     # parameters
@@ -201,12 +201,23 @@ experiments <- tribble(
     # irace parameters
     irace_max_evals = 52800
   ),
-  "flowshop-corr-50j10m", "MOEA/D+irace", list(
-    strategy = "moead",
+  "flowshop-corr-50j10m-irace-extremes", "irace-extremes", list(
+    strategy = "irace-extremes",
     # parameters
     algorithm = algorithm,
     # problems
     eval_problems = corr_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    # irace parameters
+    irace_max_evals = 52800
+  ),
+  "flowshop-objective-50j10m", "MOEA/D+irace", list(
+    strategy = "moead",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = obj_problems,
     solve_function = fsp_solver_performance,
     aggregation_function = arpf_by_objective,
     eval_no_samples = 4,
@@ -216,56 +227,47 @@ experiments <- tribble(
     moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
     moead_max_iter = 50,
     # irace variation
-    irace_variation_problems = corr_problems,
-    irace_variation_no_evaluations = 100,
+    irace_variation_problems = obj_problems,
+    irace_variation_no_evaluations = 300,
     irace_variation_no_samples = 4
   ),
-  # "flowshop-objective-50j10m", "MOEA/D+irace", list(
-  #   strategy = "moead",
-  #   # parameters
-  #   algorithm = algorithm,
-  #   # problems
-  #   eval_problems = obj_problems,
-  #   solve_function = fsp_solver_performance,
-  #   aggregation_function = arpf_by_objective,
-  #   eval_no_samples = 4,
-  #   # moead parameters
-  #   moead_variation = "irace",
-  #   moead_decomp = list(name = "SLD", H = 7),
-  #   moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
-  #   moead_max_iter = 50,
-  #   # irace variation
-  #   irace_variation_problems = obj_problems,
-  #   irace_variation_no_evaluations = 300,
-  #   irace_variation_no_samples = 4
-  # ),
-  # "flowshop-objective-50j10m-ga", "MOEA/D", list(
-  #   strategy = "moead",
-  #   # parameters
-  #   algorithm = algorithm,
-  #   # problems
-  #   eval_problems = obj_problems,
-  #   solve_function = fsp_solver_performance,
-  #   aggregation_function = arpf_by_objective,
-  #   eval_no_samples = 4,
-  #   # moead parameters
-  #   moead_variation = "ga",
-  #   moead_decomp = list(name = "SLD", H = 7),
-  #   moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
-  #   moead_max_iter = 519
-  # ),
-  # "flowshop-objective-50j10m-irace", "irace", list(
-  #   strategy = "irace",
-  #   # parameters
-  #   algorithm = algorithm,
-  #   # problems
-  #   eval_problems = obj_problems,
-  #   solve_function = fsp_solver_performance,
-  #   aggregation_function = arpf_by_objective,
-  #   eval_no_samples = 4,
-  #   # irace parameters
-  #   irace_max_evals = 132864
-  # ),
+  "flowshop-objective-50j10m-ga", "MOEA/D", list(
+    strategy = "moead",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = obj_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    eval_no_samples = 4,
+    # moead parameters
+    moead_variation = "ga",
+    moead_decomp = list(name = "SLD", H = 7),
+    moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
+    moead_max_iter = 519
+  ),
+  "flowshop-objective-50j10m-irace", "irace", list(
+    strategy = "irace",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = obj_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    # irace parameters
+    irace_max_evals = 132864
+  ),
+  "flowshop-objective-50j10m-irace-extremes", "irace-extremes", list(
+    strategy = "irace-extremes",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = obj_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    # irace parameters
+    irace_max_evals = 132864
+  ),
   # "flowshop-type-50j10m", "MOEA/D+irace", list(
   #   strategy = "moead",
   #   # parameters
@@ -349,7 +351,6 @@ experiments <- tribble(
   #   irace_variation_no_evaluations = 100,
   #   irace_variation_no_samples = 6
   # ),
-<<<<<<< HEAD
   "flowshop-type-50j10m-ga-irace100", "MOEA/D", list(
     strategy = "moead",
     # parameters
@@ -387,7 +388,6 @@ experiments <- tribble(
     # moead parameters
     irace_max_evals = 99200
   ),
-=======
   # "flowshop-type-50j10m-ga-irace100", "MOEA/D", list(
   #   strategy = "moead",
   #   # parameters
@@ -414,7 +414,6 @@ experiments <- tribble(
   #   # moead parameters
   #   irace_max_evals = 99200
   # ),
->>>>>>> 8107cb14791ad5c525d126134071a7eae7dda5f5
   # "type-medium-lin" = list(
   #   # parameters
   #   parameter_space = parameter_space,

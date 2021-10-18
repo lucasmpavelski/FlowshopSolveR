@@ -97,6 +97,18 @@ taillard_instances_df <- function() {
     )
 }
 
+ml_instances_df <- function() {
+  tidyr::crossing(
+    dist = c("uniform", "exponential", "binomial"),
+    corr = c("random", "job-correlated", "machine-correlated"),
+    no_jobs = c(10, 20, 30, 50),
+    no_machines = c(5, 10, 20),
+    inst_n = 1:5,
+    problem = "meta-learning"
+  ) %>%
+    mutate(instance = pmap_chr(., filename_from_instance_data))
+}
+
 #' Get info from all instances in data/instances/flowshop folder.
 #'
 #' @return Data frame with all instances data.
@@ -106,11 +118,8 @@ taillard_instances_df <- function() {
 all_instances_df <- function() {
   bind_rows(
     generated_instances_df(),
-    vrf_small_instances_df(), #%>%
-      # filter(no_jobs == 50 & no_machines == 20),
-    vrf_large_instances_df() #%>%
-      # filter(no_jobs %in% c(100, 200) & no_machines %in% c(20, 40)),
-    # taillard_instances_df() # %>%
-      # filter(no_jobs %in% c(50, 100, 200) & no_machines %in% c(20))
+    vrf_small_instances_df(),
+    vrf_large_instances_df(),
+    ml_instances_df()
   )
 }

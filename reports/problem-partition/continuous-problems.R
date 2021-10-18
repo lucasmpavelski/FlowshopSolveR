@@ -214,6 +214,15 @@ experiments <- tribble(
     aggregation_function = aggregate_by_ert,
     # irace parameters
     irace_max_evals = 64000
+  ),
+  "cmaes-cec2013-irace-extremes", "irace-extremes", list(
+    strategy = "irace-extremes",
+    algorithm = Algorithm(name = "cmaes", parameters = cmaes_params),
+    eval_problems = cec_problems,
+    solve_function = solve_function,
+    aggregation_function = aggregate_by_ert,
+    # irace parameters
+    irace_max_evals = 64000
   )
 ) %>%
   mutate(
