@@ -3,8 +3,8 @@ library(tidyverse)
 library(here)
 
 
-# plan(sequential)
-plan(multisession, workers = 6)
+plan(sequential)
+# plan(multisession, workers = 6)
 # plan(remote,
 #      workers = rep("linode2", 32),
 #      persistent = TRUE)
@@ -106,7 +106,7 @@ algorithm <- Algorithm(name = "EA (1+1)", parameters = parameter_space)
 
 experiments <- tribble(
     ~name, ~name_print, ~experiment_data,
-    "jump-ea-mutations-ert-budget", "MOEA/D+irace", list(
+    "jump-ea-mutations-ert-budget-arquive", "MOEA/D+irace", list(
       strategy = "moead",
       # parameters
       algorithm = algorithm,
@@ -124,6 +124,24 @@ experiments <- tribble(
       irace_variation_no_evaluations = 100,
       irace_variation_no_samples = 30
     ),
+    # "jump-ea-mutations-ert-budget", "MOEA/D+irace", list(
+    #   strategy = "moead",
+    #   # parameters
+    #   algorithm = algorithm,
+    #   eval_problems = jump_problems,
+    #   solve_function = solve_function,
+    #   # moead parameters
+    #   aggregation_function = aggregate_by_ert,
+    #   eval_no_samples = 30,
+    #   moead_variation = "irace",
+    #   moead_decomp = list(name = "SLD", H = 7),
+    #   moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
+    #   moead_max_iter = 50,
+    #   # irace variation
+    #   irace_variation_problems = jump_problems,
+    #   irace_variation_no_evaluations = 100,
+    #   irace_variation_no_samples = 30
+    # ),
     "jump-ea-mutations-ga-ert-budget", "MOEA/D", list(
       strategy = "moead",
       # parameters
@@ -140,6 +158,15 @@ experiments <- tribble(
     ),
     "jump-ea-mutations-irace-ert-budget", "irace", list(
       strategy = "irace",
+      # parameters
+      algorithm = algorithm,
+      eval_problems = jump_problems,
+      solve_function = solve_function,
+      # irace parameters
+      irace_max_evals = 160000
+    ),
+    "jump-ea-mutations-irace-extremes-ert-budget", "irace-extremes", list(
+      strategy = "irace-extremes",
       # parameters
       algorithm = algorithm,
       eval_problems = jump_problems,
@@ -174,6 +201,8 @@ plt_dt <- experiments %>%
 plt_dt %>%
   ggplot() +
   geom_point(aes(x = low, y = high, color = name_print, size = mu), alpha = .85) +
+  scale_x_log10() +
+  scale_y_log10() +
   theme_minimal() +
   labs(color = "strategy", size = expression(mu))
 

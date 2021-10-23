@@ -103,6 +103,10 @@ moead_experiment <- function(experiment_data, name, folder) {
     neighbors = experiment_data$moead_neighbors,
     stopcrit = list(list(name  = "maxiter",
                          maxiter  = experiment_data$moead_max_iter)),
+    update = list(
+      name = "standard",
+      UseArchive = TRUE
+    ),
     seed     = 42
   )
   

@@ -5,7 +5,7 @@ library(furrr)
 library(plot3D)
 
 # plan(sequential)
-plan(multisession, workers = 16)
+plan(multisession, workers = 8)
 
 parameter_space <- readParameters(
   text = '
@@ -156,7 +156,26 @@ arpf_by_objective <- function(perfs) {
 
 experiments <- tribble(
   ~name, ~name_print, ~experiment_data,
-  "flowshop-corr-50j10m", "MOEA/D+irace", list(
+  "flowshop-corr-50j10m", "MOEA/D+irace-na", list(
+    strategy = "moead",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = corr_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    eval_no_samples = 4,
+    # moead parameters
+    moead_variation = "irace",
+    moead_decomp = list(name = "SLD", H = 7),
+    moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
+    moead_max_iter = 50,
+    # irace variation
+    irace_variation_problems = corr_problems,
+    irace_variation_no_evaluations = 100,
+    irace_variation_no_samples = 4
+  ),
+  "flowshop-corr-50j10m-arquive", "MOEA/D+irace", list(
     strategy = "moead",
     # parameters
     algorithm = algorithm,
@@ -212,7 +231,7 @@ experiments <- tribble(
     # irace parameters
     irace_max_evals = 52800
   ),
-  "flowshop-objective-50j10m", "MOEA/D+irace", list(
+  "flowshop-objective-50j10m-100ils-arquive", "MOEA/D+irace", list(
     strategy = "moead",
     # parameters
     algorithm = algorithm,
@@ -228,10 +247,10 @@ experiments <- tribble(
     moead_max_iter = 50,
     # irace variation
     irace_variation_problems = obj_problems,
-    irace_variation_no_evaluations = 300,
+    irace_variation_no_evaluations = 100,
     irace_variation_no_samples = 4
   ),
-  "flowshop-objective-50j10m-ga", "MOEA/D", list(
+  "flowshop-objective-50j10m-ga-100ils-arquive", "MOEA/D", list(
     strategy = "moead",
     # parameters
     algorithm = algorithm,
@@ -244,31 +263,31 @@ experiments <- tribble(
     moead_variation = "ga",
     moead_decomp = list(name = "SLD", H = 7),
     moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
-    moead_max_iter = 519
+    moead_max_iter = 206
   ),
-  "flowshop-objective-50j10m-irace", "irace", list(
-    strategy = "irace",
-    # parameters
-    algorithm = algorithm,
-    # problems
-    eval_problems = obj_problems,
-    solve_function = fsp_solver_performance,
-    aggregation_function = arpf_by_objective,
-    # irace parameters
-    irace_max_evals = 132864
-  ),
-  "flowshop-objective-50j10m-irace-extremes", "irace-extremes", list(
-    strategy = "irace-extremes",
-    # parameters
-    algorithm = algorithm,
-    # problems
-    eval_problems = obj_problems,
-    solve_function = fsp_solver_performance,
-    aggregation_function = arpf_by_objective,
-    # irace parameters
-    irace_max_evals = 132864
-  ),
-  # "flowshop-type-50j10m", "MOEA/D+irace", list(
+  # "flowshop-objective-50j10m-irace", "irace", list(
+  #   strategy = "irace",
+  #   # parameters
+  #   algorithm = algorithm,
+  #   # problems
+  #   eval_problems = obj_problems,
+  #   solve_function = fsp_solver_performance,
+  #   aggregation_function = arpf_by_objective,
+  #   # irace parameters
+  #   irace_max_evals = 132864
+  # ),
+  # "flowshop-objective-50j10m-irace-extremes", "irace-extremes", list(
+  #   strategy = "irace-extremes",
+  #   # parameters
+  #   algorithm = algorithm,
+  #   # problems
+  #   eval_problems = obj_problems,
+  #   solve_function = fsp_solver_performance,
+  #   aggregation_function = arpf_by_objective,
+  #   # irace parameters
+  #   irace_max_evals = 132864
+  # ),
+  # "flowshop-type-50j10m", "MOEA/D+irace-na", list(
   #   strategy = "moead",
   #   # parameters
   #   algorithm = algorithm,
@@ -313,7 +332,7 @@ experiments <- tribble(
   #   # moead parameters
   #   irace_max_evals = 249600
   # ),
-  # "flowshop-type-50j10m-irace100", "MOEA/D+irace", list(
+  # "flowshop-type-50j10m-irace100", "MOEA/D+irace-na", list(
   #   strategy = "moead",
   #   # parameters
   #   algorithm = algorithm,
@@ -332,6 +351,25 @@ experiments <- tribble(
   #   irace_variation_no_evaluations = 100,
   #   irace_variation_no_samples = 4
   # ),
+  "flowshop-type-50j10m-irace100-arquive", "MOEA/D+irace", list(
+    strategy = "moead",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = type_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    eval_no_samples = 2,
+    # moead parameters
+    moead_variation = "irace",
+    moead_decomp = list(name = "MSLD", H = c(3,2), tau=c(1,.5), .nobj = 3),
+    moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
+    moead_max_iter = 50,
+    # irace variation
+    irace_variation_problems = type_problems,
+    irace_variation_no_evaluations = 100,
+    irace_variation_no_samples = 4
+  ),
   # "flowshop-type-50j10m-irace100-c2", "MOEA/D+irace c2", list(
   #   strategy = "moead",
   #   # parameters
@@ -387,84 +425,7 @@ experiments <- tribble(
     aggregation_function = arpf_by_objective,
     # moead parameters
     irace_max_evals = 99200
-  ),
-  # "flowshop-type-50j10m-ga-irace100", "MOEA/D", list(
-  #   strategy = "moead",
-  #   # parameters
-  #   algorithm = algorithm,
-  #   # problems
-  #   eval_problems = type_problems,
-  #   solve_function = fsp_solver_performance,
-  #   aggregation_function = arpf_by_objective,
-  #   eval_no_samples = 2,
-  #   # moead parameters
-  #   moead_variation = "ga",
-  #   moead_decomp = list(name = "MSLD", H = c(3,2), tau=c(1,.5), .nobj = 3),
-  #   moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
-  #   moead_max_iter = 260
-  # ),
-  # "flowshop-type-50j10m-irace-irace100", "irace", list(
-  #   strategy = "irace",
-  #   # parameters
-  #   algorithm = algorithm,
-  #   # problems
-  #   eval_problems = type_problems,
-  #   solve_function = fsp_solver_performance,
-  #   aggregation_function = arpf_by_objective,
-  #   # moead parameters
-  #   irace_max_evals = 99200
-  # ),
-  # "type-medium-lin" = list(
-  #   # parameters
-  #   parameter_space = parameter_space,
-  #   algorithm = algorithm,
-  #   # problems
-  #   problems = type_problems,
-  #   objective_feature = "objective",
-  #   objectives = c("PERM", "NOWAIT", "NOIDLE"),
-  #   eval_problems = type_problems %>% 
-  #     filter(map_lgl(instances, ~ .x$inst_n == 6)) %>%
-  #     unnest(instances) %>%
-  #     inner_join(lower_bounds, by = lb_features) %>%
-  #     mutate(problem_space = map2(problem_space, best_cost, ~{
-  #       .x@data['best_cost'] <- .y
-  #       .x
-  #     })),
-  #   eval_no_samples = 1,
-  #   # moead parameters
-  #   moead_variation = "irace",
-  #   moead_decomp = list(name = "MSLD", H = c(3,2), tau=c(1,.5), .nobj = 3),
-  #   moead_neighbors = list(name = "lambda", T = 3, delta.p = 1),
-  #   moead_max_iter = 50,
-  #   # irace variation
-  #   irace_variation_problems = type_problems %>% 
-  #     filter(map_lgl(instances, ~ .x$inst_n < 6)),
-  #   irace_variation_no_evaluations = 100,
-  #   irace_variation_no_samples = 10
-  # ),
-  # "type-medium-lin-ga" = list(
-  #   # parameters
-  #   parameter_space = parameter_space,
-  #   algorithm = algorithm,
-  #   # problems
-  #   problems = type_problems,
-  #   objective_feature = "objective",
-  #   objectives = c("PERM", "NOWAIT", "NOIDLE"),
-  #   eval_problems = type_problems %>% 
-  #     filter(map_lgl(instances, ~ .x$inst_n == 6)) %>%
-  #     unnest(instances) %>%
-  #     inner_join(lower_bounds, by = lb_features) %>%
-  #     mutate(problem_space = map2(problem_space, best_cost, ~{
-  #       .x@data['best_cost'] <- .y
-  #       .x
-  #     })),
-  #   eval_no_samples = 1,
-  #   # moead parameters
-  #   moead_variation = "ga",
-  #   moead_decomp = list(name = "MSLD", H = c(3,2), tau=c(1,.5), .nobj = 3),
-  #   moead_neighbors = list(name = "lambda", T = 3, delta.p = 1),
-  #   moead_max_iter = 467
-  # )
+  )
 ) %>%
   mutate(
     configs = pmap(., run_experiment, 
@@ -589,6 +550,7 @@ scatter3D_fancy(plot_3d_dt$permutation, plot_3d_dt$`no-idle`, plot_3d_dt$`no-wai
 
 plt_dt %>%
   left_join(nd_points, by = c("name_print", "conf_id")) %>%
+  filter(non_dominated) %>%
   ggplot() +
   geom_line(aes(
     x = meta_objective, 
@@ -598,7 +560,6 @@ plt_dt %>%
     group = paste(name_print, conf_id)),
     alpha = .85
   ) +
-  scale_y_log10() +
   theme_minimal() +
   labs(color = NULL, linetype = "non-dominated")
 

@@ -104,7 +104,7 @@ ml_instances_df <- function() {
     no_jobs = c(10, 20, 30, 50),
     no_machines = c(5, 10, 20),
     inst_n = 1:5,
-    problem = "meta-learning"
+    problem = "ml_instances"
   ) %>%
     mutate(instance = pmap_chr(., filename_from_instance_data))
 }

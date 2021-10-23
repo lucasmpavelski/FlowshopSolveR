@@ -5,22 +5,20 @@ library(wrapr)
 library(irace)
 library(furrr)
 
-plan(sequential)
+# plan(sequential)
 # NCORES <- 48
 # options(parallelly.debug = TRUE)
-# plan(multisession)
+plan(multisession)
 # plan(remote, workers = rep("linode2", NCORES), persistent = TRUE)
 
 all_problems <- all_problems_df() %>%
   filter(
-    no_jobs %in% c(50),
-    no_machines %in% c(20),
-    dist %in% c('uniform', 'exponential'),
+    problem == 'ml_instances',
     stopping_criterion == 'TIME',
-    budget == 'high'
+    budget == 'high',
+    type == 'PERM'
   ) %>%
   mutate(stopping_criterion = "FIXEDTIME") %>%
-  mutate(instances = map(instances, ~filter(.x, inst_n > 6))) %>%
   mutate(meta_opt_problem = pmap(., as_metaopt_problem))
 
 
