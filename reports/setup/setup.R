@@ -18,6 +18,11 @@ all_problems <- all_problems_df() %>%
     budget == 'high',
     type == 'PERM'
   ) %>%
+  unnest(instances) %>%
+  mutate(id = inst_n * 100 + id) %>%
+  group_by(id) %>%
+  nest(instances = c(instance, inst_n)) %>%
+  ungroup() %>%
   mutate(stopping_criterion = "FIXEDTIME") %>%
   mutate(meta_opt_problem = pmap(., as_metaopt_problem))
 
@@ -25,8 +30,7 @@ all_problems <- all_problems_df() %>%
 LOWER_BOUNDS_FOLDER <- here("data", "lower_bounds")
 dir.create(LOWER_BOUNDS_FOLDER, FALSE, TRUE)
 
-pwalk(all_problems, function(meta_opt_problem, id, ...) {
-  print(id)
+pwalk(all_problems$meta_opt_problem, function(meta_opt_problem) {
   print(meta_opt_problem)
   sample_performance(
     algorithm = get_algorithm("IG"),
@@ -34,13 +38,12 @@ pwalk(all_problems, function(meta_opt_problem, id, ...) {
     problemSpace = ProblemSpace(problems = list(meta_opt_problem)),
     solve_function = fsp_solver_performance,
     no_samples = 30,
-    cache = file.path(LOWER_BOUNDS_FOLDER, paste0(id, '-', paste0(meta_opt_problem@instances, collapse = '-'), ".rds")),
-    parallel = TRUE
+    cache = file.path(LOWER_BOUNDS_FOLDER, paste0(meta_opt_problem@name, '-', paste0(meta_opt_problem@instances, collapse = '-'), ".rds")),
+    parallel = TRUE,
   )
 })
 
 plan(sequential)
-
 
 lower_bound_cache <- map(dir(LOWER_BOUNDS_FOLDER, full.names = T), read_rds) %>%
   bind_rows() %>%

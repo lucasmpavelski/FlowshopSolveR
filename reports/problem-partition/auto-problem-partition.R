@@ -29,7 +29,7 @@ load_fla_metrics <- function() {
 # select problems
 problems <- all_problems_df() %>% 
   filter(
-    problem == "meta-learning",
+    problem == "ml-problems",
     type == "PERM",
     stopping_criterion == "TIME",
     budget == "high"
@@ -54,7 +54,9 @@ problems_data <- read_csv("data/models/problems.csv") %>%
       corr == "mcorr" ~ "machine-correlated",
       corr == "rand" ~ "random"
     )
-  )
+  ) %>%
+  left_join(problems)
+  
 train_problems <- problems_data %>%
   filter(dataset_1_folds != 0)
 test_problems <- problems_data %>%
@@ -108,7 +110,19 @@ eval_instances <- train_problems %>%
       rank(-Dim.3, ties.method = "first") <= instances_per_objective ~ 3
     )
   ) %>%
-  filter(!is.na(meta_objective))
+  filter(!is.na(meta_objective)) %>%
+  select(-sample_index) %>%  
+  nest(instances = c(inst_n, instance)) %>%
+  ungroup() %>%
+  mutate(problem_space = pmap(., function(...) {
+    browser()
+    as_metaopt_problem(...)
+  })) %>%
+  unnest(instances) %>%
+  inner_join(lower_bounds, by = lb_features) %>%
+  mutate(problem_space = map2(problem_space, best_cost, ~{
+    .x@data['best_cost'] <- .y
+  }))
 
 config <- list(
   strategy = "moead",
@@ -131,5 +145,6 @@ config <- list(
 )
 
 # solve problem partition
+run_experiment(config, "pca3", "flowshop-pca3")
 
 # test on new instances

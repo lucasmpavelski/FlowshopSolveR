@@ -5,7 +5,7 @@ library(furrr)
 library(plot3D)
 
 # plan(sequential)
-plan(multisession, workers = 8)
+plan(multisession, workers = 32)
 
 parameter_space <- readParameters(
   text = '
@@ -152,8 +152,6 @@ arpf_by_objective <- function(perfs) {
   res
 }
 
-
-
 experiments <- tribble(
   ~name, ~name_print, ~experiment_data,
   "flowshop-corr-50j10m", "MOEA/D+irace-na", list(
@@ -265,28 +263,28 @@ experiments <- tribble(
     moead_neighbors = list(name = "lambda", T = 2, delta.p = 1),
     moead_max_iter = 206
   ),
-  # "flowshop-objective-50j10m-irace", "irace", list(
-  #   strategy = "irace",
-  #   # parameters
-  #   algorithm = algorithm,
-  #   # problems
-  #   eval_problems = obj_problems,
-  #   solve_function = fsp_solver_performance,
-  #   aggregation_function = arpf_by_objective,
-  #   # irace parameters
-  #   irace_max_evals = 132864
-  # ),
-  # "flowshop-objective-50j10m-irace-extremes", "irace-extremes", list(
-  #   strategy = "irace-extremes",
-  #   # parameters
-  #   algorithm = algorithm,
-  #   # problems
-  #   eval_problems = obj_problems,
-  #   solve_function = fsp_solver_performance,
-  #   aggregation_function = arpf_by_objective,
-  #   # irace parameters
-  #   irace_max_evals = 132864
-  # ),
+  "flowshop-objective-50j10m-100ils-irace", "irace", list(
+    strategy = "irace",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = obj_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    # irace parameters
+    irace_max_evals = 52800
+  ),
+  "flowshop-objective-50j10m-100ils-irace-extremes", "irace-extremes", list(
+    strategy = "irace-extremes",
+    # parameters
+    algorithm = algorithm,
+    # problems
+    eval_problems = obj_problems,
+    solve_function = fsp_solver_performance,
+    aggregation_function = arpf_by_objective,
+    # irace parameters
+    irace_max_evals = 52800
+  ),
   # "flowshop-type-50j10m", "MOEA/D+irace-na", list(
   #   strategy = "moead",
   #   # parameters
