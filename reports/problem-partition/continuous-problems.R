@@ -7,7 +7,7 @@ library(tidyverse)
 library(patchwork)
 
 # plan(sequential)
-plan(multisession, workers = 7)
+plan(multisession, workers = 8)
 
 cecTags <- function(i) {
   checkNumber(i, lower = 1, upper = 24)
@@ -176,7 +176,7 @@ aggregate_by_ert <- function(sample) {
 
 experiments <- tribble(
   ~name, ~name_print, ~experiment_data,
-  "cmaes-cec2013", "MOEA/D+irace", list(
+  "cmaes-cec2013-arquive", "MOEA/D+irace", list(
     strategy = "moead",
     algorithm = Algorithm(name = "cmaes", parameters = cmaes_params),
     eval_problems = cec_problems,
